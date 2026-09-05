@@ -278,7 +278,7 @@
     <!-- Hero Banner -->
     <div class="hero-banner">
         <div class="hero-content">
-            <h1>สำรวจสถานที่ท่องเที่ยวยอดฮิต & รีวิวจริง 🌏</h1>
+            <h1>สำรวจสถานที่ท่องเที่ยวยอดฮิต & รีวิวจริง</h1>
             <p>แหล่งรวมจุดเช็คอิน คาเฟ่ ธรรมชาติ และทริปการเดินทางจากเพื่อนนักเดินทางทั่วประเทศไทย</p>
         </div>
     </div>
@@ -288,7 +288,6 @@
         <div class="section-header">
             <div class="section-title-wrap">
                 <h2 class="section-title">
-                    <span class="section-icon">✨</span>
                     <span>ฟีดรีวิวล่าสุด</span>
                 </h2>
                 <p class="section-subtitle">แชร์ประสบการณ์ ความประทับใจ และรูปถ่ายจากนักเดินทาง</p>
@@ -499,7 +498,7 @@ function toggleLikeReview(reviewId) {
         likedReviewsMap.set(reviewId, true);
         btn.classList.add("liked");
         countEl.innerText = count + 1;
-        showToast("ถูกใจรีวิวนี้แล้ว ❤️");
+        showToast("ถูกใจรีวิวนี้แล้ว");
     }
 }
 
@@ -511,7 +510,7 @@ function shareReview(reviewId) {
             url: window.location.href,
         }).catch(() => {});
     } else {
-        showToast("คัดลอกลิงก์เรียบร้อยแล้ว 🔗");
+        showToast("คัดลอกลิงก์เรียบร้อยแล้ว");
     }
 }
 </script>
