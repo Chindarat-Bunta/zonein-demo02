@@ -48,6 +48,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "[::1]",
+    "testserver",
 ]
 if "ALLOWED_HOSTS" in os.environ:
     ALLOWED_HOSTS.extend(
@@ -96,7 +97,7 @@ ROOT_URLCONF = "zonein02.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -170,6 +171,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+STATICFILES_DIRS = [
+    BASE_DIR / "statics",
+]
 
 # ==============================================================================
 # Cloudinary Configuration
@@ -193,3 +197,4 @@ elif CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
         api_secret=CLOUDINARY_API_SECRET,
         secure=True,
     )
+
