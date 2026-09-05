@@ -199,6 +199,7 @@ a {
 .hero-title span {
     background: linear-gradient(135deg, var(--primary), #ec4899);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -680,6 +681,7 @@ a {
     margin-bottom: 0.9rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
