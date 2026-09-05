@@ -217,6 +217,44 @@
             min-width: 240px;
         }
 
+        .profile-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+
+        .btn-edit-profile {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            color: #ffffff;
+            font-size: 0.88rem;
+            font-weight: 700;
+            border-radius: var(--radius-pill);
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(255, 157, 157, 0.4);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-edit-profile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 157, 157, 0.55);
+            color: #ffffff;
+        }
+
+        .btn-edit-profile:active {
+            transform: translateY(0);
+        }
+
+        .btn-edit-profile svg {
+            flex-shrink: 0;
+        }
+
         .user-name-title {
             font-size: 1.85rem;
             font-weight: 800;
@@ -420,6 +458,11 @@
                 text-align: center;
                 gap: 18px;
             }
+            .profile-title-row {
+                justify-content: center;
+                flex-direction: column;
+                gap: 12px;
+            }
             .user-name-title {
                 justify-content: center;
             }
@@ -474,25 +517,34 @@
                     <!-- Online indicator dot -->
                     <div class="avatar-online-dot" title="สถานะ: กำลังออนไลน์"></div>
                     <!-- Edit camera button -->
-                    <button class="avatar-camera-btn" title="เปลี่ยนรูปโปรไฟล์">
+                    <a href="/profile/settings/" class="avatar-camera-btn" title="เปลี่ยนรูปโปรไฟล์ / แก้ไขข้อมูล">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                             <circle cx="12" cy="13" r="4"></circle>
                         </svg>
-                    </button>
+                    </a>
                 </div>
 
                 <!-- ชื่อของ User & ข้อมูลโปรไฟล์ -->
                 <div class="profile-info">
-                    <h1 class="user-name-title">
-                        <span>{{ display_name }}</span>
-                        <span class="user-badge">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    <div class="profile-title-row">
+                        <h1 class="user-name-title">
+                            <span>{{ display_name }}</span>
+                            <span class="user-badge">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                                สมาชิก Zone In
+                            </span>
+                        </h1>
+                        <a href="/profile/settings/" class="btn-edit-profile" id="btnEditProfile" title="ไปยังหน้าแก้ไขข้อมูลส่วนตัว">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                             </svg>
-                            สมาชิก Zone In
-                        </span>
-                    </h1>
+                            <span>แก้ไขโปรไฟล์</span>
+                        </a>
+                    </div>
                     
                     <div class="user-handle">
                         <span>@{{ username }}</span>
