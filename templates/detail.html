@@ -1,4 +1,4 @@
-{% extends 'web/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}{{ place.name }} - ZoneIn รีวิว{% endblock %}
@@ -86,7 +86,7 @@
         <h2 class="section-heading"><i class="fa-solid fa-fire"></i> สถานที่ใกล้เคียง / หมวดหมู่เดียวกัน</h2>
         <div class="places-grid">
             {% for r_place in related_places %}
-                {% include 'web/components/place_card.html' with place=r_place %}
+                {% include 'components/place_card.html' with place=r_place %}
             {% endfor %}
         </div>
     </section>

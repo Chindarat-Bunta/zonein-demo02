@@ -74,7 +74,7 @@ def index_view(request):
         "all_places_count": Place.objects.count(),
         "filters": current_filters,
     }
-    return render(request, "web/index.html", context)
+    return render(request, "index.html", context)
 
 
 def api_places_view(request):
@@ -135,6 +135,6 @@ def place_detail_view(request, slug):
 
     return render(
         request,
-        "web/detail.html",
+        "detail.html",
         {"place": place, "related_places": related_places},
     )
