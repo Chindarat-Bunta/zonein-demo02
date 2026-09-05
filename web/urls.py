@@ -1,11 +1,11 @@
 from django.urls import include, path
 from . import views
 
-app_name = "web"
-
 urlpatterns = [
     # Pages
+    path("", views.home_view, name="index"),
     path("", views.home_view, name="home"),
+    path("feed/", views.home_view, name="feed"),
     path("signin/", views.signin_view, name="signin"),
     path("login/", views.signin_view, name="login"),
     path("signup/", views.signup_view, name="signup"),

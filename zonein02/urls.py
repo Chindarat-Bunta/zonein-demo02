@@ -5,5 +5,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("web.api.urls")),
     path("", include("web.urls")),
+    path("", include(("web.urls", "web"), namespace="web")),
 ]
-
