@@ -71,11 +71,9 @@ class Place(models.Model):
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default="cafe", verbose_name="หมวดหมู่")
     description = models.TextField(blank=True, verbose_name="รายละเอียดสถานที่")
     address = models.CharField(max_length=255, blank=True, verbose_name="ที่อยู่ / พิกัดตำบล-อำเภอ")
-
     # Google Maps coordinates
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name="ละติจูด (Google Maps)")
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name="ลองจิจูด (Google Maps)")
-
     # Cloudinary cover image
     cover_image_url = models.URLField(max_length=500, blank=True, verbose_name="รูปภาพปกสถานที่")
     cover_image_public_id = models.CharField(max_length=200, blank=True, verbose_name="Cloudinary Cover ID")
@@ -332,3 +330,4 @@ class Notification(models.Model):
 # ==============================================================================
 TravelPost = Place
 PostLike = PlaceLike
+

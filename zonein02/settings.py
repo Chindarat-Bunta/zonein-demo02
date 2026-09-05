@@ -48,6 +48,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "[::1]",
+    "testserver",
 ]
 if "ALLOWED_HOSTS" in os.environ:
     ALLOWED_HOSTS.extend(
@@ -96,7 +97,7 @@ ROOT_URLCONF = "zonein02.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -114,19 +115,15 @@ WSGI_APPLICATION = "zonein02.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-if os.environ.get("DATABASE_URL"):
-    import urllib.parse
+import dj_database_url
 
-    url = urllib.parse.urlparse(os.environ["DATABASE_URL"])
+if os.environ.get("DATABASE_URL"):
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": url.path.lstrip("/"),
-            "USER": url.username,
-            "PASSWORD": url.password,
-            "HOST": url.hostname,
-            "PORT": url.port,
-        }
+        "default": dj_database_url.config(
+            default=os.environ["DATABASE_URL"],
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
 else:
     DATABASES = {
@@ -174,6 +171,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+STATICFILES_DIRS = [
+    BASE_DIR / "statics",
+]
 
 # ==============================================================================
 # Cloudinary Configuration (Central Image & Media Upload Service)
@@ -204,3 +204,4 @@ else:
         api_secret=CLOUDINARY_API_SECRET or "demo_secret",
         secure=True,
     )
+
