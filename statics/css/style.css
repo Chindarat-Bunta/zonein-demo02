@@ -665,3 +665,146 @@ body {
         justify-content: center;
     }
 }
+
+/* ==========================================================================
+   FLOATING ACTION BUTTON (POST / สร้างโพสต์)
+   ========================================================================== */
+.fab-post-wrapper {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 999;
+}
+
+.fab-post-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 50%, #f9846b 100%);
+    color: #ffffff;
+    font-family: var(--font-main);
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 
+        0 12px 28px -6px rgba(255, 157, 157, 0.55),
+        0 4px 12px rgba(255, 197, 170, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(12px);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+}
+
+/* Subtle Shimmer effect on FAB */
+.fab-post-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transform: skewX(-20deg);
+    transition: 0.65s ease;
+}
+
+.fab-post-btn:hover {
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 
+        0 18px 36px -6px rgba(255, 157, 157, 0.65),
+        0 0 20px rgba(187, 241, 210, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.fab-post-btn:hover::before {
+    left: 150%;
+}
+
+.fab-post-btn:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.fab-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    transition: transform 0.35s ease;
+}
+
+.fab-post-btn:hover .fab-icon-wrap {
+    transform: rotate(90deg) scale(1.1);
+}
+
+.fab-icon-wrap svg {
+    width: 16px;
+    height: 16px;
+    stroke: #ffffff;
+    stroke-width: 2.6;
+}
+
+.fab-label {
+    letter-spacing: 0.02em;
+}
+
+/* Responsive adjustment on mobile */
+@media (max-width: 640px) {
+    .fab-post-wrapper {
+        bottom: 22px;
+        right: 20px;
+    }
+
+    .fab-post-btn {
+        padding: 12px 20px;
+        font-size: 0.938rem;
+    }
+}
+
+/* Toast notification for feature readiness */
+.zonein-toast {
+    position: fixed;
+    bottom: 95px;
+    right: 32px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 157, 157, 0.4);
+    box-shadow: 0 12px 30px rgba(45, 55, 72, 0.12);
+    border-radius: 16px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+    font-size: 0.88rem;
+    font-weight: 600;
+    z-index: 1000;
+    transform: translateY(20px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+}
+
+.zonein-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+@media (max-width: 640px) {
+    .zonein-toast {
+        bottom: 80px;
+        right: 20px;
+        left: 20px;
+        justify-content: center;
+    }
+}

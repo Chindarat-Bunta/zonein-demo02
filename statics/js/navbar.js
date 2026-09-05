@@ -143,6 +143,22 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(`[Zone In]: กำลังเปิดหน้าต่าง ${actionName}`);
     };
 
+    // Handler for Floating Action Button (Post)
+    let toastTimeout = null;
+    window.handlePostClick = function (e) {
+        if (e) e.preventDefault();
+        console.log("[Zone In]: Floating Post button clicked — ready for post creation feature integration");
+
+        const toast = document.getElementById('zoneinToast');
+        if (toast) {
+            toast.classList.add('show');
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3200);
+        }
+    };
+
     window.addEventListener('resize', () => {
         const currentActive = document.querySelector('.nav-tab-btn.active');
         if (currentActive) {
