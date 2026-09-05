@@ -1,11 +1,258 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zone In</title>
+    <title>Zone In — Discover Your Next Horizon</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom Design System Stylesheet from statics/ -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    
+
+    <!-- SVG Definitions for Gradients -->
+    <svg width="0" height="0" style="position: absolute;">
+        <defs>
+            <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FF9D9D"/>
+                <stop offset="50%" stop-color="#FFC5AA"/>
+                <stop offset="100%" stop-color="#BBF1D2"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <!-- Subtle Ambient Grid Background -->
+    <div class="ambient-grid"></div>
+
+    <!-- ==========================================================================
+         TOP FLOATING MODERN NAVBAR
+         ========================================================================== -->
+    <header class="navbar-wrapper">
+        <nav class="navbar" id="mainNavbar">
+            
+            <!-- 1. LEFT: LOGO (ZONE IN) -->
+            <a href="/" class="brand-link" id="brandLogo">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="word-zone">Zone</span>
+                    <span class="word-in">In</span>
+                    <span class="brand-pulse-dot"></span>
+                </div>
+            </a>
+
+            <!-- 2. CENTER: NAVIGATION TABS WITH SLIDING GLIDER PILL -->
+            <div class="nav-center-tabs" id="navTabsContainer">
+                <!-- Smooth sliding background indicator -->
+                <div class="tab-glider-pill" id="tabGlider"></div>
+
+                <!-- Tab 1: หน้าแรก -->
+                <a href="/" class="nav-tab-btn active" data-tab="home" id="tabHome">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span>หน้าแรก</span>
+                </a>
+
+                <!-- Tab 2: เกี่ยวกับเรา -->
+                <a href="#about" class="nav-tab-btn" data-tab="about" id="tabAbout">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span>เกี่ยวกับเรา</span>
+                </a>
+
+                <!-- Tab 3: ค้นหา (เมนูปกติสำหรับเชื่อมโยงหน้าค้นหาภายหลัง) -->
+                <a href="#search" class="nav-tab-btn" data-tab="search" id="tabSearch">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>ค้นหา</span>
+                </a>
+            </div>
+
+            <!-- 3. RIGHT: SIGN IN / SIGN UP -->
+            <div class="nav-auth-group">
+                <button class="btn-signin" id="btnSignIn" onclick="triggerAuth('Sign In')">
+                    Sign In
+                </button>
+                <button class="btn-signup" id="btnSignUp" onclick="triggerAuth('Sign Up')">
+                    <span>Sign Up</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Hamburger Toggle -->
+            <button class="mobile-toggle-btn" id="mobileMenuBtn" aria-label="Toggle Navigation Menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </nav>
+    </header>
+
+    <!-- ==========================================================================
+         4. MOBILE RESPONSIVE DRAWER
+         ========================================================================== -->
+    <div class="mobile-drawer" id="mobileDrawer">
+        <div class="mobile-drawer-links">
+            <a href="/" class="mobile-tab-btn active" data-tab="home" onclick="handleMobileTab(event, 'home')">
+                <span style="display: flex; align-items: center; gap: 10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span>หน้าแรก</span>
+                </span>
+                <span>→</span>
+            </a>
+            <a href="#about" class="mobile-tab-btn" data-tab="about" onclick="handleMobileTab(event, 'about')">
+                <span style="display: flex; align-items: center; gap: 10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span>เกี่ยวกับเรา</span>
+                </span>
+                <span>→</span>
+            </a>
+            <a href="#search" class="mobile-tab-btn" data-tab="search" onclick="handleMobileTab(event, 'search')">
+                <span style="display: flex; align-items: center; gap: 10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>ค้นหา</span>
+                </span>
+                <span>→</span>
+            </a>
+        </div>
+        <div class="mobile-drawer-auth">
+            <button class="btn-signin" onclick="triggerAuth('Sign In')">Sign In / เข้าสู่ระบบ</button>
+            <button class="btn-signup" onclick="triggerAuth('Sign Up')">Sign Up / สมัครสมาชิก</button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         PAGE CONTENT & DYNAMIC TABS DEMO SHOWCASE
+         ========================================================================== -->
+    <main class="page-content-wrapper">
+        <!-- Palette preview badge -->
+        <div class="palette-preview-badge">
+            <div class="palette-dots-row">
+                <span class="palette-dot" style="background-color: #FF9D9D;" title="#FF9D9D"></span>
+                <span class="palette-dot" style="background-color: #FFC5AA;" title="#FFC5AA"></span>
+                <span class="palette-dot" style="background-color: #EEF8CD;" title="#EEF8CD"></span>
+                <span class="palette-dot" style="background-color: #BBF1D2;" title="#BBF1D2"></span>
+            </div>
+            <span>Warm Pastel Palette &amp; Glassmorphic Navigation</span>
+        </div>
+
+        <h1 class="hero-title">ยินดีต้อนรับสู่ Zone In</h1>
+        <p class="hero-subtitle">
+            แถบนำทางดีไซน์ล้ำสมัยพร้อมลูกเล่น Sliding Glider Tab ในโทนสีพาสเทลอบอุ่น (Coral, Peach, Cream &amp; Mint) สวยงามและสบายตา
+        </p>
+
+        <!-- Palette Preview Bar -->
+        <div class="palette-strip-card">
+            <div class="palette-color-chip" style="background: rgba(255, 157, 157, 0.22); border: 1px solid #FF9D9D;">
+                <span class="chip-dot" style="background: #FF9D9D;"></span>
+                <span>#FF9D9D Coral</span>
+            </div>
+            <div class="palette-color-chip" style="background: rgba(255, 197, 170, 0.25); border: 1px solid #FFC5AA;">
+                <span class="chip-dot" style="background: #FFC5AA;"></span>
+                <span>#FFC5AA Peach</span>
+            </div>
+            <div class="palette-color-chip" style="background: rgba(238, 248, 205, 0.45); border: 1px solid #d4dfa6;">
+                <span class="chip-dot" style="background: #EEF8CD;"></span>
+                <span>#EEF8CD Cream</span>
+            </div>
+            <div class="palette-color-chip" style="background: rgba(187, 241, 210, 0.35); border: 1px solid #BBF1D2;">
+                <span class="chip-dot" style="background: #BBF1D2;"></span>
+                <span>#BBF1D2 Mint</span>
+            </div>
+        </div>
+
+        <!-- Interactive Panels that switch based on selected tab -->
+        <div class="tab-panel-container">
+            
+            <!-- Panel 1: หน้าแรก -->
+            <div class="tab-panel active" id="panel-home">
+                <h3 style="font-size: 1.4rem; margin-bottom: 12px; color: var(--text-primary);">🌟 หน้าแรก (Home)</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                    ทดลองคลิกสลับระหว่างแท็บ <strong>"หน้าแรก"</strong>, <strong>"เกี่ยวกับเรา"</strong> หรือ <strong>"ค้นหา"</strong> ด้านบน เพื่อชมลูกเล่นแอนิเมชัน Sliding Pill ที่เคลื่อนไหวตามตำแหน่งจริง
+                </p>
+                <div class="interactive-feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-card-icon">⚡</div>
+                        <h4>Sliding Glider Pill</h4>
+                        <p>แถบไฮไลต์เลื่อนสไลด์ตามการเปลี่ยนแท็บอย่างนุ่มนวลด้วยฟิสิกส์สปริง</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-icon">🎨</div>
+                        <h4>Warm Pastel Palette</h4>
+                        <p>ดีไซน์โทนสีอบอุ่น นุ่มนวล สบายตา ด้วยโทน Coral, Peach, Cream และ Mint</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-icon">📁</div>
+                        <h4>Clean Statics Structure</h4>
+                        <p>แยกไฟล์สไตล์ชีตและสคริปต์ไว้ใน <code>statics/css</code> และ <code>statics/js</code> อย่างเป็นระเบียบ</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 2: เกี่ยวกับเรา -->
+            <div class="tab-panel" id="panel-about">
+                <h3 style="font-size: 1.4rem; margin-bottom: 12px; color: var(--text-primary);">🚀 เกี่ยวกับเรา (About Zone In)</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                    <strong>Zone In</strong> สร้างขึ้นเพื่อมอบประสบการณ์ดิจิทัลที่สวยงาม ทันสมัย และตอบโจทย์การใช้งานอย่างแท้จริง
+                </p>
+                <div style="background: rgba(255,255,255,0.7); border: 1px dashed rgba(255, 157, 157, 0.45); border-radius: 16px; padding: 24px; text-align: left;">
+                    <h5 style="color: #e05d5d; margin-bottom: 8px; font-size: 1rem;">จุดมุ่งหมายของเรา:</h5>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.7;">
+                        มุ่งเน้นการพัฒนาเว็บแอปพลิเคชันด้วยเทคโนโลยีมาตรฐานสูงสุด พร้อมระบบที่รองรับการ Deploy บน Serverless Platform อย่าง Vercel ได้อย่างรวดเร็วและปลอดภัย
+                    </p>
+                </div>
+            </div>
+
+            <!-- Panel 3: ค้นหา -->
+            <div class="tab-panel" id="panel-search">
+                <h3 style="font-size: 1.4rem; margin-bottom: 12px; color: var(--text-primary);">🔍 ค้นหา (Search)</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                    เมนูค้นหาถูกจัดเตรียมไว้สำหรับเชื่อมต่อกับหน้าค้นหา (Search Page) ที่คุณจะสร้างเพิ่มเติมในภายหลัง
+                </p>
+                <div style="background: rgba(255,255,255,0.7); border: 1px dashed rgba(187, 241, 210, 0.7); border-radius: 16px; padding: 28px; text-align: center;">
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                        💡 สามารถเปลี่ยนค่า <code>href="#search"</code> เป็น URL ปลายทาง เช่น <code>href="/search/"</code> ได้ทันทีเมื่อสร้างหน้านั้นเสร็จ
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- External JavaScript from statics/ -->
+    <script src="{% static 'js/navbar.js' %}"></script>
 </body>
 </html>
