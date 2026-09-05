@@ -100,6 +100,86 @@
         color: var(--text-dim);
     }
 
+    /* 3-Dots Post Options Menu */
+    .post-options-dropdown {
+        position: relative;
+    }
+
+    .btn-post-options {
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        padding: 0;
+        outline: none;
+    }
+
+    .btn-post-options:hover,
+    .btn-post-options.active {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .options-menu {
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        background: #192237;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.65), 0 8px 10px -6px rgba(0, 0, 0, 0.65);
+        min-width: 130px;
+        z-index: 50;
+        display: none;
+        flex-direction: column;
+        padding: 0.35rem;
+        backdrop-filter: blur(12px);
+        animation: fadeIn 0.15s ease;
+    }
+
+    .options-menu.show {
+        display: flex;
+    }
+
+    .option-item {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #cbd5e1;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+    }
+
+    .option-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+
+    .option-item.option-danger {
+        color: #f87171;
+    }
+
+    .option-item.option-danger:hover {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+    }
+
     /* Post Content & Media */
     .post-place-header {
         display: flex;
@@ -874,11 +954,37 @@ async function loadTravelPosts() {
             const timeAgo = formatRelativeTime(p.created_at);
             const authorInitial = (p.author_name || "T")[0].toUpperCase();
 
-            // Edit and Delete actions
-            const actionBtns = `
-                <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn-outline btn-sm btn-pill" onclick="openEditPostModal(${p.id})">แก้ไข</button>
-                    <button class="btn btn-danger btn-sm btn-pill" onclick="handleDeletePost(${p.id})">ลบโพสต์</button>
+            // 3-Dots Options Menu (Edit / Delete)
+            const actionMenu = `
+                <div class="post-options-dropdown" id="dropdown_${p.id}">
+                    <button type="button"
+                            class="btn-post-options"
+                            id="options_btn_${p.id}"
+                            onclick="togglePostDropdown(event, ${p.id})"
+                            title="ตัวเลือกเพิ่มเติม"
+                            aria-label="ตัวเลือกเพิ่มเติม">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="1.5"></circle>
+                            <circle cx="12" cy="5" r="1.5"></circle>
+                            <circle cx="12" cy="19" r="1.5"></circle>
+                        </svg>
+                    </button>
+                    <div class="options-menu" id="options_menu_${p.id}">
+                        <button type="button" class="option-item" onclick="handleMenuEdit(${p.id})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            <span>แก้ไข</span>
+                        </button>
+                        <button type="button" class="option-item option-danger" onclick="handleMenuDelete(${p.id})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            <span>ลบโพสต์</span>
+                        </button>
+                    </div>
                 </div>
             `;
 
@@ -905,7 +1011,7 @@ async function loadTravelPosts() {
                                 <div class="post-time">${dateStr} • ${timeAgo}</div>
                             </div>
                         </div>
-                        <div>${actionBtns}</div>
+                        <div>${actionMenu}</div>
                     </div>
 
                     <div class="post-place-header">
@@ -1040,6 +1146,45 @@ async function handleSaveTravelPost(event) {
         btn.innerText = editingId ? "บันทึกการแก้ไข" : "โพสต์รีวิวสถานที่";
     }
 }
+
+// 3-Dots Post Options Menu Handlers
+function togglePostDropdown(event, postId) {
+    event.stopPropagation();
+    const menu = document.getElementById(`options_menu_${postId}`);
+    const btn = document.getElementById(`options_btn_${postId}`);
+    if (!menu) return;
+
+    const isOpen = menu.classList.contains("show");
+
+    // Close all other open menus
+    document.querySelectorAll(".options-menu.show").forEach(m => m.classList.remove("show"));
+    document.querySelectorAll(".btn-post-options.active").forEach(b => b.classList.remove("active"));
+
+    if (!isOpen) {
+        menu.classList.add("show");
+        if (btn) btn.classList.add("active");
+    }
+}
+
+function handleMenuEdit(postId) {
+    document.querySelectorAll(".options-menu.show").forEach(m => m.classList.remove("show"));
+    document.querySelectorAll(".btn-post-options.active").forEach(b => b.classList.remove("active"));
+    openEditPostModal(postId);
+}
+
+function handleMenuDelete(postId) {
+    document.querySelectorAll(".options-menu.show").forEach(m => m.classList.remove("show"));
+    document.querySelectorAll(".btn-post-options.active").forEach(b => b.classList.remove("active"));
+    handleDeletePost(postId);
+}
+
+// Close options menu when clicking anywhere outside
+document.addEventListener("click", function(event) {
+    if (!event.target.closest(".post-options-dropdown")) {
+        document.querySelectorAll(".options-menu.show").forEach(m => m.classList.remove("show"));
+        document.querySelectorAll(".btn-post-options.active").forEach(b => b.classList.remove("active"));
+    }
+});
 
 // Open Edit Modal
 async function openEditPostModal(postId) {
