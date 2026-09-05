@@ -79,3 +79,75 @@ class SearchFilterTestCase(TestCase):
         self.assertEqual(data["count"], 1)
         self.assertEqual(data["places"][0]["slug"], "specialty-coffee-ari")
         self.assertEqual(data["places"][0]["category"]["slug"], "cafe")
+
+
+class WishlistTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.cat = Category.objects.create(name="คาเฟ่", slug="cafe", icon="fa-mug-hot")
+        self.loc = Location.objects.create(city="กรุงเทพมหานคร", zone="อารีย์", slug="bkk-ari")
+        self.place = Place.objects.create(
+            name="Nana Coffee Roasters",
+            slug="nana-coffee-roasters",
+            category=self.cat,
+            location=self.loc,
+            rating=4.8,
+            review_count=50,
+            address="อารีย์ ซอย 4",
+            description="คาเฟ่สวย กาแฟดี",
+        )
+
+    def test_wishlist_page_renders_empty_state(self):
+        response = self.client.get(reverse("web:wishlist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "รายการสถานที่โปรด (My Wishlist)")
+        self.assertContains(response, "ยังไม่มีสถานที่ในรายการโปรด")
+
+    def test_api_wishlist_toggle_add_and_remove(self):
+        # 1. Add to wishlist
+        response = self.client.post(
+            reverse("web:api_wishlist_toggle"),
+            data={"place_id": self.place.id},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(data["action"], "added")
+        self.assertTrue(data["is_wishlisted"])
+        self.assertEqual(data["total_count"], 1)
+
+        # Verify in wishlist page
+        wishlist_page_res = self.client.get(reverse("web:wishlist"))
+        self.assertEqual(wishlist_page_res.status_code, 200)
+        self.assertContains(wishlist_page_res, "Nana Coffee Roasters")
+
+        # 2. Remove from wishlist (toggle again)
+        response2 = self.client.post(
+            reverse("web:api_wishlist_toggle"),
+            data={"place_id": self.place.id},
+            content_type="application/json",
+        )
+        self.assertEqual(response2.status_code, 200)
+        data2 = response2.json()
+        self.assertEqual(data2["status"], "success")
+        self.assertEqual(data2["action"], "removed")
+        self.assertFalse(data2["is_wishlisted"])
+        self.assertEqual(data2["total_count"], 0)
+
+    def test_api_wishlist_list_endpoint(self):
+        # Toggle add
+        self.client.post(
+            reverse("web:api_wishlist_toggle"),
+            data={"place_id": self.place.id},
+            content_type="application/json",
+        )
+
+        response = self.client.get(reverse("web:api_wishlist_list"))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "success")
+        self.assertIn(self.place.id, data["place_ids"])
+        self.assertEqual(len(data["places"]), 1)
+        self.assertEqual(data["places"][0]["name"], "Nana Coffee Roasters")
+

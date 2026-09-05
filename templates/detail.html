@@ -63,8 +63,17 @@
                 {% endif %}
 
                 <div class="detail-actions">
+                    <button 
+                        type="button" 
+                        class="btn-wishlist-detail btn-wishlist-toggle {% if is_wishlisted or place.id in wishlist_ids %}active{% endif %}"
+                        data-place-id="{{ place.id }}"
+                        data-place-name="{{ place.name }}"
+                    >
+                        <i class="fa-solid fa-heart icon-heart"></i> 
+                        <span class="wishlist-btn-text">{% if is_wishlisted or place.id in wishlist_ids %}บันทึกแล้วในรายการโปรด{% else %}บันทึกเป็นสถานที่โปรด{% endif %}</span>
+                    </button>
                     <a href="https://maps.google.com/?q={{ place.name }}+{{ place.address }}" target="_blank" rel="noopener" class="btn-primary-map">
-                        <i class="fa-solid fa-map-location-dot"></i> เปิดดูบน Google Maps
+                        <i class="fa-solid fa-map-location-dot"></i> ดูแผนที่
                     </a>
                     <a href="{% url 'web:index' %}" class="btn-secondary-back">
                         <i class="fa-solid fa-arrow-left"></i> กลับไปค้นหา

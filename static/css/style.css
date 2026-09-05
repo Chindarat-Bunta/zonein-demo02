@@ -1050,36 +1050,281 @@ a {
     border-radius: 4px;
 }
 
-/* Utility */
-.hidden {
-    display: none !important;
+/* ============================================================
+   Wishlist & Bookmark Components
+   ============================================================ */
+
+/* Header Wishlist Button */
+.btn-wishlist-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    background: #fdf2f8;
+    color: #db2777;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: var(--transition);
+    border: 1px solid #fbcfe8;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-    .detail-header-grid {
-        grid-template-columns: 1fr;
+.btn-wishlist-header:hover {
+    background: #fce7f3;
+    color: #be185d;
+    transform: translateY(-1px);
+}
+
+.wishlist-badge {
+    background: #ec4899;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.1rem 0.45rem;
+    border-radius: var(--radius-full);
+    display: none;
+}
+
+.wishlist-badge.visible {
+    display: inline-block;
+}
+
+/* Place Card Wishlist Toggle Button */
+.btn-wishlist-toggle {
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    z-index: 5;
+}
+
+.place-card:hover .btn-wishlist-toggle {
+    transform: scale(1.05);
+}
+
+.btn-wishlist-toggle:hover {
+    color: #ec4899;
+    background: #ffffff;
+    transform: scale(1.15) !important;
+}
+
+.btn-wishlist-toggle.active {
+    background: linear-gradient(135deg, #ec4899, #db2777);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(236, 72, 153, 0.45);
+}
+
+.btn-wishlist-toggle.active:hover {
+    background: linear-gradient(135deg, #db2777, #be185d);
+}
+
+/* Pop Animation on Click */
+.pop-anim {
+    animation: heartPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes heartPop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.4); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+
+/* Detail Page Wishlist Button */
+.btn-wishlist-detail {
+    padding: 0.75rem 1.4rem;
+    background: #fdf2f8;
+    color: #db2777;
+    border: 1.5px solid #fbcfe8;
+    border-radius: var(--radius-md);
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+}
+
+.btn-wishlist-detail:hover {
+    background: #fce7f3;
+    border-color: #f472b6;
+    transform: translateY(-1px);
+}
+
+.btn-wishlist-detail.active {
+    background: linear-gradient(135deg, #ec4899, #db2777);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(236, 72, 153, 0.35);
+}
+
+/* Wishlist Page Header */
+.wishlist-container {
+    padding-top: 2.5rem;
+    padding-bottom: 4rem;
+}
+
+.wishlist-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.wishlist-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+.wishlist-icon-badge {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, #ec4899, #db2777);
+    color: #fff;
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(236, 72, 153, 0.35);
+}
+
+.wishlist-page-title {
+    font-family: var(--font-heading);
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--bg-dark);
+}
+
+.wishlist-page-desc {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.wishlist-stats-pill {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 1.2rem;
+    border-radius: var(--radius-full);
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+}
+
+.wishlist-stats-pill strong {
+    color: #db2777;
+    font-size: 1.15rem;
+}
+
+.heart-empty {
+    color: #f472b6 !important;
+    background: #fdf2f8 !important;
+}
+
+.explore-more-section {
+    margin-top: 4rem;
+    padding-top: 2.5rem;
+    border-top: 1px dashed var(--border-color);
+}
+
+.section-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.btn-view-all-link {
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.btn-view-all-link:hover {
+    color: var(--primary-hover);
+    transform: translateX(3px);
+}
+
+/* ============================================================
+   Toast Notifications
+   ============================================================ */
+.toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    pointer-events: none;
+}
+
+.toast-item {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.25rem;
+    border-radius: var(--radius-md);
+    background: var(--bg-dark);
+    color: #fff;
+    font-size: 0.92rem;
+    font-weight: 500;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--bg-dark-surface);
+    animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    max-width: 360px;
+}
+
+.toast-item.toast-success .toast-icon {
+    color: #ec4899;
+    font-size: 1.1rem;
+}
+
+.toast-item.toast-info .toast-icon {
+    color: var(--accent-teal);
+    font-size: 1.1rem;
+}
+
+.toast-fade-out {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
     }
-    .hero-title {
-        font-size: 2.1rem;
-    }
-    .nav-links {
-        display: none;
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 }
 
-@media (max-width: 640px) {
-    .search-input-group {
-        flex-direction: column;
-    }
-    .btn-primary-search {
-        padding: 0.85rem;
-        justify-content: center;
-    }
-    .filter-secondary-row {
-        grid-template-columns: 1fr;
-    }
-    .hero-title {
-        font-size: 1.75rem;
-    }
-}

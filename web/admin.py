@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Location, Place
+from .models import Category, Location, Place, Wishlist
 
 
 @admin.register(Category)
@@ -31,3 +31,11 @@ class PlaceAdmin(admin.ModelAdmin):
     list_filter = ("category", "location__city", "location", "price_level", "is_featured")
     search_fields = ("name", "description", "address", "tags")
     prepopulated_fields = {"slug": ("name",)}
+
+
+@admin.register(Wishlist)
+class WishlistAdmin(admin.ModelAdmin):
+    list_display = ("place", "user", "session_key", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("place__name", "user__username", "session_key")
+

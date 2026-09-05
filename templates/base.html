@@ -30,7 +30,7 @@
             </a>
             
             <nav class="nav-links">
-                <a href="{% url 'web:index' %}" class="nav-link active"><i class="fa-solid fa-compass"></i> สำรวจสถานที่</a>
+                <a href="{% url 'web:index' %}" class="nav-link"><i class="fa-solid fa-compass"></i> สำรวจสถานที่</a>
                 <a href="{% url 'web:index' %}?category=cafe" class="nav-link"><i class="fa-solid fa-mug-hot"></i> คาเฟ่</a>
                 <a href="{% url 'web:index' %}?category=restaurant" class="nav-link"><i class="fa-solid fa-utensils"></i> ร้านอาหาร</a>
                 <a href="{% url 'web:index' %}?category=hotel" class="nav-link"><i class="fa-solid fa-bed"></i> ที่พัก</a>
@@ -38,12 +38,20 @@
             </nav>
 
             <div class="header-actions">
+                <a href="{% url 'web:wishlist' %}" class="btn-wishlist-header" id="header-wishlist-link" title="ดูสถานที่โปรดที่บันทึกไว้">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="header-wishlist-text">รายการโปรด</span>
+                    <span class="wishlist-badge" id="wishlist-header-count">0</span>
+                </a>
                 <a href="{% url 'admin:index' %}" class="btn-admin-pill" target="_blank" rel="noopener">
                     <i class="fa-solid fa-gear"></i> ระบบจัดการ
                 </a>
             </div>
         </div>
     </header>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -61,12 +69,13 @@
                 <p>แพลตฟอร์มค้นหาและรีวิวสถานที่ยอดนิยม คาเฟ่ ร้านอาหาร ที่เที่ยว และที่พักในทุกย่านเด็ดทั่วไทย</p>
             </div>
             <div class="footer-bottom">
-                <p>© 2026 ZoneIn Review Platform. All rights reserved. • Branch: <code>feature/search-filter</code></p>
+                <p>© 2026 ZoneIn Review Platform. All rights reserved. • Branch: <code>feature/wishlist</code></p>
             </div>
         </div>
     </footer>
 
-    <!-- App Script -->
+    <!-- App Scripts -->
+    <script src="{% static 'js/wishlist.js' %}"></script>
     <script src="{% static 'js/search-filter.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>

@@ -1,7 +1,26 @@
+import json
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.db.models import Q
-from .models import Category, Location, Place
+from django.views.decorators.csrf import csrf_exempt
+from .models import Category, Location, Place, Wishlist
+
+
+def get_user_or_session_key(request):
+    if request.user.is_authenticated:
+        return request.user, None
+    if not request.session.session_key:
+        request.session.create()
+    return None, request.session.session_key
+
+
+def get_user_wishlist_place_ids(request):
+    user, session_key = get_user_or_session_key(request)
+    if user:
+        return set(Wishlist.objects.filter(user=user).values_list("place_id", flat=True))
+    elif session_key:
+        return set(Wishlist.objects.filter(session_key=session_key).values_list("place_id", flat=True))
+    return set()
 
 
 def filter_places_queryset(request):
@@ -65,6 +84,7 @@ def index_view(request):
     categories = Category.objects.all()
     locations = Location.objects.all()
     places, current_filters = filter_places_queryset(request)
+    wishlist_ids = get_user_wishlist_place_ids(request)
 
     context = {
         "categories": categories,
@@ -73,12 +93,14 @@ def index_view(request):
         "total_count": places.count(),
         "all_places_count": Place.objects.count(),
         "filters": current_filters,
+        "wishlist_ids": wishlist_ids,
     }
     return render(request, "index.html", context)
 
 
 def api_places_view(request):
     places, current_filters = filter_places_queryset(request)
+    wishlist_ids = get_user_wishlist_place_ids(request)
     data = []
     for p in places:
         data.append(
@@ -113,6 +135,7 @@ def api_places_view(request):
                 "price_display": p.price_display,
                 "tags": p.tag_list,
                 "is_featured": p.is_featured,
+                "is_wishlisted": p.id in wishlist_ids,
             }
         )
 
@@ -132,9 +155,136 @@ def place_detail_view(request, slug):
     related_places = Place.objects.filter(
         category=place.category
     ).exclude(id=place.id)[:3]
+    wishlist_ids = get_user_wishlist_place_ids(request)
 
     return render(
         request,
         "detail.html",
-        {"place": place, "related_places": related_places},
+        {
+            "place": place,
+            "related_places": related_places,
+            "is_wishlisted": place.id in wishlist_ids,
+            "wishlist_ids": wishlist_ids,
+        },
+    )
+
+
+def wishlist_page_view(request):
+    wishlist_ids = get_user_wishlist_place_ids(request)
+    places = Place.objects.filter(id__in=wishlist_ids).select_related("category", "location")
+    all_places = Place.objects.select_related("category", "location").all()
+
+    return render(
+        request,
+        "wishlist.html",
+        {
+            "places": places,
+            "all_places": all_places,
+            "total_wishlist_count": places.count(),
+            "wishlist_ids": wishlist_ids,
+        },
+    )
+
+
+@csrf_exempt
+def api_wishlist_toggle_view(request):
+    if request.method not in ["POST", "GET"]:
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    place_id = None
+    if request.method == "POST":
+        try:
+            body = json.loads(request.body.decode("utf-8")) if request.body else {}
+            place_id = body.get("place_id") or request.POST.get("place_id")
+        except json.JSONDecodeError:
+            place_id = request.POST.get("place_id")
+    else:
+        place_id = request.GET.get("place_id")
+
+    if not place_id:
+        return JsonResponse({"status": "error", "message": "Missing place_id"}, status=400)
+
+    try:
+        place = Place.objects.get(id=int(place_id))
+    except (Place.DoesNotExist, ValueError):
+        return JsonResponse({"status": "error", "message": "Place not found"}, status=404)
+
+    user, session_key = get_user_or_session_key(request)
+
+    # Check if already in wishlist
+    if user:
+        wishlist_item = Wishlist.objects.filter(user=user, place=place).first()
+        if wishlist_item:
+            wishlist_item.delete()
+            action = "removed"
+        else:
+            Wishlist.objects.create(user=user, place=place)
+            action = "added"
+        total_count = Wishlist.objects.filter(user=user).count()
+    else:
+        wishlist_item = Wishlist.objects.filter(session_key=session_key, place=place).first()
+        if wishlist_item:
+            wishlist_item.delete()
+            action = "removed"
+        else:
+            Wishlist.objects.create(session_key=session_key, place=place)
+            action = "added"
+        total_count = Wishlist.objects.filter(session_key=session_key).count()
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "action": action,
+            "place_id": place.id,
+            "place_name": place.name,
+            "total_count": total_count,
+            "is_wishlisted": (action == "added"),
+        }
+    )
+
+
+def api_wishlist_list_view(request):
+    wishlist_ids = get_user_wishlist_place_ids(request)
+    places = Place.objects.filter(id__in=wishlist_ids).select_related("category", "location")
+    data = []
+    for p in places:
+        data.append(
+            {
+                "id": p.id,
+                "name": p.name,
+                "slug": p.slug,
+                "description": p.description,
+                "address": p.address,
+                "image_url": p.image_url or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80",
+                "category": {
+                    "name": p.category.name if p.category else "ทั่วไป",
+                    "slug": p.category.slug if p.category else "",
+                    "icon": p.category.icon if p.category else "fa-tag",
+                    "color": p.category.color if p.category else "#3b82f6",
+                }
+                if p.category
+                else None,
+                "location": {
+                    "city": p.location.city if p.location else "",
+                    "zone": p.location.zone if p.location else "",
+                    "display": str(p.location) if p.location else "",
+                }
+                if p.location
+                else None,
+                "rating": float(p.rating),
+                "review_count": p.review_count,
+                "price_level": p.price_level,
+                "price_display": p.price_display,
+                "tags": p.tag_list,
+                "is_featured": p.is_featured,
+            }
+        )
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "count": len(data),
+            "place_ids": list(wishlist_ids),
+            "places": data,
+        }
     )

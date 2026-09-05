@@ -228,6 +228,9 @@ class PlaceFilterEngine {
 
         if (this.placesGrid) {
             this.placesGrid.innerHTML = places.map(place => this.buildPlaceCardHTML(place)).join('');
+            if (window.wishlistManager) {
+                window.wishlistManager.refreshUI();
+            }
         }
     }
 
@@ -243,6 +246,20 @@ class PlaceFilterEngine {
                 <i class="fa-solid fa-crown"></i> แนะนำ
             </span>
         ` : '';
+
+        const isWishlisted = (window.wishlistManager && window.wishlistManager.isWishlisted(place.id)) || place.is_wishlisted;
+        const wishlistBtn = `
+            <button 
+                type="button" 
+                class="btn-wishlist-toggle ${isWishlisted ? 'active' : ''}" 
+                data-place-id="${place.id}" 
+                data-place-name="${this.escapeHTML(place.name)}"
+                aria-label="บันทึกสถานที่โปรด"
+                title="${isWishlisted ? 'ลบออกจากรายการโปรด' : 'บันทึกสถานที่โปรด'}"
+            >
+                <i class="fa-solid fa-heart icon-heart"></i>
+            </button>
+        `;
 
         const locationTag = place.location ? `
             <span class="place-location-tag">
@@ -267,6 +284,7 @@ class PlaceFilterEngine {
                     >
                     ${categoryBadge}
                     ${featuredBadge}
+                    ${wishlistBtn}
                     <div class="place-rating-badge">
                         <i class="fa-solid fa-star star-icon"></i> ${place.rating.toFixed(1)}
                         <span class="review-count">(${place.review_count})</span>

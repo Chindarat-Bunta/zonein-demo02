@@ -97,3 +97,48 @@ class Place(models.Model):
         if not self.tags:
             return []
         return [t.strip() for t in self.tags.split(",") if t.strip()]
+
+
+class Wishlist(models.Model):
+    user = models.ForeignKey(
+        "auth.User",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="wishlists",
+        verbose_name="ผู้ใช้งาน",
+    )
+    session_key = models.CharField(
+        max_length=40,
+        blank=True,
+        null=True,
+        verbose_name="Session Key (สำหรับผู้ใช้ทั่วไป)",
+    )
+    place = models.ForeignKey(
+        Place,
+        on_delete=models.CASCADE,
+        related_name="wishlists",
+        verbose_name="สถานที่",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="วันที่บันทึก")
+
+    class Meta:
+        verbose_name = "สถานที่โปรด (Wishlist)"
+        verbose_name_plural = "รายการสถานที่โปรดทั้งหมด"
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "place"],
+                name="unique_user_place_wishlist",
+                condition=models.Q(user__isnull=False),
+            ),
+            models.UniqueConstraint(
+                fields=["session_key", "place"],
+                name="unique_session_place_wishlist",
+                condition=models.Q(session_key__isnull=False),
+            ),
+        ]
+
+    def __str__(self):
+        user_display = self.user.username if self.user else f"Guest ({self.session_key})"
+        return f"{user_display} -> {self.place.name}"

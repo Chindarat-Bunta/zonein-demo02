@@ -19,6 +19,17 @@
         </span>
         {% endif %}
 
+        <button 
+            type="button" 
+            class="btn-wishlist-toggle {% if is_wishlisted or place.id in wishlist_ids %}active{% endif %}" 
+            data-place-id="{{ place.id }}" 
+            data-place-name="{{ place.name }}"
+            aria-label="บันทึกสถานที่โปรด"
+            title="บันทึกสถานที่โปรด"
+        >
+            <i class="fa-solid fa-heart icon-heart"></i>
+        </button>
+
         <div class="place-rating-badge">
             <i class="fa-solid fa-star star-icon"></i> {{ place.rating|floatformat:1 }}
             <span class="review-count">({{ place.review_count }})</span>
