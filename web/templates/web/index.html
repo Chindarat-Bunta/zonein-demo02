@@ -1098,13 +1098,7 @@ async function loadTravelPosts() {
             let followBadgeOrBtn = "";
             if (isOtherUser) {
                 followBadgeOrBtn = `
-                    <button type="button" 
-                            class="btn-follow-user ${p.is_following ? 'following' : ''}" 
-                            id="follow_btn_user_${p.author_id}_post_${p.id}"
-                            data-user-id="${p.author_id}"
-                            data-following="${p.is_following ? 'true' : 'false'}"
-                            onclick="handleToggleFollowUser(event, ${p.author_id})"
-                            title="${p.is_following ? 'คลิกเพื่อยกเลิกติดตาม' : 'คลิกเพื่อติดตาม'}">
+                    <button type="button" class="btn-follow-user ${p.is_following ? 'following' : ''}" id="follow_btn_user_${p.author_id}_post_${p.id}" data-user-id="${p.author_id}" data-following="${p.is_following ? 'true' : 'false'}" onclick="handleToggleFollowUser(event, ${p.author_id})" title="${p.is_following ? 'คลิกเพื่อยกเลิกติดตาม' : 'คลิกเพื่อติดตาม'}">
                         ${p.is_following ? 'ยกเลิกติดตาม' : 'ติดตาม'}
                     </button>
                 `;
