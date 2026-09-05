@@ -254,6 +254,24 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Floating Action Button (ปุ่มโพสต์ลอยตัวฝั่งล่างขวา) -->
+    <aside class="fab-post-wrapper" aria-label="สร้างโพสต์">
+        <a href="#create-post" class="fab-post-btn" id="fabPostBtn" onclick="handlePostClick(event)" title="สร้างโพสต์">
+            <div class="fab-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 5v14M5 12h14"></path>
+                </svg>
+            </div>
+            <span class="fab-label">โพสต์</span>
+        </a>
+    </aside>
+
+    <!-- Notification Toast for Feature Connection Ready -->
+    <div id="zoneinToast" class="zonein-toast" role="status" aria-live="polite">
+        <span style="font-size: 1.1rem;">✨</span>
+        <span>ปุ่มโพสต์พร้อมเชื่อมต่อกับฟีเจอร์สร้างโพสต์</span>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
