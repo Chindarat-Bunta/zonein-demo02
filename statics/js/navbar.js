@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabsContainer = document.getElementById('navTabsContainer');
     const tabGlider = document.getElementById('tabGlider');
     const tabButtons = document.querySelectorAll('.nav-tab-btn');
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const mobileDrawer = document.getElementById('mobileDrawer');
+    const mobileProfileBtn = document.getElementById('mobileProfileBtn');
+    const mobileProfileDropdown = document.getElementById('mobileProfileDropdown');
 
     // Function: Position the sliding pill glider behind the target tab
     function moveGliderTo(button, animate = true) {
@@ -78,8 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Update mobile drawer links
-        document.querySelectorAll('.mobile-tab-btn').forEach(mb => {
+        // Update mobile nav icon buttons
+        document.querySelectorAll('.mobile-nav-icon-btn').forEach(mb => {
             if (mb.getAttribute('data-tab') === tabId) {
                 mb.classList.add('active');
             } else {
@@ -97,54 +97,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Mobile drawer toggle & backdrop controls
-    const mobileDrawerBackdrop = document.getElementById('mobileDrawerBackdrop');
-    const drawerCloseBtn = document.getElementById('drawerCloseBtn');
-
-    function openMobileDrawer() {
-        if (!mobileDrawer) return;
-        mobileDrawer.classList.add('active');
-        if (mobileDrawerBackdrop) mobileDrawerBackdrop.classList.add('active');
-        document.body.style.overflow = 'hidden';
+    // Mobile Profile Dropdown controls
+    function openProfileDropdown() {
+        if (!mobileProfileDropdown) return;
+        mobileProfileDropdown.classList.add('open');
+        if (mobileProfileBtn) {
+            mobileProfileBtn.classList.add('active');
+            mobileProfileBtn.setAttribute('aria-expanded', 'true');
+        }
     }
 
-    function closeMobileDrawer() {
-        if (!mobileDrawer) return;
-        mobileDrawer.classList.remove('active');
-        if (mobileDrawerBackdrop) mobileDrawerBackdrop.classList.remove('active');
-        document.body.style.overflow = '';
+    function closeProfileDropdown() {
+        if (!mobileProfileDropdown) return;
+        mobileProfileDropdown.classList.remove('open');
+        if (mobileProfileBtn) {
+            mobileProfileBtn.classList.remove('active');
+            mobileProfileBtn.setAttribute('aria-expanded', 'false');
+        }
     }
 
-    if (mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', (e) => {
+    function toggleProfileDropdown(e) {
+        if (e) {
             e.stopPropagation();
-            if (mobileDrawer && mobileDrawer.classList.contains('active')) {
-                closeMobileDrawer();
-            } else {
-                openMobileDrawer();
+            e.preventDefault();
+        }
+        if (!mobileProfileDropdown) return;
+        if (mobileProfileDropdown.classList.contains('open')) {
+            closeProfileDropdown();
+        } else {
+            openProfileDropdown();
+        }
+    }
+
+    if (mobileProfileBtn) {
+        mobileProfileBtn.addEventListener('click', toggleProfileDropdown);
+    }
+
+    // Close dropdown on click outside
+    document.addEventListener('click', (e) => {
+        if (mobileProfileDropdown && mobileProfileDropdown.classList.contains('open')) {
+            if (!mobileProfileDropdown.contains(e.target) && !mobileProfileBtn.contains(e.target)) {
+                closeProfileDropdown();
             }
-        });
-    }
-
-    if (drawerCloseBtn) {
-        drawerCloseBtn.addEventListener('click', closeMobileDrawer);
-    }
-
-    if (mobileDrawerBackdrop) {
-        mobileDrawerBackdrop.addEventListener('click', closeMobileDrawer);
-    }
-
-    // Close drawer on Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && mobileDrawer && mobileDrawer.classList.contains('active')) {
-            closeMobileDrawer();
         }
     });
 
-    window.handleMobileTab = function (e, tabId) {
-        e.preventDefault();
-        closeMobileDrawer();
-        window.switchTab(tabId);
+    // Close dropdown on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && mobileProfileDropdown && mobileProfileDropdown.classList.contains('open')) {
+            closeProfileDropdown();
+        }
+    });
+
+    window.handleMobileAuth = function (actionName) {
+        closeProfileDropdown();
+        window.triggerAuth(actionName);
     };
 
     window.triggerAuth = function (actionName) {
