@@ -1,8 +1,9 @@
+import json
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from .models import Place, Review
+from .models import Comment, Place, Review
 
 
 class PlaceModelTests(TestCase):
@@ -79,3 +80,39 @@ class HomePageAPITests(TestCase):
         data = response.json()
         self.assertEqual(data["name"], "ดอยอินทนนท์")
         self.assertEqual(data["average_rating"], 5.0)
+
+    def test_api_add_comment(self):
+        """Adding a comment to a review should succeed."""
+        review = Review.objects.first()
+        response = self.client.post(
+            reverse("web:api_add_comment", args=[review.id]),
+            data=json.dumps({"content": "สวยมากครับ!", "username": "somchai"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertTrue(data["success"])
+        self.assertEqual(data["comment"]["content"], "สวยมากครับ!")
+
+    def test_api_edit_review(self):
+        """Editing review content and rating should succeed."""
+        review = Review.objects.first()
+        response = self.client.post(
+            reverse("web:api_edit_review", args=[review.id]),
+            data=json.dumps({"content": "แก้ไขข้อความรีวิวใหม่", "rating": 4}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data["success"])
+        review.refresh_from_db()
+        self.assertEqual(review.content, "แก้ไขข้อความรีวิวใหม่")
+        self.assertEqual(review.rating, 4)
+
+    def test_api_delete_review(self):
+        """Deleting a review should remove it from the database."""
+        review = Review.objects.first()
+        review_id = review.id
+        response = self.client.post(reverse("web:api_delete_review", args=[review_id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Review.objects.filter(id=review_id).exists())

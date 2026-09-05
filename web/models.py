@@ -60,5 +60,24 @@ class Review(models.Model):
         return f"[{self.rating}★] {self.author.username} on {self.place.name}"
 
 
+class Comment(models.Model):
+    """
+    Comment left by viewers on a travel review.
+    ความคิดเห็นของคนที่เข้ามาดูรีวิว
+    """
+    review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name="comments")
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    content = models.TextField(help_text="ข้อความความคิดเห็น")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "comments"
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"{self.author.username} on review #{self.review_id}: {self.content[:30]}"
+
+
 # Alias for backward compatibility
 TravelPost = Review

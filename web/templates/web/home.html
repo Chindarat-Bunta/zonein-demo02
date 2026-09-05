@@ -1,7 +1,9 @@
 {% extends "web/base.html" %}
+
 {% block title %}ZoneIn - หน้าแรก ฟีดรีวิวล่าสุด{% endblock %}
+
 {% block extra_head %}
-    <style>
+<style>
     /* Hero Banner */
     .hero-banner {
         margin-bottom: 2.25rem;
@@ -54,10 +56,6 @@
         display: flex;
         align-items: center;
         gap: 0.6rem;
-    }
-
-    .section-icon {
-        font-size: 1.35rem;
     }
 
     .section-subtitle {
@@ -125,6 +123,18 @@
     .review-time {
         font-size: 0.8rem;
         color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+    }
+
+    /* Review Header Right Area & 3-Dots Menu */
+    .review-header-right {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        position: relative;
     }
 
     .rating-badge {
@@ -138,6 +148,86 @@
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
+    }
+
+    .dropdown-wrap {
+        position: relative;
+    }
+
+    .btn-dots {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+    }
+
+    .btn-dots:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border-color: var(--border-color-hover);
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        background: #141b2d;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: var(--radius-md);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        min-width: 140px;
+        display: none;
+        flex-direction: column;
+        padding: 0.35rem;
+        z-index: 50;
+        backdrop-filter: blur(12px);
+    }
+
+    .dropdown-menu.show {
+        display: flex;
+        animation: fadeInDown 0.15s ease-out;
+    }
+
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 0.85rem;
+        color: var(--text-main);
+        font-size: 0.88rem;
+        border: none;
+        background: transparent;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        text-align: left;
+        width: 100%;
+        transition: var(--transition-smooth);
+    }
+
+    .dropdown-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+
+    .dropdown-item-danger {
+        color: #f87171;
+    }
+
+    .dropdown-item-danger:hover {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
     }
 
     .review-place-tag {
@@ -168,6 +258,7 @@
         line-height: 1.65;
         margin-bottom: 1.15rem;
         word-break: break-word;
+        white-space: pre-line;
     }
 
     .review-image-wrap {
@@ -193,6 +284,7 @@
         gap: 0.75rem;
         padding-top: 0.85rem;
         border-top: 1px solid var(--border-color);
+        flex-wrap: wrap;
     }
 
     .action-btn {
@@ -224,6 +316,279 @@
     .action-btn.liked svg {
         fill: #ec4899;
         stroke: #ec4899;
+    }
+
+    /* Comments Section */
+    .comments-section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px dashed var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+
+    .comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .comment-item {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 0.75rem 0.85rem;
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .comment-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .comment-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.2rem;
+        flex-wrap: wrap;
+    }
+
+    .comment-author {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .comment-time {
+        font-size: 0.76rem;
+        color: var(--text-dim);
+    }
+
+    .comment-text {
+        font-size: 0.88rem;
+        color: var(--text-main);
+        line-height: 1.45;
+        word-break: break-word;
+    }
+
+    .comment-form {
+        display: flex;
+        gap: 0.65rem;
+        margin-top: 0.35rem;
+        align-items: center;
+    }
+
+    .comment-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-full);
+        padding: 0.55rem 1rem;
+        color: #fff;
+        font-size: 0.88rem;
+        outline: none;
+        transition: var(--transition-smooth);
+        font-family: inherit;
+    }
+
+    .comment-input:focus {
+        border-color: var(--primary);
+        background: rgba(255, 255, 255, 0.07);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .comment-submit-btn {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-full);
+        padding: 0.55rem 1.15rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        white-space: nowrap;
+    }
+
+    .comment-submit-btn:hover {
+        background: #4f46e5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(6px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+
+    .modal-overlay.show {
+        display: flex;
+        animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color-hover);
+        border-radius: var(--radius-lg);
+        width: 100%;
+        max-width: 520px;
+        padding: 1.75rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+        position: relative;
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .modal-field {
+        margin-bottom: 1.2rem;
+    }
+
+    .modal-label {
+        display: block;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-textarea {
+        width: 100%;
+        min-height: 110px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 0.75rem;
+        color: #fff;
+        font-family: inherit;
+        font-size: 0.92rem;
+        resize: vertical;
+        outline: none;
+        transition: var(--transition-smooth);
+    }
+
+    .modal-textarea:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .rating-select-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .star-select-btn {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        padding: 0.4rem 0.8rem;
+        border-radius: var(--radius-full);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+    }
+
+    .star-select-btn.active {
+        background: rgba(251, 191, 36, 0.15);
+        border-color: rgba(251, 191, 36, 0.4);
+        color: var(--star-gold);
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn-modal-cancel {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 0.6rem 1.25rem;
+        border-radius: var(--radius-full);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+    }
+
+    .btn-modal-cancel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .btn-modal-save {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        padding: 0.6rem 1.4rem;
+        border-radius: var(--radius-full);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+    }
+
+    .btn-modal-save:hover {
+        background: #4f46e5;
+        box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .btn-modal-delete {
+        background: #ef4444;
+        color: #fff;
+        border: none;
+        padding: 0.6rem 1.4rem;
+        border-radius: var(--radius-full);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+    }
+
+    .btn-modal-delete:hover {
+        background: #dc2626;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
     }
 
     /* Skeleton Loading Placeholder */
@@ -269,8 +634,9 @@
         text-align: center;
         color: var(--text-muted);
     }
-    </style>
+</style>
 {% endblock %}
+
 {% block content %}
     <!-- Hero Banner -->
     <div class="hero-banner">
@@ -279,6 +645,7 @@
             <p>แหล่งรวมจุดเช็คอิน คาเฟ่ ธรรมชาติ และทริปการเดินทางจากเพื่อนนักเดินทางทั่วประเทศไทย</p>
         </div>
     </div>
+
     <!-- Recent Reviews Feed -->
     <section>
         <div class="section-header">
@@ -289,28 +656,81 @@
                 <p class="section-subtitle">แชร์ประสบการณ์ ความประทับใจ และรูปถ่ายจากนักเดินทาง</p>
             </div>
         </div>
+
         <div class="feed-container" id="recentReviewsFeed">
             <!-- Skeleton Slices -->
             <div class="skeleton" style="height: 200px;"></div>
             <div class="skeleton" style="height: 200px;"></div>
             <div class="skeleton" style="height: 200px;"></div>
         </div>
+
         <button type="button"
                 id="btnLoadMoreReviews"
                 class="btn-load-more"
                 onclick="loadMoreReviews()"
                 style="display: none">โหลดรีวิวเพิ่มเติม</button>
     </section>
+
+    <!-- Modal: Edit Review -->
+    <div class="modal-overlay" id="editReviewModal">
+        <div class="modal-box">
+            <h3 class="modal-title">แก้ไขรีวิว</h3>
+            <input type="hidden" id="editReviewId">
+            <div class="modal-field">
+                <label class="modal-label">คะแนนความประทับใจ</label>
+                <div class="rating-select-group" id="editRatingGroup">
+                    <button type="button" class="star-select-btn" onclick="selectEditRating(1)">★ 1</button>
+                    <button type="button" class="star-select-btn" onclick="selectEditRating(2)">★ 2</button>
+                    <button type="button" class="star-select-btn" onclick="selectEditRating(3)">★ 3</button>
+                    <button type="button" class="star-select-btn" onclick="selectEditRating(4)">★ 4</button>
+                    <button type="button" class="star-select-btn active" onclick="selectEditRating(5)">★ 5</button>
+                </div>
+                <input type="hidden" id="editRatingValue" value="5">
+            </div>
+            <div class="modal-field">
+                <label class="modal-label">ข้อความรีวิว</label>
+                <textarea id="editContentTextarea" class="modal-textarea" placeholder="พิมพ์ข้อความรีวิว..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closeEditModal()">ยกเลิก</button>
+                <button type="button" class="btn-modal-save" onclick="saveEditReview()">บันทึกการแก้ไข</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Delete Confirm -->
+    <div class="modal-overlay" id="deleteReviewModal">
+        <div class="modal-box">
+            <h3 class="modal-title">ยืนยันการลบรีวิว</h3>
+            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;">
+                คุณแน่ใจหรือไม่ว่าต้องการลบรีวิวนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้
+            </p>
+            <input type="hidden" id="deleteReviewId">
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closeDeleteModal()">ยกเลิก</button>
+                <button type="button" class="btn-modal-delete" onclick="executeDeleteReview()">ลบรีวิว</button>
+            </div>
+        </div>
+    </div>
 {% endblock %}
+
 {% block extra_scripts %}
-    <script>
+<script>
 let currentReviewPage = 1;
 let hasNextReviewPage = false;
 let isLoadingReviews = false;
 const likedReviewsMap = new Map();
+const reviewsDataMap = new Map();
 
 document.addEventListener("DOMContentLoaded", () => {
     loadRecentReviews(1);
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest(".dropdown-wrap")) {
+            document.querySelectorAll(".dropdown-menu.show").forEach(el => el.classList.remove("show"));
+        }
+    });
 });
 
 function showToast(message) {
@@ -338,6 +758,19 @@ function formatRelativeTime(dateString) {
     const diffMonths = Math.floor(diffDays / 30);
     if (diffMonths < 12) return `เมื่อ ${diffMonths} เดือนที่แล้ว`;
     return `เมื่อ ${Math.floor(diffDays / 365)} ปีที่แล้ว`;
+}
+
+function formatDateTimeWithRelative(dateString) {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    const day = d.getDate();
+    const month = months[d.getMonth()];
+    const year = d.getFullYear() + 543;
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const relative = formatRelativeTime(dateString);
+    return `${day} ${month} ${year}, ${hours}:${minutes} น. • ${relative}`;
 }
 
 // Fetch & Render Recent Reviews Feed
@@ -368,6 +801,10 @@ async function loadRecentReviews(page = 1, append = false) {
         hasNextReviewPage = data.has_next;
         currentReviewPage = data.page;
 
+        reviews.forEach(r => {
+            reviewsDataMap.set(r.id, r);
+        });
+
         if (!append && reviews.length === 0) {
             container.innerHTML = `
                 <div class="state-box">
@@ -379,70 +816,7 @@ async function loadRecentReviews(page = 1, append = false) {
             return;
         }
 
-        const cardsHtml = reviews.map(r => {
-            const authorInitial = (r.author?.username || "T")[0].toUpperCase();
-            const stars = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
-            const timeAgo = formatRelativeTime(r.created_at);
-            const isLiked = likedReviewsMap.get(r.id) || false;
-            const fakeLikes = 12 + (r.id * 5) + (isLiked ? 1 : 0);
-
-            let imgHtml = "";
-            if (r.image_url) {
-                imgHtml = `
-                    <div class="review-image-wrap">
-                        <img src="${r.image_url}" alt="${r.place?.name || 'รูปรีวิว'}" class="review-image" loading="lazy">
-                    </div>
-                `;
-            }
-
-            return `
-                <article class="review-card" id="review_${r.id}">
-                    <div class="review-header">
-                        <div class="review-author">
-                            <div class="author-avatar">${authorInitial}</div>
-                            <div>
-                                <div class="author-name">${r.author?.username || 'นักเดินทาง'}</div>
-                                <div class="review-time">${timeAgo}</div>
-                            </div>
-                        </div>
-                        <span class="rating-badge">${stars} ${r.rating}.0</span>
-                    </div>
-
-                    ${r.place ? `
-                        <a href="javascript:void(0)" class="review-place-tag" onclick="showToast('สถานที่: ${r.place.name}')">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
-                            <span>${r.place.name} (${r.place.location || 'ที่ตั้ง'})</span>
-                        </a>
-                    ` : ''}
-
-                    <p class="review-content">${r.content || ''}</p>
-
-                    ${imgHtml}
-
-                    <div class="review-actions">
-                        <button type="button" class="action-btn ${isLiked ? 'liked' : ''}" id="like_btn_${r.id}" onclick="toggleLikeReview(${r.id})">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="${isLiked ? '#ec4899' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-                            <span id="like_count_${r.id}">${fakeLikes}</span>
-                        </button>
-                        <button type="button" class="action-btn" onclick="shareReview(${r.id})">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="18" cy="5" r="3"></circle>
-                                <circle cx="6" cy="12" r="3"></circle>
-                                <circle cx="18" cy="19" r="3"></circle>
-                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                            </svg>
-                            <span>แชร์</span>
-                        </button>
-                    </div>
-                </article>
-            `;
-        }).join("");
+        const cardsHtml = reviews.map(r => renderReviewCardHtml(r)).join("");
 
         if (append) {
             container.insertAdjacentHTML("beforeend", cardsHtml);
@@ -471,9 +845,317 @@ async function loadRecentReviews(page = 1, append = false) {
     }
 }
 
+function renderReviewCardHtml(r) {
+    const authorInitial = (r.author?.username || "T")[0].toUpperCase();
+    const stars = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
+    const dateFormatted = formatDateTimeWithRelative(r.created_at);
+    const isLiked = likedReviewsMap.get(r.id) || false;
+    const fakeLikes = 12 + (r.id * 5) + (isLiked ? 1 : 0);
+    const comments = r.comments || [];
+    const commentsCount = comments.length;
+
+    let imgHtml = "";
+    if (r.image_url) {
+        imgHtml = `
+            <div class="review-image-wrap">
+                <img src="${r.image_url}" alt="${r.place?.name || 'รูปรีวิว'}" class="review-image" loading="lazy">
+            </div>
+        `;
+    }
+
+    const commentsListHtml = comments.map(c => `
+        <div class="comment-item" id="comment_${c.id}">
+            <div class="comment-avatar">${(c.author?.username || 'U')[0].toUpperCase()}</div>
+            <div class="comment-body">
+                <div class="comment-meta">
+                    <span class="comment-author">${c.author?.username || 'นักเดินทาง'}</span>
+                    <span class="comment-time">${formatDateTimeWithRelative(c.created_at)}</span>
+                </div>
+                <div class="comment-text">${c.content}</div>
+            </div>
+        </div>
+    `).join("");
+
+    return `
+        <article class="review-card" id="review_${r.id}">
+            <div class="review-header">
+                <div class="review-author">
+                    <div class="author-avatar">${authorInitial}</div>
+                    <div>
+                        <div class="author-name">${r.author?.username || 'นักเดินทาง'}</div>
+                        <div class="review-time">${dateFormatted}</div>
+                    </div>
+                </div>
+                <div class="review-header-right">
+                    <span class="rating-badge" id="rating_badge_${r.id}">${stars} ${r.rating}.0</span>
+                    <div class="dropdown-wrap">
+                        <button type="button" class="btn-dots" onclick="toggleDropdown(event, ${r.id})" title="ตัวเลือก">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="5" r="2"></circle>
+                                <circle cx="12" cy="12" r="2"></circle>
+                                <circle cx="12" cy="19" r="2"></circle>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu" id="dropdown_${r.id}">
+                            <button type="button" class="dropdown-item" onclick="openEditModal(${r.id})">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                                <span>แก้ไข</span>
+                            </button>
+                            <button type="button" class="dropdown-item dropdown-item-danger" onclick="openDeleteModal(${r.id})">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                                <span>ลบ</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            ${r.place ? `
+                <a href="javascript:void(0)" class="review-place-tag" onclick="showToast('สถานที่: ${r.place.name}')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <span>${r.place.name} (${r.place.location || 'ที่ตั้ง'})</span>
+                </a>
+            ` : ''}
+
+            <p class="review-content" id="review_content_${r.id}">${r.content || ''}</p>
+
+            ${imgHtml}
+
+            <div class="review-actions">
+                <button type="button" class="action-btn ${isLiked ? 'liked' : ''}" id="like_btn_${r.id}" onclick="toggleLikeReview(${r.id})">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="${isLiked ? '#ec4899' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <span id="like_count_${r.id}">${fakeLikes}</span>
+                </button>
+
+                <button type="button" class="action-btn" onclick="toggleCommentsSection(${r.id})">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>ความคิดเห็น (<span id="comment_count_${r.id}">${commentsCount}</span>)</span>
+                </button>
+
+                <button type="button" class="action-btn" onclick="shareReview(${r.id})">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                    <span>แชร์</span>
+                </button>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="comments-section" id="comments_section_${r.id}">
+                <div class="comments-list" id="comments_list_${r.id}">
+                    ${commentsListHtml}
+                </div>
+                <form class="comment-form" onsubmit="submitComment(event, ${r.id})">
+                    <div class="comment-avatar">U</div>
+                    <input type="text" class="comment-input" id="comment_input_${r.id}" placeholder="เขียนความคิดเห็นของคุณ..." required>
+                    <button type="submit" class="comment-submit-btn">ส่ง</button>
+                </form>
+            </div>
+        </article>
+    `;
+}
+
 function loadMoreReviews() {
     if (hasNextReviewPage && !isLoadingReviews) {
         loadRecentReviews(currentReviewPage + 1, true);
+    }
+}
+
+function toggleDropdown(event, reviewId) {
+    event.stopPropagation();
+    const dropdown = document.getElementById(`dropdown_${reviewId}`);
+    const isShown = dropdown.classList.contains("show");
+    document.querySelectorAll(".dropdown-menu.show").forEach(el => el.classList.remove("show"));
+    if (!isShown) {
+        dropdown.classList.add("show");
+    }
+}
+
+function toggleCommentsSection(reviewId) {
+    const sec = document.getElementById(`comments_section_${reviewId}`);
+    if (!sec) return;
+    const input = document.getElementById(`comment_input_${reviewId}`);
+    if (sec.style.display === "none") {
+        sec.style.display = "flex";
+        if (input) input.focus();
+    } else {
+        if (input) input.focus();
+    }
+}
+
+async function submitComment(event, reviewId) {
+    event.preventDefault();
+    const input = document.getElementById(`comment_input_${reviewId}`);
+    const list = document.getElementById(`comments_list_${reviewId}`);
+    const countEl = document.getElementById(`comment_count_${reviewId}`);
+    if (!input || !input.value.trim()) return;
+
+    const content = input.value.trim();
+    input.value = "";
+
+    try {
+        const res = await fetch(`/api/reviews/${reviewId}/comments/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: content, username: "traveler" }),
+        });
+
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const c = data.comment;
+
+        const newCommentHtml = `
+            <div class="comment-item" id="comment_${c.id}">
+                <div class="comment-avatar">${(c.author?.username || 'U')[0].toUpperCase()}</div>
+                <div class="comment-body">
+                    <div class="comment-meta">
+                        <span class="comment-author">${c.author?.username || 'นักเดินทาง'}</span>
+                        <span class="comment-time">${formatDateTimeWithRelative(c.created_at)}</span>
+                    </div>
+                    <div class="comment-text">${c.content}</div>
+                </div>
+            </div>
+        `;
+
+        list.insertAdjacentHTML("beforeend", newCommentHtml);
+        if (countEl) {
+            countEl.innerText = parseInt(countEl.innerText || 0) + 1;
+        }
+
+        const cached = reviewsDataMap.get(reviewId);
+        if (cached) {
+            if (!cached.comments) cached.comments = [];
+            cached.comments.push(c);
+        }
+
+        showToast("เพิ่มความคิดเห็นเรียบร้อยแล้ว");
+    } catch (err) {
+        console.error(err);
+        showToast("เกิดข้อผิดพลาดในการส่งความคิดเห็น");
+    }
+}
+
+function openEditModal(reviewId) {
+    document.querySelectorAll(".dropdown-menu.show").forEach(el => el.classList.remove("show"));
+    const review = reviewsDataMap.get(reviewId);
+    if (!review) return;
+
+    document.getElementById("editReviewId").value = reviewId;
+    document.getElementById("editContentTextarea").value = review.content || "";
+    selectEditRating(review.rating || 5);
+
+    document.getElementById("editReviewModal").classList.add("show");
+}
+
+function closeEditModal() {
+    document.getElementById("editReviewModal").classList.remove("show");
+}
+
+function selectEditRating(rating) {
+    document.getElementById("editRatingValue").value = rating;
+    const buttons = document.querySelectorAll("#editRatingGroup .star-select-btn");
+    buttons.forEach((btn, index) => {
+        if (index + 1 === rating) {
+            btn.classList.add("active");
+        } else {
+            btn.classList.remove("active");
+        }
+    });
+}
+
+async function saveEditReview() {
+    const reviewId = parseInt(document.getElementById("editReviewId").value);
+    const content = document.getElementById("editContentTextarea").value.trim();
+    const rating = parseInt(document.getElementById("editRatingValue").value) || 5;
+
+    try {
+        const res = await fetch(`/api/reviews/${reviewId}/edit/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: content, rating: rating }),
+        });
+
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        
+        // Update DOM
+        const contentEl = document.getElementById(`review_content_${reviewId}`);
+        const ratingBadgeEl = document.getElementById(`rating_badge_${reviewId}`);
+        if (contentEl) contentEl.innerText = content;
+        if (ratingBadgeEl) {
+            const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+            ratingBadgeEl.innerText = `${stars} ${rating}.0`;
+        }
+
+        // Update cached data
+        const cached = reviewsDataMap.get(reviewId);
+        if (cached) {
+            cached.content = content;
+            cached.rating = rating;
+        }
+
+        closeEditModal();
+        showToast("แก้ไขรีวิวเรียบร้อยแล้ว");
+    } catch (err) {
+        console.error(err);
+        showToast("เกิดข้อผิดพลาดในการบันทึกรีวิว");
+    }
+}
+
+function openDeleteModal(reviewId) {
+    document.querySelectorAll(".dropdown-menu.show").forEach(el => el.classList.remove("show"));
+    document.getElementById("deleteReviewId").value = reviewId;
+    document.getElementById("deleteReviewModal").classList.add("show");
+}
+
+function closeDeleteModal() {
+    document.getElementById("deleteReviewModal").classList.remove("show");
+}
+
+async function executeDeleteReview() {
+    const reviewId = parseInt(document.getElementById("deleteReviewId").value);
+    try {
+        const res = await fetch(`/api/reviews/${reviewId}/delete/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+        });
+
+        if (!res.ok) throw new Error();
+
+        closeDeleteModal();
+        const card = document.getElementById(`review_${reviewId}`);
+        if (card) {
+            card.style.transition = "all 0.3s ease";
+            card.style.opacity = "0";
+            card.style.transform = "translateY(-10px)";
+            setTimeout(() => {
+                card.remove();
+                reviewsDataMap.delete(reviewId);
+            }, 300);
+        }
+        showToast("ลบรีวิวเรียบร้อยแล้ว");
+    } catch (err) {
+        console.error(err);
+        showToast("เกิดข้อผิดพลาดในการลบรีวิว");
     }
 }
 
@@ -508,5 +1190,5 @@ function shareReview(reviewId) {
         showToast("คัดลอกลิงก์เรียบร้อยแล้ว");
     }
 }
-    </script>
+</script>
 {% endblock %}
