@@ -1,12 +1,140 @@
-from unittest.mock import patch, MagicMock
-from django.test import TestCase
+import json
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from web.models import (
+    Comment,
+    Place,
+    PlaceImage,
+    PlaceLike,
+    Review,
+    UserProfile,
+    Wishlist,
+)
 from web.services.cloudinary_service import (
-    upload_image,
     delete_image,
     get_optimized_url,
-    upload_multiple_images,
     is_cloudinary_configured,
+    upload_image,
+    upload_multiple_images,
 )
+
+
+class PlaceModelTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", password="password123")
+        self.place = Place.objects.create(author=self.user, name="สวนเบญจกิติ", address="กรุงเทพฯ")
+
+    def test_average_rating_and_reviews_count(self):
+        """Average rating should compute correctly and reviews count match."""
+        self.assertEqual(self.place.average_rating, 0.0)
+        self.assertEqual(self.place.reviews_count, 0)
+
+        Review.objects.create(place=self.place, user=self.user, rating=5, comment="ยอดเยี่ยม")
+        Review.objects.create(place=self.place, user=self.user, rating=3, comment="พอใช้")
+
+        self.assertEqual(self.place.reviews_count, 2)
+        self.assertEqual(self.place.average_rating, 4.0)
+
+
+class HomePageAPITests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user1 = User.objects.create_user(username="somchai", password="password123")
+        self.user2 = User.objects.create_user(username="ploy", password="password123")
+
+        # Create 2 places
+        self.place1 = Place.objects.create(author=self.user1, name="ดอยอินทนนท์", address="เชียงใหม่")
+        self.place2 = Place.objects.create(author=self.user2, name="หาดป่าตอง", address="ภูเก็ต")
+
+        # Create reviews with distinct ratings
+        Review.objects.create(place=self.place1, user=self.user1, rating=5, comment="หนาวจับใจ")
+        Review.objects.create(place=self.place1, user=self.user2, rating=5, comment="วิวอลังการ")
+        Review.objects.create(place=self.place2, user=self.user1, rating=4, comment="หาดทรายสวย")
+
+    def test_home_page_renders_successfully(self):
+        """Home page should return status code 200."""
+        response = self.client.get(reverse("web:home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "web/home.html")
+
+    def test_api_popular_places_ordered_by_rating(self):
+        """Popular places API should return places sorted by rating and review count."""
+        response = self.client.get(reverse("web:api_popular_places") + "?limit=10")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("places", data)
+        self.assertTrue(len(data["places"]) >= 2)
+
+        # Place 1 (rating 5.0) should come before Place 2 (rating 4.0)
+        first_place = data["places"][0]
+        self.assertEqual(first_place["name"], "ดอยอินทนนท์")
+        self.assertEqual(first_place["average_rating"], 5.0)
+        self.assertEqual(first_place["reviews_count"], 2)
+
+    def test_api_recent_reviews_ordered_by_date(self):
+        """Recent reviews API should return reviews in reverse chronological order."""
+        response = self.client.get(reverse("web:api_recent_reviews") + "?limit=10")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("reviews", data)
+        self.assertTrue(len(data["reviews"]) >= 3)
+
+        first_review = data["reviews"][0]
+        self.assertIn("author", first_review)
+        self.assertIn("place", first_review)
+        self.assertIn("rating", first_review)
+        self.assertIn("content", first_review)
+
+    def test_api_place_detail(self):
+        """Place detail API should return full info for a specific place."""
+        response = self.client.get(reverse("web:api_place_detail", args=[self.place1.id]))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["name"], "ดอยอินทนนท์")
+        self.assertEqual(data["average_rating"], 5.0)
+
+    def test_api_add_comment(self):
+        """Adding a comment to a review should succeed."""
+        review = Review.objects.first()
+        response = self.client.post(
+            reverse("web:api_add_comment", args=[review.id]),
+            data=json.dumps({"content": "สวยมากครับ!", "username": "somchai"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertTrue(data["success"])
+        self.assertEqual(data["comment"]["content"], "สวยมากครับ!")
+
+    def test_api_edit_review(self):
+        """Editing review content and rating should succeed."""
+        review = Review.objects.first()
+        response = self.client.post(
+            reverse("web:api_edit_review", args=[review.id]),
+            data=json.dumps({"content": "แก้ไขข้อความรีวิวใหม่", "rating": 4}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data["success"])
+        review.refresh_from_db()
+        self.assertEqual(review.content, "แก้ไขข้อความรีวิวใหม่")
+        self.assertEqual(review.rating, 4)
+
+    def test_api_delete_review(self):
+        """Deleting a review should remove it from the database."""
+        review = Review.objects.first()
+        review_id = review.id
+        response = self.client.post(reverse("web:api_delete_review", args=[review_id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Review.objects.filter(id=review_id).exists())
 
 
 class CloudinaryServiceTests(TestCase):
@@ -84,27 +212,10 @@ class CloudinaryServiceTests(TestCase):
         self.assertEqual(len(results), 2)
         self.assertTrue(results[0]["success"])
         self.assertTrue(results[1]["success"])
-        mock_upload.assert_called_once()
-
-
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.db import IntegrityError
-from decimal import Decimal
-from web.models import UserProfile, Place, PlaceImage, Review, Wishlist, PlaceLike
+        self.assertEqual(mock_upload.call_count, 2)
 
 
 class ModelsSchemaTests(TestCase):
-    """
-    Unit tests for Neon PostgreSQL schema:
-    - UserProfile (User info, avatar, bio)
-    - Place (Place/post, coordinates, category, Cloudinary cover)
-    - PlaceImage (Place gallery image)
-    - Review (1-5 star ratings, reviews)
-    - Wishlist (Unique save/bookmark)
-    - PlaceLike (Unique likes)
-    """
-
     def setUp(self):
         self.user1 = User.objects.create_user(
             username="testuser1",
@@ -177,7 +288,6 @@ class ModelsSchemaTests(TestCase):
         """Test rating and review calculations on a Place."""
         place = Place.objects.create(author=self.user1, name="Artisan Bakery", category="cafe")
 
-        # User1 gives 5 stars
         Review.objects.create(
             place=place,
             user=self.user1,
@@ -185,7 +295,6 @@ class ModelsSchemaTests(TestCase):
             comment="ขนมอบสดใหม่ อร่อยมาก!"
         )
 
-        # User2 gives 4 stars
         Review.objects.create(
             place=place,
             user=self.user2,
@@ -202,7 +311,7 @@ class ModelsSchemaTests(TestCase):
         invalid_review = Review(
             place=place,
             user=self.user1,
-            rating=6,  # Exceeds max rating of 5
+            rating=6,
             comment="Invalid rating test"
         )
         with self.assertRaises(ValidationError):
@@ -215,7 +324,6 @@ class ModelsSchemaTests(TestCase):
         Wishlist.objects.create(user=self.user1, place=place)
         self.assertEqual(place.wishlist_count, 1)
 
-        # Attempt duplicate wishlist
         with self.assertRaises(IntegrityError):
             Wishlist.objects.create(user=self.user1, place=place)
 
@@ -226,16 +334,11 @@ class ModelsSchemaTests(TestCase):
         PlaceLike.objects.create(user=self.user2, place=place)
         self.assertEqual(place.likes_count, 1)
 
-        # Attempt duplicate like
         with self.assertRaises(IntegrityError):
             PlaceLike.objects.create(user=self.user2, place=place)
 
 
 class ApiEndpointsTests(TestCase):
-    """
-    Tests for basic Zone In REST API routes (GET, POST).
-    """
-
     def setUp(self):
         self.user = User.objects.create_user(
             username="api_tester",
@@ -268,14 +371,12 @@ class ApiEndpointsTests(TestCase):
         self.assertEqual(data["database"], "connected")
 
     def test_places_list_and_create(self):
-        # 1. GET places list
         response = self.client.get("/api/places/")
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data["success"])
         self.assertGreaterEqual(data["count"], 1)
 
-        # 2. POST create place
         response = self.client.post(
             "/api/places/",
             data={
@@ -302,7 +403,6 @@ class ApiEndpointsTests(TestCase):
         self.assertEqual(data["place"]["name"], "Cafe De Botanica")
 
     def test_reviews_list_and_create(self):
-        # 1. POST add review
         response = self.client.post(
             f"/api/places/{self.place.id}/reviews/",
             data={"rating": 5, "comment": "เครื่องดื่มดี วิวสวยมาก"},
@@ -312,7 +412,6 @@ class ApiEndpointsTests(TestCase):
         data = response.json()
         self.assertTrue(data["success"])
 
-        # 2. GET reviews list
         response = self.client.get(f"/api/places/{self.place.id}/reviews/")
         self.assertEqual(response.status_code, 200)
         reviews_data = response.json()
@@ -320,20 +419,17 @@ class ApiEndpointsTests(TestCase):
         self.assertEqual(reviews_data["review_count"], 1)
 
     def test_like_toggle(self):
-        # 1. Like
         response = self.client.post(f"/api/places/{self.place.id}/like/")
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data["is_liked"])
 
-        # 2. Unlike
         response = self.client.post(f"/api/places/{self.place.id}/like/")
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertFalse(data["is_liked"])
 
     def test_wishlist_list_and_toggle(self):
-        # 1. Save to wishlist
         response = self.client.post(
             "/api/wishlist/toggle/",
             data={"place_id": self.place.id},
@@ -343,20 +439,17 @@ class ApiEndpointsTests(TestCase):
         data = response.json()
         self.assertTrue(data["is_saved"])
 
-        # 2. View wishlist
         response = self.client.get("/api/wishlist/")
         self.assertEqual(response.status_code, 200)
         wishlist_data = response.json()
         self.assertTrue(wishlist_data["success"])
 
     def test_profile_detail_and_update(self):
-        # 1. GET profile
         response = self.client.get("/api/profile/")
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data["success"])
 
-        # 2. POST update profile
         response = self.client.post(
             "/api/profile/",
             data={"nickname": "สายคาเฟ่ตัวจริง", "bio": "ตระเวนชิมกาแฟทั่วไทย"},
@@ -366,4 +459,3 @@ class ApiEndpointsTests(TestCase):
         updated = response.json()
         self.assertTrue(updated["success"])
         self.assertEqual(updated["profile"]["nickname"], "สายคาเฟ่ตัวจริง")
-

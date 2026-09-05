@@ -38,9 +38,9 @@ def places_list_create(request):
                 "longitude": float(place.longitude) if place.longitude else None,
                 "cover_image_url": place.cover_image_url,
                 "author": {
-                    "id": place.author.id,
-                    "username": place.author.username,
-                    "name": place.author.first_name or place.author.username,
+                    "id": place.author.id if place.author else None,
+                    "username": place.author.username if place.author else "ZoneIn",
+                    "name": (place.author.first_name or place.author.username) if place.author else "ZoneIn",
                 },
                 "average_rating": place.average_rating,
                 "review_count": place.review_count,
@@ -144,6 +144,10 @@ def place_detail(request, place_id):
 
     return JsonResponse({
         "success": True,
+        "id": place.id,
+        "name": place.name,
+        "average_rating": place.average_rating,
+        "reviews_count": place.reviews_count,
         "place": {
             "id": place.id,
             "name": place.name,
@@ -156,9 +160,9 @@ def place_detail(request, place_id):
             "longitude": float(place.longitude) if place.longitude else None,
             "cover_image_url": place.cover_image_url,
             "author": {
-                "id": place.author.id,
-                "username": place.author.username,
-                "name": place.author.first_name or place.author.username,
+                "id": place.author.id if place.author else None,
+                "username": place.author.username if place.author else "ZoneIn",
+                "name": (place.author.first_name or place.author.username) if place.author else "ZoneIn",
             },
             "average_rating": place.average_rating,
             "review_count": place.review_count,

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import (
+    Comment,
     Notification,
     Place,
     PlaceImage,
@@ -34,6 +35,13 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ("place", "user", "rating", "created_at")
     list_filter = ("rating", "created_at")
     search_fields = ("place__name", "user__username", "comment")
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ("review", "author", "created_at")
+    search_fields = ("author__username", "content")
+    list_filter = ("created_at",)
 
 
 @admin.register(Wishlist)
