@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ZoneIn - สำรวจสถานที่ท่องเที่ยวยอดฮิตและรีวิวล่าสุด{% endblock %}</title>
-    <meta name="description" content="{% block meta_desc %}ค้นพบสถานที่ท่องเที่ยวยอดฮิต คาเฟ่ แคมป์ปิ้ง และรีวิวจริงจากนักเดินทางทั่วไทย{% endblock %}">
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}ZoneIn - สำรวจสถานที่ท่องเที่ยวยอดฮิตและรีวิวล่าสุด{% endblock %}</title>
+        <meta name="description"
+              content="{% block meta_desc %}ค้นพบสถานที่ท่องเที่ยวยอดฮิต คาเฟ่ แคมป์ปิ้ง และรีวิวจริงจากนักเดินทางทั่วไทย{% endblock %}">
+        <!-- Google Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap"
+              rel="stylesheet">
+        <style>
         :root {
             --bg-body: #0a0e1a;
             --bg-card: #121829;
@@ -202,40 +202,35 @@
             font-size: 0.88rem;
             background: rgba(10, 14, 26, 0.7);
         }
-    </style>
-    {% block extra_head %}{% endblock %}
-</head>
-<body>
-    <div class="ambient-glow"></div>
-
-    <header class="navbar">
-        <div class="nav-container">
-            <a href="/" class="brand-logo">
-                <div class="brand-icon">📍</div>
-                <span>ZoneIn</span>
-                <span class="brand-tagline">Review Hub</span>
-            </a>
-            <div class="nav-actions">
-                <a href="/" class="nav-btn active">
-                    <span>🏠</span> หน้าแรก
+        </style>
+        {% block extra_head %}{% endblock %}
+    </head>
+    <body>
+        <div class="ambient-glow"></div>
+        <header class="navbar">
+            <div class="nav-container">
+                <a href="/" class="brand-logo">
+                    <div class="brand-icon">📍</div>
+                    <span>ZoneIn</span>
+                    <span class="brand-tagline">Review Hub</span>
                 </a>
-                <a href="/admin/" class="nav-btn" target="_blank">
-                    <span>⚙️</span> หลังบ้าน
-                </a>
+                <div class="nav-actions">
+                    <a href="/" class="nav-btn active">
+                        <span>🏠</span> หน้าแรก
+                    </a>
+                </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <main class="main-wrapper">
-        {% block content %}{% endblock %}
-    </main>
+        <main class="main-wrapper">
+            {% block content %}{% endblock %}
+        </main>
 
-    <footer class="footer">
-        <p>© 2026 ZoneIn Travel & Review Community. สำรวจและแบ่งปันประสบการณ์การท่องเที่ยวทั่วไทย</p>
-    </footer>
+        <footer class="footer">
+            <p>© 2026 ZoneIn Travel & Review Community. สำรวจและแบ่งปันประสบการณ์การท่องเที่ยวทั่วไทย</p>
+        </footer>
 
-    <div id="toast" class="toast"></div>
-
-    {% block extra_scripts %}{% endblock %}
-</body>
+        <div id="toast" class="toast"></div>
+        {% block extra_scripts %}{% endblock %}
+    </body>
 </html>
