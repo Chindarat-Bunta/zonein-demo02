@@ -1,244 +1,358 @@
 {% extends "web/base.html" %}
 
-{% block title %}ZoneIn - โพสต์แนะนำสถานที่ & รีวิวให้คะแนนสถานที่ (Place Reviews & Tag Friends){% endblock %}
+{% block title %}ZoneIn - ฟีดรีวิวสถานที่ท่องเที่ยว & แท็กเพื่อน (Travel Review Hub){% endblock %}
 
 {% block extra_head %}
 <style>
-    .grid-layout {
-        display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: 2rem;
-        align-items: start;
+    /* Feed Container */
+    .feed-container {
+        max-width: 820px;
+        margin: 0 auto;
     }
 
-    @media (max-width: 960px) {
-        .grid-layout {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    /* Header Bar with New Post Button */
-    .places-nav-bar {
+    /* Top Action Bar */
+    .feed-top-bar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
         gap: 1rem;
         flex-wrap: wrap;
     }
 
-    .target-tabs {
-        display: flex;
-        gap: 0.65rem;
-        overflow-x: auto;
-        padding-bottom: 0.35rem;
-        flex: 1;
-    }
-
-    .target-tab {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        padding: 0.6rem 1.1rem;
-        border-radius: var(--radius-md);
-        color: var(--text-muted);
-        cursor: pointer;
-        font-size: 0.88rem;
-        font-weight: 600;
-        white-space: nowrap;
-        transition: var(--transition-smooth);
+    .feed-title-section h1 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #fff;
         display: flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 0.5rem;
     }
 
-    .target-tab:hover {
-        background: var(--bg-card-hover);
-        color: #fff;
-    }
-
-    .target-tab.active {
-        background: var(--primary-light);
-        border-color: var(--primary);
-        color: #c7d2fe;
+    .feed-title-section p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
     }
 
     .btn-create-post {
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         color: #ffffff;
-        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-        white-space: nowrap;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        padding: 0.65rem 1.35rem;
+        font-size: 0.95rem;
     }
 
     .btn-create-post:hover {
         opacity: 0.95;
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
     }
 
-    /* Place / Location Hero Card */
-    .place-hero {
+    /* Category Filter Pills */
+    .category-filter-bar {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .cat-pill {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 0.45rem 0.95rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: var(--transition-smooth);
+    }
+
+    .cat-pill:hover {
+        background: var(--bg-card-hover);
+        color: #fff;
+    }
+
+    .cat-pill.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+
+    /* Travel Post Card */
+    .post-card {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
         border-radius: var(--radius-lg);
         padding: 1.75rem;
-        display: flex;
-        gap: 1.75rem;
-        box-shadow: var(--shadow-card);
         margin-bottom: 2rem;
+        box-shadow: var(--shadow-card);
+        transition: var(--transition-smooth);
+        position: relative;
     }
 
-    .place-img {
-        width: 220px;
-        height: 200px;
-        border-radius: var(--radius-md);
-        object-fit: cover;
-        background: #1e293b;
-        border: 1px solid var(--border-color);
+    .post-card:hover {
+        border-color: rgba(255, 255, 255, 0.18);
     }
 
-    .place-info {
-        flex: 1;
+    .post-card.tagged-highlight {
+        border-color: rgba(236, 72, 153, 0.45);
+        background: rgba(26, 25, 45, 0.9);
+    }
+
+    /* Author Header */
+    .post-header {
         display: flex;
-        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .author-info {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .author-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #ec4899);
+        display: flex;
+        align-items: center;
         justify-content: center;
+        font-weight: 800;
+        color: #fff;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
     }
 
-    .place-meta-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
+    .author-name {
+        font-weight: 700;
+        color: #fff;
+        font-size: 1rem;
+    }
+
+    .post-time {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+    }
+
+    /* Post Content & Media */
+    .place-title {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #fff;
         margin-bottom: 0.6rem;
     }
 
-    .category-badge {
-        display: inline-flex;
+    .post-meta-tags {
+        display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 0.35rem;
-        font-size: 0.78rem;
-        font-weight: 700;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .badge-category {
         background: var(--primary-light);
         color: #c7d2fe;
         border: 1px solid rgba(99, 102, 241, 0.3);
         padding: 0.2rem 0.65rem;
         border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
     }
 
-    .location-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        font-size: 0.78rem;
-        font-weight: 600;
+    .badge-location {
         background: rgba(255, 255, 255, 0.06);
-        color: var(--text-muted);
+        color: #d1d5db;
         border: 1px solid var(--border-color);
         padding: 0.2rem 0.65rem;
         border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
     }
 
-    .place-title {
-        font-size: 1.6rem;
+    .rating-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: rgba(251, 191, 36, 0.15);
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        color: var(--star-gold);
+        padding: 0.2rem 0.65rem;
+        border-radius: 999px;
+        font-size: 0.82rem;
         font-weight: 800;
-        margin-bottom: 0.6rem;
-        color: #fff;
-        line-height: 1.3;
     }
 
-    .place-desc {
-        color: #d1d5db;
-        font-size: 0.95rem;
-        line-height: 1.6;
+    .post-image-wrap {
+        margin: 1.25rem 0;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        max-height: 420px;
+        background: #111827;
+        border: 1px solid var(--border-color);
     }
 
-    /* Summary Card */
-    .summary-card {
-        background: var(--bg-card);
+    .post-image {
+        width: 100%;
+        height: 100%;
+        max-height: 420px;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+
+    .post-image-wrap:hover .post-image {
+        transform: scale(1.02);
+    }
+
+    .post-text {
+        color: #e5e7eb;
+        font-size: 0.98rem;
+        line-height: 1.65;
+        white-space: pre-line;
+        margin-bottom: 1.25rem;
+    }
+
+    /* Mentions and Tagged Friends */
+    .mention-tag {
+        display: inline-block;
+        background: rgba(99, 102, 241, 0.22);
+        color: #a5b4fc;
+        padding: 0.05rem 0.45rem;
+        border-radius: 6px;
+        font-weight: 700;
+    }
+
+    .tagged-section {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.85rem 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: var(--radius-sm);
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .tagged-pill {
+        background: rgba(236, 72, 153, 0.18);
+        border: 1px solid rgba(236, 72, 153, 0.35);
+        color: #f472b6;
+        padding: 0.15rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .tagged-banner {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: linear-gradient(135deg, rgba(236, 72, 153, 0.25), rgba(99, 102, 241, 0.25));
+        border: 1px solid rgba(236, 72, 153, 0.4);
+        color: #fbcfe8;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        margin-bottom: 0.85rem;
+    }
+
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1.5rem;
+        animation: fadeIn 0.2s ease;
+    }
+
+    .modal-content {
+        background: #141b2d;
         border: 1px solid var(--border-color);
         border-radius: var(--radius-lg);
-        padding: 1.75rem;
-        box-shadow: var(--shadow-card);
-        position: sticky;
-        top: 5rem;
+        max-width: 620px;
+        width: 100%;
+        padding: 2rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+        max-height: 90vh;
+        overflow-y: auto;
     }
 
-    .score-banner {
-        text-align: center;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid var(--border-color);
-        margin-bottom: 1.5rem;
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
     }
 
-    .big-score {
-        font-size: 3.5rem;
+    .modal-title {
+        font-size: 1.35rem;
         font-weight: 800;
-        line-height: 1;
-        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #fff;
+    }
+
+    .modal-close {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .form-group {
+        margin-bottom: 1.15rem;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        display: block;
         margin-bottom: 0.4rem;
     }
 
-    .stars-row {
-        display: flex;
-        justify-content: center;
-        gap: 0.25rem;
-        color: var(--star-gold);
-        margin-bottom: 0.35rem;
-    }
-
-    .breakdown-row {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 0.6rem;
-        font-size: 0.85rem;
-    }
-
-    .star-label {
-        width: 45px;
-        color: var(--text-muted);
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .progress-bar-bg {
-        flex: 1;
-        height: 8px;
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 999px;
-        overflow: hidden;
-    }
-
-    .progress-bar-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #f59e0b, #fbbf24);
-        border-radius: 999px;
-        transition: width 0.4s ease;
-        width: 0%;
-    }
-
-    .breakdown-count {
-        width: 30px;
-        text-align: right;
-        color: var(--text-dim);
-    }
-
-    /* Interactive Review Form */
-    .form-card {
-        background: var(--bg-card);
+    .form-control {
+        width: 100%;
+        background: var(--bg-input);
         border: 1px solid var(--border-color);
-        border-radius: var(--radius-lg);
-        padding: 1.75rem;
-        box-shadow: var(--shadow-card);
-        margin-bottom: 2rem;
+        border-radius: var(--radius-sm);
+        padding: 0.75rem;
+        color: var(--text-main);
+        font-family: inherit;
+        font-size: 0.95rem;
+        outline: none;
+        transition: var(--transition-smooth);
     }
 
+    .form-control:focus {
+        border-color: var(--border-focus);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    /* Star selector in modal */
     .interactive-stars {
         display: flex;
         align-items: center;
         gap: 0.4rem;
-        margin: 0.75rem 0;
+        margin: 0.5rem 0;
     }
 
     .star-btn {
@@ -251,65 +365,16 @@
         padding: 0;
     }
 
-    .star-btn.active, .star-btn.hovered {
+    .star-btn.active {
         color: var(--star-gold);
         filter: drop-shadow(0 0 6px var(--star-gold-glow));
-    }
-
-    .star-btn:hover {
-        transform: scale(1.15);
-    }
-
-    .rating-caption {
-        margin-left: 0.75rem;
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--text-muted);
-    }
-
-    .form-control {
-        width: 100%;
-        background: var(--bg-input);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        padding: 0.85rem;
-        color: var(--text-main);
-        font-family: inherit;
-        font-size: 0.95rem;
-        resize: vertical;
-        outline: none;
-        transition: var(--transition-smooth);
-    }
-
-    .form-control:focus {
-        border-color: var(--border-focus);
-        box-shadow: 0 0 0 3px var(--primary-light);
-    }
-
-    /* Friend Tagging Section */
-    .tag-friends-box {
-        margin-top: 0.85rem;
-        margin-bottom: 1.25rem;
-        background: rgba(18, 25, 39, 0.6);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        padding: 0.85rem;
-    }
-
-    .tag-friends-title {
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
     }
 
     .friend-chips {
         display: flex;
         flex-wrap: wrap;
         gap: 0.4rem;
+        margin-top: 0.4rem;
     }
 
     .friend-chip {
@@ -339,136 +404,6 @@
         font-weight: 600;
     }
 
-    /* Mention & Tag Badges in Reviews */
-    .mention-tag {
-        display: inline-block;
-        background: rgba(99, 102, 241, 0.2);
-        color: #818cf8;
-        padding: 0.05rem 0.4rem;
-        border-radius: 4px;
-        font-weight: 600;
-        font-size: 0.88rem;
-    }
-
-    .tagged-friends-row {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.4rem;
-        margin-top: 0.75rem;
-        padding-top: 0.75rem;
-        border-top: 1px dashed rgba(255, 255, 255, 0.08);
-        font-size: 0.82rem;
-        color: var(--text-muted);
-    }
-
-    .tagged-user-badge {
-        background: rgba(236, 72, 153, 0.15);
-        border: 1px solid rgba(236, 72, 153, 0.3);
-        color: #f472b6;
-        padding: 0.15rem 0.55rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    .you-are-tagged-banner {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(99, 102, 241, 0.2));
-        border: 1px solid rgba(236, 72, 153, 0.4);
-        color: #fbcfe8;
-        font-size: 0.75rem;
-        font-weight: 700;
-        padding: 0.2rem 0.6rem;
-        border-radius: 6px;
-        margin-bottom: 0.5rem;
-    }
-
-    /* Reviewed status banner */
-    .user-reviewed-box {
-        background: rgba(99, 102, 241, 0.12);
-        border: 1px solid rgba(99, 102, 241, 0.3);
-        border-radius: var(--radius-md);
-        padding: 1.25rem;
-        margin-bottom: 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    /* Review Card */
-    .reviews-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.25rem;
-    }
-
-    .review-item {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        padding: 1.35rem;
-        margin-bottom: 1rem;
-        transition: var(--transition-smooth);
-    }
-
-    .review-item.tagged-highlight {
-        border-color: rgba(236, 72, 153, 0.4);
-        background: rgba(29, 27, 49, 0.85);
-    }
-
-    .review-item:hover {
-        border-color: rgba(255, 255, 255, 0.15);
-    }
-
-    .review-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.75rem;
-    }
-
-    .reviewer-meta {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .avatar {
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #6366f1, #a855f7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        color: #fff;
-        font-size: 0.95rem;
-    }
-
-    .reviewer-name {
-        font-weight: 700;
-        font-size: 0.95rem;
-        color: #fff;
-    }
-
-    .review-date {
-        font-size: 0.78rem;
-        color: var(--text-dim);
-    }
-
-    .review-comment {
-        color: #d1d5db;
-        font-size: 0.92rem;
-        line-height: 1.55;
-        white-space: pre-line;
-    }
-
-    /* Demo User Switcher Bar */
     .demo-bar {
         background: rgba(30, 41, 59, 0.6);
         border: 1px dashed rgba(255, 255, 255, 0.15);
@@ -499,68 +434,6 @@
         border-color: var(--primary);
     }
 
-    /* Modal for Creating Place Post */
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.75);
-        backdrop-filter: blur(8px);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        padding: 1.5rem;
-        animation: fadeIn 0.2s ease;
-    }
-
-    .modal-content {
-        background: #151c2e;
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-lg);
-        max-width: 600px;
-        width: 100%;
-        padding: 2rem;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
-        position: relative;
-    }
-
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.25rem;
-    }
-
-    .modal-title {
-        font-size: 1.35rem;
-        font-weight: 800;
-        color: #fff;
-    }
-
-    .modal-close {
-        background: transparent;
-        border: none;
-        color: var(--text-muted);
-        font-size: 1.5rem;
-        cursor: pointer;
-        line-height: 1;
-    }
-
-    .form-group {
-        margin-bottom: 1.15rem;
-    }
-
-    .form-label {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        display: block;
-        margin-bottom: 0.4rem;
-    }
-
     .toast {
         position: fixed;
         bottom: 2rem;
@@ -583,204 +456,121 @@
 {% endblock %}
 
 {% block content %}
-<!-- Quick Demo Persona Switcher -->
-<div class="demo-bar">
-    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
-        <span style="color: var(--star-gold);">⚡</span>
-        <strong style="color: #fff;">สลับผู้ใช้งานทดสอบ (Demo Users):</strong>
-        <span style="color: var(--text-muted);">คลิกสลับเพื่อทดสอบโพสต์สถานที่, เขียนรีวิว และแท็กเพื่อน:</span>
-    </div>
-    <div style="display: flex; gap: 0.5rem; align-items: center;">
-        <span class="demo-pill {% if user.username == 'alex_dev' %}active{% endif %}" onclick="switchDemoUser('alex_dev')">👤 alex_dev</span>
-        <span class="demo-pill {% if user.username == 'sarah_ux' %}active{% endif %}" onclick="switchDemoUser('sarah_ux')">👤 sarah_ux</span>
-        <span class="demo-pill {% if user.username == 'john_doe' %}active{% endif %}" onclick="switchDemoUser('john_doe')">👤 john_doe</span>
-        <span class="demo-pill {% if user.username == 'admin' %}active{% endif %}" onclick="switchDemoUser('admin')">🛡️ admin</span>
-        {% if user.is_authenticated %}
-            <span class="demo-pill" onclick="logoutDemoUser()">🚪 Guest (ไม่ล็อกอิน)</span>
-        {% endif %}
-    </div>
-</div>
-
-<!-- Places Nav Bar with Create Post Button -->
-<div class="places-nav-bar">
-    <div class="target-tabs" id="placeTabsContainer">
-        {% for p in places %}
-            <div class="target-tab {% if forloop.first %}active{% endif %}" onclick="selectPlace({{ p.id }}, this)" id="tab_place_{{ p.id }}">
-                <span>📍</span> {{ p.name }}
-            </div>
-        {% endfor %}
-    </div>
-    <button type="button" class="btn btn-create-post" onclick="openCreatePlaceModal()">
-        <span>+</span> โพสต์แนะนำสถานที่ใหม่
-    </button>
-</div>
-
-<!-- Main 2-Column Grid -->
-<div class="grid-layout">
-    <!-- Left Column: Place Info, Write Review Form, Reviews List -->
-    <div>
-        <!-- Place Hero Card (Shows category, location & description) -->
-        <div class="place-hero" id="placeHero">
-            <img src="{{ current_place.image_url|default:'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=800' }}" alt="Place" class="place-img" id="heroImg">
-            <div class="place-info">
-                <div class="place-meta-badges">
-                    <span class="category-badge" id="heroCategory">🌲 {{ current_place.category|default:'สถานที่ท่องเที่ยว' }}</span>
-                    <span class="location-badge" id="heroLocation">📍 {{ current_place.location|default:'ประเทศไทย' }}</span>
-                </div>
-                <h1 class="place-title" id="heroTitle">{{ current_place.name }}</h1>
-                <p class="place-desc" id="heroDesc">{{ current_place.description }}</p>
-            </div>
+<div class="feed-container">
+    <!-- Demo Persona Switcher -->
+    <div class="demo-bar">
+        <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+            <span style="color: var(--star-gold);">⚡</span>
+            <strong style="color: #fff;">สลับผู้ใช้งานทดสอบ (Demo Travelers):</strong>
+            <span style="color: var(--text-muted);">คลิกสลับเพื่อทดสอบโพสต์รีวิว, แท็กเพื่อน และลบโพสต์ของตัวเอง:</span>
         </div>
-
-        <!-- User Already Reviewed Notice Banner -->
-        <div id="alreadyReviewedBanner" class="user-reviewed-box" style="display: none;">
-            <div>
-                <div style="font-weight: 700; color: #fff; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.5rem;">
-                    <span>✓</span> คุณได้รีวิวสถานที่นี้ไปแล้ว
-                </div>
-                <div id="userReviewSnippet" style="font-size: 0.88rem; color: var(--text-muted);"></div>
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-                <button class="btn btn-outline btn-sm" onclick="editMyReview()">แก้ไขรีวิว</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteMyReview()">ลบรีวิว</button>
-            </div>
-        </div>
-
-        <!-- Write / Edit Review Form Card -->
-        <div class="form-card" id="reviewFormCard">
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;" id="formTitle">
-                เขียนรีวิวสถานที่ & ชวนเพื่อน (Write a Review)
-            </h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
-                แชร์ประสบการณ์ ความประทับใจ จุดถ่ายรูป หรือแนะนำสิ่งที่น่าสนใจในสถานที่นี้
-            </p>
-
-            <input type="hidden" id="editingReviewId" value="">
-
-            <div style="margin-bottom: 1.25rem;">
-                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block;">
-                    ให้คะแนนความประทับใจ (1-5 ดาว) *
-                </label>
-                <div class="interactive-stars" id="starSelector" onmouseleave="resetStarHover()">
-                    <button type="button" class="star-btn" data-val="1" onmouseover="hoverStars(1)" onclick="selectStars(1)">★</button>
-                    <button type="button" class="star-btn" data-val="2" onmouseover="hoverStars(2)" onclick="selectStars(2)">★</button>
-                    <button type="button" class="star-btn" data-val="3" onmouseover="hoverStars(3)" onclick="selectStars(3)">★</button>
-                    <button type="button" class="star-btn" data-val="4" onmouseover="hoverStars(4)" onclick="selectStars(4)">★</button>
-                    <button type="button" class="star-btn" data-val="5" onmouseover="hoverStars(5)" onclick="selectStars(5)">★</button>
-                    <span class="rating-caption" id="ratingCaption">เลือกระดับดาว</span>
-                </div>
-            </div>
-
-            <div style="margin-bottom: 1rem;">
-                <label for="commentInput" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">
-                    ข้อความรีวิว และแนะนำเพื่อน
-                </label>
-                <textarea id="commentInput" rows="3" class="form-control" placeholder="ที่นี่บรรยากาศเป็นยังไง มีอะไรน่าสนใจบ้าง? สามารถพิมพ์ @username เช่น @sarah_ux หรือคลิกปุ่มเพื่อนด้านล่างเพื่อแท็กได้ทันที"></textarea>
-            </div>
-
-            <!-- Friend Tagging Helper -->
-            <div class="tag-friends-box">
-                <div class="tag-friends-title">
-                    <span>👥</span>
-                    <span>แท็กเพื่อนชวนมาเที่ยว (คลิกเพื่อแท็ก @mention):</span>
-                </div>
-                <div class="friend-chips" id="availableFriendChips">
-                    <!-- Populated via JS -->
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 0.75rem; align-items: center;">
-                <button type="button" class="btn btn-primary" id="btnSubmitReview" onclick="submitReview()">
-                    ส่งรีวิวสถานที่
-                </button>
-                <button type="button" class="btn btn-outline" id="btnCancelEdit" onclick="cancelEdit()" style="display: none;">
-                    ยกเลิก
-                </button>
-                <span id="formError" style="color: var(--danger); font-size: 0.85rem; margin-left: auto;"></span>
-            </div>
-        </div>
-
-        <!-- Reviews List -->
-        <div>
-            <div class="reviews-header">
-                <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff;">รีวิวจากผู้ที่เคยมาเยือน</h3>
-                <span id="reviewsCountBadge" style="font-size: 0.85rem; color: var(--text-dim);">0 รีวิว</span>
-            </div>
-
-            <div id="reviewsListContainer">
-                <!-- Reviews injected via JavaScript -->
-            </div>
-
-            <!-- Pagination buttons -->
-            <div id="paginationBar" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem;"></div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="demo-pill {% if user.username == 'alex_traveler' %}active{% endif %}" onclick="switchDemoUser('alex_traveler')">👤 alex_traveler</span>
+            <span class="demo-pill {% if user.username == 'sarah_backpacker' %}active{% endif %}" onclick="switchDemoUser('sarah_backpacker')">👤 sarah_backpacker</span>
+            <span class="demo-pill {% if user.username == 'john_camper' %}active{% endif %}" onclick="switchDemoUser('john_camper')">👤 john_camper</span>
+            <span class="demo-pill {% if user.username == 'admin' %}active{% endif %}" onclick="switchDemoUser('admin')">🛡️ admin</span>
+            {% if user.is_authenticated %}
+                <span class="demo-pill" onclick="logoutDemoUser()">🚪 Guest (ไม่ล็อกอิน)</span>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Right Column: Summary & Breakdown Stats -->
-    <div>
-        <div class="summary-card">
-            <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 1.25rem;">
-                สรุปคะแนนสถานที่ (Review Summary)
-            </h3>
-
-            <div class="score-banner">
-                <div class="big-score" id="summaryAvg">0.0</div>
-                <div class="stars-row" id="summaryStarsHeader">
-                    ★★★★★
-                </div>
-                <div style="font-size: 0.85rem; color: var(--text-muted);" id="summaryCountText">
-                    คำนวณจาก 0 รีวิว
-                </div>
-            </div>
-
-            <!-- Rating Breakdown (5 to 1 star) -->
-            <div id="breakdownContainer">
-                <!-- Injected via JS -->
-            </div>
+    <!-- Feed Top Action Bar -->
+    <div class="feed-top-bar">
+        <div class="feed-title-section">
+            <h1><span>🗺️</span> ฟีดรีวิวสถานที่ท่องเที่ยว</h1>
+            <p>แนะนำสถานที่สวยๆ ให้คะแนนความประทับใจ และแท็กเพื่อนชวนไปเที่ยวกัน</p>
         </div>
+        <button type="button" class="btn btn-create-post" onclick="openCreatePostModal()">
+            <span>📸 +</span> โพสต์รีวิวสถานที่ใหม่
+        </button>
+    </div>
+
+    <!-- Category Filter Bar -->
+    <div class="category-filter-bar" id="categoryFilterBar">
+        <div class="cat-pill active" onclick="filterByCategory('', this)">ทั้งหมด</div>
+        <div class="cat-pill" onclick="filterByCategory('ธรรมชาติ & สวนสาธารณะ', this)">🌲 ธรรมชาติ & สวน</div>
+        <div class="cat-pill" onclick="filterByCategory('คาเฟ่ริมน้ำ & ของกิน', this)">☕ คาเฟ่ & ร้านอาหาร</div>
+        <div class="cat-pill" onclick="filterByCategory('แคมป์ปิ้ง & ภูเขา', this)">🏕️ แคมป์ปิ้ง & ภูเขา</div>
+        <div class="cat-pill" onclick="filterByCategory('ทะเล & ชายหาด', this)">🏖️ ทะเล & ชายหาด</div>
+    </div>
+
+    <!-- Posts Feed Container -->
+    <div id="postsFeedList">
+        <!-- Injected via JS -->
     </div>
 </div>
 
-<!-- Modal: Create New Place Post -->
-<div class="modal-overlay" id="createPlaceModal">
+<!-- Modal: Create / Edit Travel Review Post -->
+<div class="modal-overlay" id="travelPostModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 class="modal-title">🏞️ โพสต์แนะนำสถานที่ใหม่</h3>
-            <button class="modal-close" onclick="closeCreatePlaceModal()">&times;</button>
+            <h3 class="modal-title" id="modalPostTitle">📸 โพสต์รีวิวสถานที่ท่องเที่ยวใหม่</h3>
+            <button class="modal-close" onclick="closeTravelPostModal()">&times;</button>
         </div>
 
-        <form id="createPlaceForm" onsubmit="handleCreatePlace(event)">
+        <form id="travelPostForm" onsubmit="handleSaveTravelPost(event)">
+            <input type="hidden" id="editingPostId" value="">
+
             <div class="form-group">
-                <label class="form-label" for="newPlaceName">ชื่อสถานที่ / ชื่อโพสต์แนะนำ *</label>
-                <input type="text" id="newPlaceName" class="form-control" placeholder="เช่น หาดไร่เลย์, ดอยสะโง้, คาเฟ่เรือนไทยริมน้ำ" required>
+                <label class="form-label" for="postPlaceName">ชื่อสถานที่ท่องเที่ยว / ร้าน / จุดเช็คอิน *</label>
+                <input type="text" id="postPlaceName" class="form-control" placeholder="เช่น สวนป่าเบญจกิติ, หาดไร่เลย์, Riva Floating Cafe" required>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
-                    <label class="form-label" for="newPlaceCategory">หมวดหมู่</label>
-                    <input type="text" id="newPlaceCategory" class="form-control" placeholder="เช่น สวนสาธารณะ, คาเฟ่, แคมป์ปิ้ง" value="สถานที่ท่องเที่ยว">
+                    <label class="form-label" for="postCategory">หมวดหมู่</label>
+                    <select id="postCategory" class="form-control">
+                        <option value="ธรรมชาติ & สวนสาธารณะ">🌲 ธรรมชาติ & สวนสาธารณะ</option>
+                        <option value="คาเฟ่ริมน้ำ & ของกิน">☕ คาเฟ่ริมน้ำ & ของกิน</option>
+                        <option value="แคมป์ปิ้ง & ภูเขา">🏕️ แคมป์ปิ้ง & ภูเขา</option>
+                        <option value="ทะเล & ชายหาด">🏖️ ทะเล & ชายหาด</option>
+                        <option value="วัด & วัฒนธรรม">🛕 วัด & วัฒนธรรม</option>
+                        <option value="สถานที่ท่องเที่ยว">🗺️ สถานที่ท่องเที่ยวทั่วไป</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="newPlaceLocation">ที่ตั้ง / จังหวัด / พิกัด</label>
-                    <input type="text" id="newPlaceLocation" class="form-control" placeholder="เช่น จ.เชียงใหม่, เขตพระนคร กรุงเทพฯ">
+                    <label class="form-label" for="postLocation">ที่ตั้ง / จังหวัด / พิกัด</label>
+                    <input type="text" id="postLocation" class="form-control" placeholder="เช่น คลองเตย กรุงเทพฯ, จ.กระบี่">
+                </div>
+            </div>
+
+            <!-- 1-5 Star Rating Selector -->
+            <div class="form-group">
+                <label class="form-label">ให้คะแนนความประทับใจ (1-5 ดาว) *</label>
+                <div class="interactive-stars" id="modalStarSelector" onmouseleave="resetModalStarsHover()">
+                    <button type="button" class="star-btn" data-val="1" onmouseover="hoverModalStars(1)" onclick="selectModalStars(1)">★</button>
+                    <button type="button" class="star-btn" data-val="2" onmouseover="hoverModalStars(2)" onclick="selectModalStars(2)">★</button>
+                    <button type="button" class="star-btn" data-val="3" onmouseover="hoverModalStars(3)" onclick="selectModalStars(3)">★</button>
+                    <button type="button" class="star-btn" data-val="4" onmouseover="hoverModalStars(4)" onclick="selectModalStars(4)">★</button>
+                    <button type="button" class="star-btn" data-val="5" onmouseover="hoverModalStars(5)" onclick="selectModalStars(5)">★</button>
+                    <span style="font-size: 0.9rem; font-weight: 700; color: var(--star-gold); margin-left: 0.75rem;" id="modalRatingCaption">เลือกระดับดาว</span>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="newPlaceDesc">ไฮไลท์ & ที่นี่มีอะไรน่าสนใจบ้าง</label>
-                <textarea id="newPlaceDesc" class="form-control" rows="3" placeholder="อธิบายจุดเด่น บรรยากาศ มุมถ่ายรูป กิจกรรมที่น่าสนใจ หรือเวลาเปิดปิด..."></textarea>
+                <label class="form-label" for="postContent">รีวิวบรรยากาศ & สิ่งที่น่าสนใจ (สามารถพิมพ์ @username เพื่อแท็กเพื่อนได้)</label>
+                <textarea id="postContent" class="form-control" rows="4" placeholder="เล่าความประทับใจ เช่น บรรยากาศช่วงเย็น จุดถ่ายรูปสวยๆ กิจกรรมที่ทำ หรือพิมพ์ @sarah_backpacker ชวนเพื่อนไปเที่ยวด้วยกัน!"></textarea>
+            </div>
+
+            <!-- Friend Tagging Chips Helper -->
+            <div class="form-group" style="background: rgba(18, 25, 39, 0.6); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                <label class="form-label" style="margin-bottom: 0.25rem;">👥 คลิกเพื่อแท็กเพื่อนชวนไปเที่ยว (@mention):</label>
+                <div class="friend-chips" id="modalFriendChips">
+                    <!-- Injected via JS -->
+                </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="newPlaceImage">ลิงก์รูปภาพสถานที่ (URL)</label>
-                <input type="url" id="newPlaceImage" class="form-control" placeholder="https://images.unsplash.com/photo-...">
+                <label class="form-label" for="postImage">ลิงก์รูปถ่ายสถานที่ (URL)</label>
+                <input type="url" id="postImage" class="form-control" placeholder="https://images.unsplash.com/photo-...">
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
-                <button type="button" class="btn btn-outline" onclick="closeCreatePlaceModal()">ยกเลิก</button>
-                <button type="submit" class="btn btn-create-post" id="btnSavePlace">บันทึกและสร้างโพสต์</button>
+                <button type="button" class="btn btn-outline" onclick="closeTravelPostModal()">ยกเลิก</button>
+                <button type="submit" class="btn btn-create-post" id="btnSavePost">โพสต์รีวิวสถานที่</button>
             </div>
-            <div id="createPlaceError" style="color: var(--danger); font-size: 0.85rem; margin-top: 0.5rem; text-align: right;"></div>
+            <div id="modalPostError" style="color: var(--danger); font-size: 0.85rem; margin-top: 0.5rem; text-align: right;"></div>
         </form>
     </div>
 </div>
@@ -791,11 +581,9 @@
 
 {% block extra_scripts %}
 <script>
-    let currentTargetId = {{ current_place.id|default:1 }};
-    let selectedRating = 0;
+    let currentCategoryFilter = "";
+    let selectedRating = 5;
     let hoveredRating = 0;
-    let currentUserReview = null;
-    let currentPage = 1;
     let availableUsers = [];
 
     const ratingDescriptions = {
@@ -808,8 +596,12 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         loadAvailableUsers();
-        loadPlaceSummary();
-        loadReviews(1);
+        loadTravelPosts();
+
+        const contentEl = document.getElementById("postContent");
+        if (contentEl) {
+            contentEl.addEventListener("input", highlightSelectedFriendChips);
+        }
     });
 
     function getCookie(name) {
@@ -835,102 +627,6 @@
         setTimeout(() => { toast.style.display = "none"; }, 3500);
     }
 
-    // Modal Control for Creating New Place Post
-    function openCreatePlaceModal() {
-        document.getElementById("createPlaceModal").style.display = "flex";
-        document.getElementById("newPlaceName").focus();
-        document.getElementById("createPlaceError").innerText = "";
-    }
-
-    function closeCreatePlaceModal() {
-        document.getElementById("createPlaceModal").style.display = "none";
-        document.getElementById("createPlaceForm").reset();
-    }
-
-    async function handleCreatePlace(event) {
-        event.preventDefault();
-        const name = document.getElementById("newPlaceName").value.trim();
-        const category = document.getElementById("newPlaceCategory").value.trim();
-        const location = document.getElementById("newPlaceLocation").value.trim();
-        const description = document.getElementById("newPlaceDesc").value.trim();
-        const image_url = document.getElementById("newPlaceImage").value.trim();
-        const errorEl = document.getElementById("createPlaceError");
-        errorEl.innerText = "";
-
-        if (!name) {
-            errorEl.innerText = "กรุณาระบุชื่อสถานที่";
-            return;
-        }
-
-        const btn = document.getElementById("btnSavePlace");
-        btn.disabled = true;
-        btn.innerText = "กำลังสร้างโพสต์...";
-
-        try {
-            const res = await fetch("/api/places/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCookie("csrftoken"),
-                },
-                body: JSON.stringify({
-                    name: name,
-                    category: category,
-                    location: location,
-                    description: description,
-                    image_url: image_url,
-                })
-            });
-
-            const data = await res.json();
-            if (!res.ok) {
-                errorEl.innerText = data.error || "ไม่สามารถสร้างโพสต์ได้";
-                btn.disabled = false;
-                btn.innerText = "บันทึกและสร้างโพสต์";
-                return;
-            }
-
-            showToast("สร้างโพสต์แนะนำสถานที่สำเร็จแล้ว!");
-            closeCreatePlaceModal();
-
-            // Refresh places tabs and select newly created place
-            await reloadPlacesList(data.place.id);
-
-        } catch (e) {
-            console.error(e);
-            errorEl.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อ";
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "บันทึกและสร้างโพสต์";
-        }
-    }
-
-    async function reloadPlacesList(selectPlaceId) {
-        try {
-            const res = await fetch("/api/places/");
-            const data = await res.json();
-            const places = data.places || data.products || [];
-
-            const container = document.getElementById("placeTabsContainer");
-            container.innerHTML = "";
-            places.forEach(p => {
-                const tab = document.createElement("div");
-                tab.className = `target-tab ${p.id === selectPlaceId ? 'active' : ''}`;
-                tab.id = `tab_place_${p.id}`;
-                tab.innerHTML = `<span>📍</span> ${p.name}`;
-                tab.onclick = () => selectPlace(p.id, tab);
-                container.appendChild(tab);
-            });
-
-            if (selectPlaceId) {
-                const targetTab = document.getElementById(`tab_place_${selectPlaceId}`);
-                selectPlace(selectPlaceId, targetTab);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
     // Load available users for tagging
     async function loadAvailableUsers() {
         try {
@@ -939,14 +635,14 @@
             const data = await res.json();
             availableUsers = data.users || [];
 
-            const container = document.getElementById("availableFriendChips");
+            const container = document.getElementById("modalFriendChips");
             container.innerHTML = "";
             availableUsers.forEach(u => {
                 const chip = document.createElement("span");
                 chip.className = "friend-chip";
-                chip.id = `friendChip_${u.username}`;
+                chip.id = `modalChip_${u.username}`;
                 chip.innerHTML = `+ @${u.username}`;
-                chip.onclick = () => tagUserIntoComment(u.username);
+                chip.onclick = () => tagUserIntoText(u.username);
                 container.appendChild(chip);
             });
         } catch (e) {
@@ -954,24 +650,23 @@
         }
     }
 
-    function tagUserIntoComment(username) {
-        const textarea = document.getElementById("commentInput");
+    function tagUserIntoText(username) {
+        const textarea = document.getElementById("postContent");
         const tag = `@${username}`;
         if (textarea.value.includes(tag)) {
             textarea.value = textarea.value.replace(new RegExp(`\\s*${tag}`, 'g'), '').trim();
-            highlightSelectedFriendChips();
         } else {
             const space = textarea.value.length > 0 && !textarea.value.endsWith(" ") ? " " : "";
             textarea.value = `${textarea.value}${space}${tag} `;
             textarea.focus();
-            highlightSelectedFriendChips();
         }
+        highlightSelectedFriendChips();
     }
 
     function highlightSelectedFriendChips() {
-        const text = document.getElementById("commentInput").value;
+        const text = document.getElementById("postContent").value;
         availableUsers.forEach(u => {
-            const chip = document.getElementById(`friendChip_${u.username}`);
+            const chip = document.getElementById(`modalChip_${u.username}`);
             if (!chip) return;
             if (text.includes(`@${u.username}`)) {
                 chip.classList.add("selected");
@@ -983,37 +678,29 @@
         });
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        const commentEl = document.getElementById("commentInput");
-        if (commentEl) {
-            commentEl.addEventListener("input", highlightSelectedFriendChips);
-        }
-    });
-
-    // Star Selector Logic
-    function hoverStars(rating) {
-        hoveredRating = rating;
-        updateStarVisuals(rating);
-        document.getElementById("ratingCaption").innerText = ratingDescriptions[rating] || "";
+    // Modal Star Rating
+    function hoverModalStars(val) {
+        hoveredRating = val;
+        updateModalStarsVisual(val);
+        document.getElementById("modalRatingCaption").innerText = ratingDescriptions[val] || "";
     }
 
-    function resetStarHover() {
+    function resetModalStarsHover() {
         hoveredRating = 0;
-        updateStarVisuals(selectedRating);
-        document.getElementById("ratingCaption").innerText = selectedRating ? ratingDescriptions[selectedRating] : "เลือกระดับดาว";
+        updateModalStarsVisual(selectedRating);
+        document.getElementById("modalRatingCaption").innerText = ratingDescriptions[selectedRating] || "เลือกระดับดาว";
     }
 
-    function selectStars(rating) {
-        selectedRating = rating;
-        updateStarVisuals(rating);
-        document.getElementById("ratingCaption").innerText = ratingDescriptions[rating];
-        document.getElementById("formError").innerText = "";
+    function selectModalStars(val) {
+        selectedRating = val;
+        updateModalStarsVisual(val);
+        document.getElementById("modalRatingCaption").innerText = ratingDescriptions[val];
     }
 
-    function updateStarVisuals(activeCount) {
-        const buttons = document.querySelectorAll("#starSelector .star-btn");
-        buttons.forEach((btn, index) => {
-            if (index < activeCount) {
+    function updateModalStarsVisual(count) {
+        const buttons = document.querySelectorAll("#modalStarSelector .star-btn");
+        buttons.forEach((btn, idx) => {
+            if (idx < count) {
                 btn.classList.add("active");
             } else {
                 btn.classList.remove("active");
@@ -1021,335 +708,262 @@
         });
     }
 
-    // Place Tab Switching
-    async function selectPlace(placeId, tabElement) {
-        currentTargetId = placeId;
-        document.querySelectorAll(".target-tab").forEach(t => t.classList.remove("active"));
-        if (tabElement) tabElement.classList.add("active");
-
-        try {
-            const res = await fetch("/api/places/");
-            const data = await res.json();
-            const place = (data.places || data.products || []).find(p => p.id === placeId);
-            if (place) {
-                document.getElementById("heroTitle").innerText = place.name;
-                document.getElementById("heroCategory").innerText = `🌲 ${place.category || 'สถานที่ท่องเที่ยว'}`;
-                document.getElementById("heroLocation").innerText = `📍 ${place.location || 'ประเทศไทย'}`;
-                document.getElementById("heroDesc").innerText = place.description;
-                if (place.image_url) {
-                    document.getElementById("heroImg").src = place.image_url;
-                }
-            }
-        } catch (e) {
-            console.error(e);
-        }
-
-        cancelEdit();
-        loadPlaceSummary();
-        loadReviews(1);
+    // Modal Open / Close
+    function openCreatePostModal() {
+        document.getElementById("editingPostId").value = "";
+        document.getElementById("modalPostTitle").innerText = "📸 โพสต์รีวิวสถานที่ท่องเที่ยวใหม่";
+        document.getElementById("travelPostForm").reset();
+        document.getElementById("btnSavePost").innerText = "โพสต์รีวิวสถานที่";
+        document.getElementById("modalPostError").innerText = "";
+        selectModalStars(5);
+        highlightSelectedFriendChips();
+        document.getElementById("travelPostModal").style.display = "flex";
+        document.getElementById("postPlaceName").focus();
     }
 
-    // Load Summary & Breakdown
-    async function loadPlaceSummary() {
-        try {
-            const res = await fetch(`/api/reviews/summary/?target_id=${currentTargetId}`);
-            if (!res.ok) return;
-            const data = await res.json();
-
-            document.getElementById("summaryAvg").innerText = data.average_rating.toFixed(1);
-            document.getElementById("summaryCountText").innerText = `คำนวณจาก ${data.review_count} รีวิว`;
-
-            const fullStars = Math.round(data.average_rating);
-            let starStr = "";
-            for (let i = 1; i <= 5; i++) {
-                starStr += i <= fullStars ? "★" : "☆";
-            }
-            document.getElementById("summaryStarsHeader").innerText = starStr;
-
-            const breakdownContainer = document.getElementById("breakdownContainer");
-            breakdownContainer.innerHTML = "";
-            const total = data.review_count || 1;
-
-            for (let star = 5; star >= 1; star--) {
-                const count = data.breakdown[star] || 0;
-                const pct = data.review_count > 0 ? ((count / total) * 100).toFixed(0) : 0;
-
-                const row = document.createElement("div");
-                row.className = "breakdown-row";
-                row.innerHTML = `
-                    <div class="star-label">${star} ★</div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" style="width: ${pct}%;"></div>
-                    </div>
-                    <div class="breakdown-count">${count}</div>
-                `;
-                breakdownContainer.appendChild(row);
-            }
-
-            // User Review status
-            currentUserReview = data.user_review;
-            const alreadyBox = document.getElementById("alreadyReviewedBanner");
-            const formCard = document.getElementById("reviewFormCard");
-
-            if (data.user_reviewed && currentUserReview) {
-                alreadyBox.style.display = "flex";
-                document.getElementById("userReviewSnippet").innerText = `คะแนนที่คุณให้: ${currentUserReview.rating} ดาว - "${currentUserReview.comment || 'ไม่ได้ระบุข้อความ'}"`;
-                formCard.style.display = "none";
-            } else {
-                alreadyBox.style.display = "none";
-                formCard.style.display = "block";
-            }
-
-        } catch (err) {
-            console.error(err);
-        }
+    function closeTravelPostModal() {
+        document.getElementById("travelPostModal").style.display = "none";
+        document.getElementById("travelPostForm").reset();
     }
 
-    function formatCommentWithMentions(comment) {
-        if (!comment) return '<span style="color: var(--text-dim); font-style: italic;">ไม่ได้ระบุข้อความรีวิว</span>';
-        return comment.replace(/@([a-zA-Z0-9_]+)/g, '<span class="mention-tag">@$1</span>');
+    // Format mentions in post content
+    function formatMentions(text) {
+        if (!text) return "";
+        return text.replace(/@([a-zA-Z0-9_]+)/g, '<span class="mention-tag">@$1</span>');
     }
 
-    // Load Reviews List
-    async function loadReviews(page = 1) {
-        currentPage = page;
-        const container = document.getElementById("reviewsListContainer");
+    // Filter by Category
+    function filterByCategory(cat, pillEl) {
+        currentCategoryFilter = cat;
+        document.querySelectorAll(".cat-pill").forEach(p => p.classList.remove("active"));
+        if (pillEl) pillEl.classList.add("active");
+        loadTravelPosts();
+    }
+
+    // Load Travel Posts Feed
+    async function loadTravelPosts() {
+        const container = document.getElementById("postsFeedList");
         try {
-            const res = await fetch(`/api/reviews/?target_id=${currentTargetId}&page=${page}&page_size=5`);
+            let url = "/api/posts/";
+            if (currentCategoryFilter) {
+                url += `?category=${encodeURIComponent(currentCategoryFilter)}`;
+            }
+            const res = await fetch(url);
             if (!res.ok) {
-                container.innerHTML = `<div style="color: var(--text-dim); text-align: center; padding: 2rem;">ไม่สามารถโหลดรายการรีวิวได้</div>`;
+                container.innerHTML = `<div style="text-align: center; color: var(--text-dim); padding: 3rem;">ไม่สามารถโหลดฟีดโพสต์ได้</div>`;
                 return;
             }
             const data = await res.json();
-            document.getElementById("reviewsCountBadge").innerText = `${data.count} รีวิว`;
+            const posts = data.results || data.posts || [];
 
-            if (data.results.length === 0) {
+            if (posts.length === 0) {
                 container.innerHTML = `
-                    <div style="background: var(--bg-card); border: 1px dashed var(--border-color); border-radius: var(--radius-md); padding: 3rem; text-align: center; color: var(--text-muted);">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏕️</div>
-                        <div style="font-weight: 600; color: #fff; margin-bottom: 0.25rem;">ยังไม่มีรีวิวสำหรับสถานที่นี้</div>
-                        <div>เป็นคนแรกที่มารีวิวความประทับใจและแท็กเพื่อนชวนไปเที่ยวกันได้เลย!</div>
+                    <div style="background: var(--bg-card); border: 1px dashed var(--border-color); border-radius: var(--radius-lg); padding: 4rem 2rem; text-align: center; color: var(--text-muted);">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏕️</div>
+                        <div style="font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 0.35rem;">ยังไม่มีโพสต์รีวิวสถานที่ในหมวดนี้</div>
+                        <p style="margin-bottom: 1.5rem;">ร่วมเป็นคนแรกที่โพสต์แนะนำสถานที่สวยๆ ให้คะแนนดาว และแท็กเพื่อนชวนไปเที่ยว!</p>
+                        <button type="button" class="btn btn-create-post" onclick="openCreatePostModal()">
+                            <span>📸 +</span> สร้างโพสต์แรกเลย
+                        </button>
                     </div>
                 `;
-                document.getElementById("paginationBar").innerHTML = "";
                 return;
             }
 
-            container.innerHTML = data.results.map(r => {
-                const stars = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
-                const dateStr = new Date(r.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
-                const initial = (r.username || "U")[0].toUpperCase();
+            container.innerHTML = posts.map(p => {
+                const stars = "★".repeat(p.rating) + "☆".repeat(5 - p.rating);
+                const dateStr = new Date(p.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+                const authorInitial = (p.author_name || "T")[0].toUpperCase();
 
-                let actionButtons = "";
-                if (r.is_owner) {
-                    actionButtons = `
-                        <div style="display: flex; gap: 0.4rem;">
-                            <button class="btn btn-outline btn-sm" onclick="editReviewFromCard(${r.id}, ${r.rating}, '${r.comment.replace(/'/g, "\\'")}')">แก้ไข</button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteReviewById(${r.id})">ลบ</button>
+                // Actions for author or admin
+                let actionBtns = "";
+                if (p.is_owner) {
+                    actionBtns = `
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-outline btn-sm" onclick="openEditPostModal(${p.id})">✏️ แก้ไข</button>
+                            <button class="btn btn-danger btn-sm" onclick="handleDeletePost(${p.id})">🗑️ ลบโพสต์</button>
                         </div>
                     `;
-                } else if (r.can_delete) {
-                    actionButtons = `
-                        <button class="btn btn-danger btn-sm" onclick="deleteReviewById(${r.id})">ลบ (Admin)</button>
+                } else if (p.can_delete) {
+                    actionBtns = `
+                        <button class="btn btn-danger btn-sm" onclick="handleDeletePost(${p.id})">🗑️ ลบโพสต์ (Admin)</button>
                     `;
                 }
 
+                // Tagged friends row
                 let taggedHtml = "";
-                if (r.tagged_users && r.tagged_users.length > 0) {
-                    const tags = r.tagged_users.map(u => `<span class="tagged-user-badge">@${u.username}</span>`).join(" ");
+                if (p.tagged_users && p.tagged_users.length > 0) {
+                    const tags = p.tagged_users.map(u => `<span class="tagged-pill">@${u.username}</span>`).join(" ");
                     taggedHtml = `
-                        <div class="tagged-friends-row">
-                            <span>🏷️ แท็กเพื่อน:</span>
+                        <div class="tagged-section">
+                            <span>🏷️ แท็กเพื่อนชวนมาดู:</span>
                             ${tags}
                         </div>
                     `;
                 }
 
+                // You are tagged banner
                 let taggedBanner = "";
-                if (r.is_tagged) {
+                if (p.is_tagged) {
                     taggedBanner = `
-                        <div class="you-are-tagged-banner">
-                            ✨ คุณถูกแท็กชวนไปเที่ยวในรีวิวนี้!
+                        <div class="tagged-banner">
+                            ✨ คุณถูกแท็กชวนไปเที่ยวในโพสต์นี้!
                         </div>
                     `;
                 }
 
-                const cardClass = r.is_tagged ? "review-item tagged-highlight" : "review-item";
+                // Photo element
+                let imageHtml = "";
+                if (p.image_url) {
+                    imageHtml = `
+                        <div class="post-image-wrap">
+                            <img src="${p.image_url}" alt="${p.place_name}" class="post-image">
+                        </div>
+                    `;
+                }
+
+                const cardClass = p.is_tagged ? "post-card tagged-highlight" : "post-card";
 
                 return `
-                    <div class="${cardClass}">
+                    <div class="${cardClass}" id="post_${p.id}">
                         ${taggedBanner}
-                        <div class="review-header">
-                            <div class="reviewer-meta">
-                                <div class="avatar">${initial}</div>
+                        <div class="post-header">
+                            <div class="author-info">
+                                <div class="author-avatar">${authorInitial}</div>
                                 <div>
-                                    <div class="reviewer-name">${r.username}</div>
-                                    <div class="review-date">${dateStr}</div>
+                                    <div class="author-name">@${p.author_name}</div>
+                                    <div class="post-time">${dateStr}</div>
                                 </div>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <div style="color: var(--star-gold); font-size: 1.1rem; letter-spacing: 1px;">${stars}</div>
-                                ${actionButtons}
-                            </div>
+                            <div>${actionBtns}</div>
                         </div>
-                        <div class="review-comment">${formatCommentWithMentions(r.comment)}</div>
+
+                        <div class="post-meta-tags">
+                            <span class="badge-category">${p.category || 'สถานที่ท่องเที่ยว'}</span>
+                            <span class="badge-location">📍 ${p.location || 'ประเทศไทย'}</span>
+                            <span class="rating-badge">${stars} ${p.rating}.0</span>
+                        </div>
+
+                        <h2 class="place-title">${p.place_name}</h2>
+
+                        <div class="post-text">${formatMentions(p.content)}</div>
+
+                        ${imageHtml}
                         ${taggedHtml}
                     </div>
                 `;
             }).join("");
-
-            const paginationBar = document.getElementById("paginationBar");
-            if (data.num_pages > 1) {
-                let html = "";
-                if (data.has_previous) {
-                    html += `<button class="btn btn-outline btn-sm" onclick="loadReviews(${currentPage - 1})">ก่อนหน้า</button>`;
-                }
-                html += `<span style="font-size: 0.85rem; color: var(--text-muted); align-self: center;">หน้า ${data.current_page} จาก ${data.num_pages}</span>`;
-                if (data.has_next) {
-                    html += `<button class="btn btn-outline btn-sm" onclick="loadReviews(${currentPage + 1})">ถัดไป</button>`;
-                }
-                paginationBar.innerHTML = html;
-            } else {
-                paginationBar.innerHTML = "";
-            }
 
         } catch (e) {
             console.error(e);
         }
     }
 
-    // Submit Review (POST or PUT)
-    async function submitReview() {
-        const errorEl = document.getElementById("formError");
+    // Save (Create or Edit) Travel Post
+    async function handleSaveTravelPost(event) {
+        event.preventDefault();
+        const editingId = document.getElementById("editingPostId").value;
+        const placeName = document.getElementById("postPlaceName").value.trim();
+        const category = document.getElementById("postCategory").value;
+        const location = document.getElementById("postLocation").value.trim();
+        const content = document.getElementById("postContent").value.trim();
+        const image_url = document.getElementById("postImage").value.trim();
+        const errorEl = document.getElementById("modalPostError");
         errorEl.innerText = "";
 
-        if (!selectedRating) {
-            errorEl.innerText = "กรุณาเลือกระดับดาว 1-5 ดาว";
+        if (!placeName) {
+            errorEl.innerText = "กรุณาระบุชื่อสถานที่ท่องเที่ยว";
             return;
         }
 
-        const comment = document.getElementById("commentInput").value;
-        const editingId = document.getElementById("editingReviewId").value;
-        const csrfToken = getCookie("csrftoken");
-
-        const btn = document.getElementById("btnSubmitReview");
+        const btn = document.getElementById("btnSavePost");
         btn.disabled = true;
         btn.innerText = "กำลังบันทึก...";
 
         try {
-            let res;
-            if (editingId) {
-                res = await fetch(`/api/reviews/${editingId}/`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrfToken,
-                    },
-                    body: JSON.stringify({ rating: selectedRating, comment: comment })
-                });
-            } else {
-                res = await fetch("/api/reviews/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrfToken,
-                    },
-                    body: JSON.stringify({
-                        target_id: currentTargetId,
-                        rating: selectedRating,
-                        comment: comment
-                    })
-                });
-            }
+            const url = editingId ? `/api/posts/${editingId}/` : "/api/posts/";
+            const method = editingId ? "PUT" : "POST";
+
+            const res = await fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+                body: JSON.stringify({
+                    place_name: placeName,
+                    category: category,
+                    location: location,
+                    rating: selectedRating,
+                    content: content,
+                    image_url: image_url,
+                })
+            });
 
             const data = await res.json();
             if (!res.ok) {
-                errorEl.innerText = data.error || "เกิดข้อผิดพลาดในการส่งข้อมูล";
-                showToast(data.error || "ไม่สามารถส่งรีวิวได้", true);
+                errorEl.innerText = data.error || "ไม่สามารถบันทึกโพสต์ได้";
                 btn.disabled = false;
-                btn.innerText = editingId ? "แก้ไขรีวิว" : "ส่งรีวิวสถานที่";
+                btn.innerText = editingId ? "บันทึกการแก้ไข" : "โพสต์รีวิวสถานที่";
                 return;
             }
 
-            showToast(editingId ? "แก้ไขรีวิวสำเร็จเรียบร้อย!" : "ส่งรีวิวและแท็กเพื่อนเรียบร้อยแล้ว!");
-            cancelEdit();
-            loadPlaceSummary();
-            loadReviews(1);
+            showToast(editingId ? "แก้ไขโพสต์เรียบร้อยแล้ว!" : "โพสต์รีวิวสถานที่และแท็กเพื่อนสำเร็จแล้ว!");
+            closeTravelPostModal();
+            loadTravelPosts();
 
-        } catch (err) {
-            errorEl.innerText = "Network error กรุณาลองใหม่อีกครั้ง";
-            console.error(err);
+        } catch (e) {
+            console.error(e);
+            errorEl.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อ";
         } finally {
             btn.disabled = false;
+            btn.innerText = editingId ? "บันทึกการแก้ไข" : "โพสต์รีวิวสถานที่";
         }
     }
 
-    // Edit Review Trigger
-    function editMyReview() {
-        if (!currentUserReview) return;
-        editReviewFromCard(currentUserReview.id, currentUserReview.rating, currentUserReview.comment);
-    }
-
-    function editReviewFromCard(id, rating, comment) {
-        document.getElementById("editingReviewId").value = id;
-        document.getElementById("formTitle").innerText = "แก้ไขรีวิวของคุณ (Edit Review)";
-        document.getElementById("commentInput").value = comment;
-        highlightSelectedFriendChips();
-        selectStars(rating);
-
-        document.getElementById("alreadyReviewedBanner").style.display = "none";
-        document.getElementById("reviewFormCard").style.display = "block";
-        document.getElementById("btnCancelEdit").style.display = "inline-flex";
-        document.getElementById("btnSubmitReview").innerText = "บันทึกการแก้ไข";
-
-        document.getElementById("reviewFormCard").scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function cancelEdit() {
-        document.getElementById("editingReviewId").value = "";
-        document.getElementById("formTitle").innerText = "เขียนรีวิวสถานที่ & ชวนเพื่อน (Write a Review)";
-        document.getElementById("commentInput").value = "";
-        highlightSelectedFriendChips();
-        document.getElementById("btnCancelEdit").style.display = "none";
-        document.getElementById("btnSubmitReview").innerText = "ส่งรีวิวสถานที่";
-        document.getElementById("formError").innerText = "";
-        selectedRating = 0;
-        updateStarVisuals(0);
-        document.getElementById("ratingCaption").innerText = "เลือกระดับดาว";
-
-        if (currentUserReview) {
-            document.getElementById("alreadyReviewedBanner").style.display = "flex";
-            document.getElementById("reviewFormCard").style.display = "none";
-        }
-    }
-
-    // Delete Review
-    async function deleteMyReview() {
-        if (!currentUserReview) return;
-        await deleteReviewById(currentUserReview.id);
-    }
-
-    async function deleteReviewById(reviewId) {
-        if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบรีวิวนี้?")) return;
-
-        const csrfToken = getCookie("csrftoken");
+    // Open Edit Modal
+    async function openEditPostModal(postId) {
         try {
-            const res = await fetch(`/api/reviews/${reviewId}/`, {
+            const res = await fetch(`/api/posts/${postId}/`);
+            if (!res.ok) return;
+            const post = await res.json();
+
+            document.getElementById("editingPostId").value = post.id;
+            document.getElementById("modalPostTitle").innerText = "✏️ แก้ไขโพสต์รีวิวสถานที่";
+            document.getElementById("postPlaceName").value = post.place_name;
+            document.getElementById("postCategory").value = post.category || "สถานที่ท่องเที่ยว";
+            document.getElementById("postLocation").value = post.location || "";
+            document.getElementById("postContent").value = post.content || "";
+            document.getElementById("postImage").value = post.image_url || "";
+            document.getElementById("btnSavePost").innerText = "บันทึกการแก้ไข";
+            document.getElementById("modalPostError").innerText = "";
+
+            selectModalStars(post.rating || 5);
+            highlightSelectedFriendChips();
+            document.getElementById("travelPostModal").style.display = "flex";
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // Delete Post
+    async function handleDeletePost(postId) {
+        if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์รีวิวนี้?")) return;
+
+        try {
+            const res = await fetch(`/api/posts/${postId}/`, {
                 method: "DELETE",
                 headers: {
-                    "X-CSRFToken": csrfToken,
+                    "X-CSRFToken": getCookie("csrftoken"),
                 }
             });
 
             if (res.ok) {
-                showToast("ลบรีวิวเรียบร้อยแล้ว");
-                cancelEdit();
-                currentUserReview = null;
-                loadPlaceSummary();
-                loadReviews(1);
+                showToast("ลบโพสต์เรียบร้อยแล้ว");
+                loadTravelPosts();
             } else {
                 const data = await res.json();
-                showToast(data.error || "ไม่สามารถลบรีวิวได้", true);
+                showToast(data.error || "ไม่สามารถลบโพสต์ได้", true);
             }
         } catch (e) {
             console.error(e);
@@ -1357,7 +971,7 @@
         }
     }
 
-    // Demo user switcher
+    // Demo Persona Switcher
     async function switchDemoUser(username) {
         const form = document.createElement("form");
         form.method = "POST";

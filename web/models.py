@@ -1,72 +1,36 @@
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models, transaction
-from django.db.models import Avg, Count
+from django.db import models
 
 
-class Place(models.Model):
-    """Place / Location post that can be recommended and reviewed."""
-
-    name = models.CharField(max_length=255, help_text="ชื่อสถานที่ / ชื่อโพสต์แนะนำ")
-    category = models.CharField(max_length=100, blank=True, default="สถานที่ท่องเที่ยว", help_text="หมวดหมู่ เช่น คาเฟ่, สวนสาธารณะ, แคมป์ปิ้ง")
+class TravelPost(models.Model):
+    """
+    Traveler place recommendation and review post.
+    โพสต์แนะนำสถานที่ท่องเที่ยวพร้อมรีวิว ให้ดาว และแท็กเพื่อน
+    """
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="travel_posts")
+    place_name = models.CharField(max_length=255, help_text="ชื่อสถานที่ท่องเที่ยว / ร้าน / จุดเช็คอิน")
     location = models.CharField(max_length=255, blank=True, default="", help_text="ที่ตั้ง / จังหวัด / พิกัด")
-    description = models.TextField(blank=True, default="", help_text="ไฮไลท์และรายละเอียดว่าที่นี่มีอะไรน่าสนใจ")
-    image_url = models.URLField(blank=True, default="")
-    average_rating = models.FloatField(default=0.0)
-    review_count = models.PositiveIntegerField(default=0)
+    category = models.CharField(max_length=100, blank=True, default="สถานที่ท่องเที่ยว", help_text="หมวดหมู่ เช่น ธรรมชาติ, คาเฟ่, แคมป์ปิ้ง")
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="คะแนนดาวความประทับใจ 1-5 ดาว",
+    )
+    content = models.TextField(blank=True, default="", help_text="รีวิวบรรยากาศ ไฮไลท์ และสิ่งที่น่าสนใจ")
+    image_url = models.URLField(blank=True, default="", help_text="ลิงก์รูปถ่ายสถานที่")
+    tagged_users = models.ManyToManyField(User, related_name="tagged_in_posts", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "places"
+        db_table = "travel_posts"
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.name} ({self.location})" if self.location else self.name
-
-    @transaction.atomic
-    def update_rating_stats(self):
-        """Recalculate and update cached average_rating and review_count atomically."""
-        stats = self.reviews.aggregate(
-            avg_rating=Avg("rating"),
-            count=Count("id"),
-        )
-        self.average_rating = round(stats["avg_rating"] or 0.0, 2)
-        self.review_count = stats["count"] or 0
-        self.save(update_fields=["average_rating", "review_count", "updated_at"])
+        return f"[{self.rating}★] {self.place_name} โดย @{self.author.username}"
 
 
 # Alias for backward compatibility
-Product = Place
-
-
-class Review(models.Model):
-    """User review with 1-5 star rating, comment, and tagged friends for a place."""
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviews")
-    target = models.ForeignKey(
-        Place, on_delete=models.CASCADE, related_name="reviews"
-    )
-    rating = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="คะแนนดาว 1-5 ดาว",
-    )
-    comment = models.TextField(blank=True, default="")
-    tagged_users = models.ManyToManyField(
-        User, related_name="tagged_reviews", blank=True
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = "reviews"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["user", "target"],
-                name="unique_user_target_review",
-            )
-        ]
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"Review by {self.user.username} on {self.target.name} ({self.rating} stars)"
+Review = TravelPost
+Place = TravelPost
+Product = TravelPost
