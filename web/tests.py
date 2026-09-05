@@ -373,3 +373,42 @@ class PostCommentAPITests(TestCase):
         self.assertIn("&lt;script&gt;", res.json()["comment"]["content"])
 
 
+class FollowModelAndAPITests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user1 = User.objects.create_user(username="alice", password="password123")
+        self.user2 = User.objects.create_user(username="bob", password="password123")
+
+    def test_follow_toggle_flow(self):
+        """User can follow and unfollow another user via API."""
+        self.client.force_login(self.user1)
+
+        # 1. Follow bob
+        res_follow = self.client.post(
+            reverse("web:api_user_follow", args=[self.user2.id]),
+            data={"action": "follow"},
+            content_type="application/json",
+        )
+        self.assertEqual(res_follow.status_code, 200)
+        self.assertTrue(res_follow.json()["is_following"])
+        self.assertEqual(res_follow.json()["followers_count"], 1)
+
+        # 2. Check follow status
+        res_status = self.client.get(reverse("web:api_user_follow_status", args=[self.user2.id]))
+        self.assertEqual(res_status.status_code, 200)
+        self.assertTrue(res_status.json()["is_following"])
+        self.assertEqual(res_status.json()["followers_count"], 1)
+
+        # 3. Unfollow bob via DELETE
+        res_unfollow = self.client.delete(reverse("web:api_user_follow", args=[self.user2.id]))
+        self.assertEqual(res_unfollow.status_code, 200)
+        self.assertFalse(res_unfollow.json()["is_following"])
+        self.assertEqual(res_unfollow.json()["followers_count"], 0)
+
+    def test_cannot_self_follow(self):
+        """User cannot follow themselves."""
+        self.client.force_login(self.user1)
+        res = self.client.post(reverse("web:api_user_follow", args=[self.user1.id]))
+        self.assertEqual(res.status_code, 400)
+
+

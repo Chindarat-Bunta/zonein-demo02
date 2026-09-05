@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.html import escape
 from django.views.decorators.http import require_http_methods
 
-from .models import PostComment, PostLike, TravelPost
+from .models import Follow, PostComment, PostLike, TravelPost
 
 
 def _parse_json_body(request):
@@ -34,10 +34,14 @@ def _serialize_post(post, current_user=None):
     is_owner = True
     is_admin = False
     is_liked = False
+    is_following = False
+    is_self = False
 
     effective_user = current_user if current_user and current_user.is_authenticated else User.objects.filter(username="traveler").first()
     if effective_user:
         is_liked = PostLike.objects.filter(post_id=post.id, user_id=effective_user.id).exists()
+        is_following = Follow.objects.filter(follower_id=effective_user.id, following_id=post.author_id).exists()
+        is_self = effective_user.id == post.author_id
 
     if current_user and current_user.is_authenticated:
         is_owner = post.author_id == current_user.id or not current_user.is_authenticated
@@ -56,6 +60,8 @@ def _serialize_post(post, current_user=None):
         "likes_count": post.likes_count,
         "comments_count": post.comments_count,
         "is_liked": is_liked,
+        "is_following": is_following,
+        "is_self": is_self,
         "is_owner": is_owner,
         "can_delete": True,  # User can delete posts
         "created_at": post.created_at.isoformat(),
@@ -429,4 +435,170 @@ def post_comment_delete_view(request, post_id, comment_id):
         },
         status=200,
     )
+
+
+@require_http_methods(["POST", "DELETE"])
+def toggle_follow_view(request, user_id):
+    """
+    POST /api/users/<user_id>/follow/ -> Follow or toggle follow
+    DELETE /api/users/<user_id>/follow/ -> Unfollow
+    """
+    target_user = get_object_or_404(User, pk=user_id)
+    current_user = _get_current_or_default_user(request)
+
+    if current_user.id == target_user.id:
+        return JsonResponse({"error": "ไม่สามารถติดตามตัวเองได้"}, status=400)
+
+    is_following = False
+
+    if request.method == "DELETE":
+        Follow.objects.filter(follower=current_user, following=target_user).delete()
+        is_following = False
+        message = f"เลิกติดตาม {target_user.username} แล้ว"
+    else:
+        # POST
+        body = _parse_json_body(request)
+        action = body.get("action") if isinstance(body, dict) else None
+
+        if action == "unfollow":
+            Follow.objects.filter(follower=current_user, following=target_user).delete()
+            is_following = False
+            message = f"เลิกติดตาม {target_user.username} แล้ว"
+        elif action == "follow":
+            Follow.objects.get_or_create(follower=current_user, following=target_user)
+            is_following = True
+            message = f"ติดตาม {target_user.username} เรียบร้อยแล้ว"
+        else:
+            # Toggle
+            existing = Follow.objects.filter(follower=current_user, following=target_user).first()
+            if existing:
+                existing.delete()
+                is_following = False
+                message = f"เลิกติดตาม {target_user.username} แล้ว"
+            else:
+                Follow.objects.create(follower=current_user, following=target_user)
+                is_following = True
+                message = f"ติดตาม {target_user.username} เรียบร้อยแล้ว"
+
+    followers_count = Follow.objects.filter(following=target_user).count()
+    following_count = Follow.objects.filter(follower=target_user).count()
+
+    return JsonResponse({
+        "success": True,
+        "is_following": is_following,
+        "followers_count": followers_count,
+        "following_count": following_count,
+        "message": message,
+        "target_user_id": target_user.id,
+        "target_username": target_user.username,
+    })
+
+
+@require_http_methods(["GET"])
+def user_follow_status_view(request, user_id):
+    """
+    GET /api/users/<user_id>/follow-status/ -> Check follow status and counts
+    """
+    target_user = get_object_or_404(User, pk=user_id)
+    current_user = _get_current_or_default_user(request)
+
+    is_following = Follow.objects.filter(follower=current_user, following=target_user).exists()
+    is_self = current_user.id == target_user.id
+    followers_count = Follow.objects.filter(following=target_user).count()
+    following_count = Follow.objects.filter(follower=target_user).count()
+
+    return JsonResponse({
+        "user_id": target_user.id,
+        "username": target_user.username,
+        "is_following": is_following,
+        "is_self": is_self,
+        "followers_count": followers_count,
+        "following_count": following_count,
+    })
+
+
+@require_http_methods(["GET"])
+def user_followers_list_view(request, user_id):
+    """
+    GET /api/users/<user_id>/followers/?page=1&limit=20
+    """
+    target_user = get_object_or_404(User, pk=user_id)
+    current_user = _get_current_or_default_user(request)
+
+    page = request.GET.get("page", 1)
+    limit = min(int(request.GET.get("limit", 20)), 100)
+
+    followers_qs = Follow.objects.filter(following=target_user).select_related("follower").order_by("-created_at")
+    paginator = Paginator(followers_qs, limit)
+
+    try:
+        page_obj = paginator.page(page)
+    except (PageNotAnInteger, EmptyPage):
+        page_obj = paginator.page(1)
+
+    following_ids = set(
+        Follow.objects.filter(follower=current_user).values_list("following_id", flat=True)
+    )
+
+    data = [
+        {
+            "id": f.follower.id,
+            "username": f.follower.username,
+            "is_following": f.follower.id in following_ids,
+            "is_self": f.follower.id == current_user.id,
+            "created_at": f.created_at.isoformat(),
+        }
+        for f in page_obj
+    ]
+
+    return JsonResponse({
+        "users": data,
+        "total": paginator.count,
+        "page": page_obj.number,
+        "num_pages": paginator.num_pages,
+        "has_next": page_obj.has_next(),
+    })
+
+
+@require_http_methods(["GET"])
+def user_following_list_view(request, user_id):
+    """
+    GET /api/users/<user_id>/following/?page=1&limit=20
+    """
+    target_user = get_object_or_404(User, pk=user_id)
+    current_user = _get_current_or_default_user(request)
+
+    page = request.GET.get("page", 1)
+    limit = min(int(request.GET.get("limit", 20)), 100)
+
+    following_qs = Follow.objects.filter(follower=target_user).select_related("following").order_by("-created_at")
+    paginator = Paginator(following_qs, limit)
+
+    try:
+        page_obj = paginator.page(page)
+    except (PageNotAnInteger, EmptyPage):
+        page_obj = paginator.page(1)
+
+    my_following_ids = set(
+        Follow.objects.filter(follower=current_user).values_list("following_id", flat=True)
+    )
+
+    data = [
+        {
+            "id": f.following.id,
+            "username": f.following.username,
+            "is_following": f.following.id in my_following_ids,
+            "is_self": f.following.id == current_user.id,
+            "created_at": f.created_at.isoformat(),
+        }
+        for f in page_obj
+    ]
+
+    return JsonResponse({
+        "users": data,
+        "total": paginator.count,
+        "page": page_obj.number,
+        "num_pages": paginator.num_pages,
+        "has_next": page_obj.has_next(),
+    })
 

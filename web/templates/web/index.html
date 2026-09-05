@@ -94,6 +94,43 @@
         font-size: 0.95rem;
     }
 
+    .btn-follow-user {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: rgba(99, 102, 241, 0.15);
+        border: 1px solid rgba(99, 102, 241, 0.4);
+        color: #a5b4fc;
+        border-radius: 9999px;
+        padding: 0.18rem 0.65rem;
+        font-size: 0.74rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        outline: none;
+        line-height: 1.2;
+    }
+
+    .btn-follow-user:hover {
+        background: #6366f1;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-follow-user.following {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: var(--text-muted);
+    }
+
+    .btn-follow-user.following:hover {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.4);
+        color: #f87171;
+    }
+
     .post-time {
         font-size: 0.78rem;
         color: var(--text-dim);
@@ -1053,6 +1090,19 @@ async function loadTravelPosts() {
                 `;
             }
 
+            const isOtherUser = !p.is_self && p.author_id;
+            const followBtnHtml = isOtherUser ? `
+                <button type="button" 
+                        class="btn-follow-user ${p.is_following ? 'following' : ''}" 
+                        id="follow_btn_user_${p.author_id}_post_${p.id}"
+                        data-user-id="${p.author_id}"
+                        data-following="${p.is_following ? 'true' : 'false'}"
+                        onclick="handleToggleFollowUser(event, ${p.author_id})"
+                        title="${p.is_following ? 'คลิกเพื่อเลิกติดตาม' : 'คลิกเพื่อติดตามผู้ใช้นี้'}">
+                    ${p.is_following ? 'กำลังติดตาม' : '+ ติดตาม'}
+                </button>
+            ` : '';
+
             return `
                 <div class="post-card" id="post_${p.id}">
                     <div class="post-header">
@@ -1061,6 +1111,7 @@ async function loadTravelPosts() {
                             <div>
                                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                                     <span class="author-name">${p.author_name || 'เรา (Traveler)'}</span>
+                                    ${followBtnHtml}
                                     <span class="rating-badge">${stars} ${p.rating}.0</span>
                                 </div>
                                 <div class="post-time">${dateStr} • ${timeAgo}</div>
@@ -1371,6 +1422,77 @@ async function handleToggleLike(postId) {
         countEl.innerText = currentCount;
         if (totalLikesEl) { totalLikesEl.innerText = currentTotalLikes; }
         showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", true);
+    }
+}
+
+// Toggle Follow / Unfollow User with Optimistic UI Update
+async function handleToggleFollowUser(event, userId) {
+    if (event) event.stopPropagation();
+    const btnList = document.querySelectorAll(`[data-user-id="${userId}"]`);
+    if (!btnList.length) return;
+
+    // Determine current state
+    const firstBtn = btnList[0];
+    const isCurrentlyFollowing = firstBtn.getAttribute("data-following") === "true";
+    const newFollowingState = !isCurrentlyFollowing;
+
+    // Optimistic UI Update across all posts from this author
+    btnList.forEach(btn => {
+        btn.setAttribute("data-following", newFollowingState ? "true" : "false");
+        if (newFollowingState) {
+            btn.classList.add("following");
+            btn.innerText = "กำลังติดตาม";
+            btn.title = "คลิกเพื่อเลิกติดตาม";
+        } else {
+            btn.classList.remove("following");
+            btn.innerText = "+ ติดตาม";
+            btn.title = "คลิกเพื่อติดตามผู้ใช้นี้";
+        }
+    });
+
+    try {
+        const res = await fetch(`/api/users/${userId}/follow/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify({ action: newFollowingState ? "follow" : "unfollow" })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            showToast(data.message || (newFollowingState ? "ติดตามเรียบร้อยแล้ว" : "เลิกติดตามแล้ว"));
+        } else {
+            // Revert state on failure
+            btnList.forEach(btn => {
+                btn.setAttribute("data-following", isCurrentlyFollowing ? "true" : "false");
+                if (isCurrentlyFollowing) {
+                    btn.classList.add("following");
+                    btn.innerText = "กำลังติดตาม";
+                    btn.title = "คลิกเพื่อเลิกติดตาม";
+                } else {
+                    btn.classList.remove("following");
+                    btn.innerText = "+ ติดตาม";
+                    btn.title = "คลิกเพื่อติดตามผู้ใช้นี้";
+                }
+            });
+            showToast(data.error || "ไม่สามารถดำเนินการได้", true);
+        }
+    } catch (err) {
+        console.error(err);
+        // Revert
+        btnList.forEach(btn => {
+            btn.setAttribute("data-following", isCurrentlyFollowing ? "true" : "false");
+            if (isCurrentlyFollowing) {
+                btn.classList.add("following");
+                btn.innerText = "กำลังติดตาม";
+            } else {
+                btn.classList.remove("following");
+                btn.innerText = "+ ติดตาม";
+            }
+        });
+        showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ", true);
     }
 }
 

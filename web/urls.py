@@ -15,6 +15,12 @@ urlpatterns = [
     path("api/posts/<int:post_id>/comments/", api_views.post_comments_list_create_view, name="api_post_comments"),
     path("api/posts/<int:post_id>/comments/<int:comment_id>/", api_views.post_comment_delete_view, name="api_post_comment_delete"),
 
+    # Follow / Unfollow APIs
+    path("api/users/<int:user_id>/follow/", api_views.toggle_follow_view, name="api_user_follow"),
+    path("api/users/<int:user_id>/follow-status/", api_views.user_follow_status_view, name="api_user_follow_status"),
+    path("api/users/<int:user_id>/followers/", api_views.user_followers_list_view, name="api_user_followers"),
+    path("api/users/<int:user_id>/following/", api_views.user_following_list_view, name="api_user_following"),
+
     # Backward compatibility aliases
     path("api/reviews/", api_views.travel_posts_list_create_view, name="api_reviews"),
     path("api/reviews/<int:post_id>/", api_views.travel_post_detail_view, name="api_review_detail"),

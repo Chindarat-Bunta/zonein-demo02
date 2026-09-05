@@ -68,6 +68,29 @@ class PostComment(models.Model):
         return f"Comment by {self.user.username} on {self.post.place_name}"
 
 
+class Follow(models.Model):
+    """
+    Follow relationship between users.
+    ระบบติดตามผู้ใช้ (Follow/Unfollow)
+    """
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following_set")
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers_set")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "user_follows"
+        unique_together = [("follower", "following")]
+        ordering = ["-created_at"]
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.follower_id == self.following_id:
+            raise ValidationError("ไม่สามารถติดตามตัวเองได้")
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"
+
+
 # Backward compatibility aliases
 Review = TravelPost
 Place = TravelPost

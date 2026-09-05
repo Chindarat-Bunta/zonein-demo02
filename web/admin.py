@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PostComment, PostLike, TravelPost
+from .models import Follow, PostComment, PostLike, TravelPost
 
 
 @admin.register(TravelPost)
@@ -21,5 +21,12 @@ class PostLikeAdmin(admin.ModelAdmin):
 class PostCommentAdmin(admin.ModelAdmin):
     list_display = ("user", "post", "content", "created_at")
     search_fields = ("user__username", "post__place_name", "content")
+    list_filter = ("created_at",)
+
+
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ("follower", "following", "created_at")
+    search_fields = ("follower__username", "following__username")
     list_filter = ("created_at",)
 
