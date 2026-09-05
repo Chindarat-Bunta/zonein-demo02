@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ZoneIn - Rating & Review System{% endblock %}</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}ZoneIn - Rating & Review System{% endblock %}</title>
+        <!-- Google Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap"
+              rel="stylesheet">
+        <style>
         :root {
             --bg-base: #0b0f19;
             --bg-card: rgba(23, 31, 49, 0.85);
@@ -180,46 +181,31 @@
             font-size: 0.875rem;
             margin-top: auto;
         }
-    </style>
-    {% block extra_head %}{% endblock %}
-</head>
-<body>
-    <header>
-        <div class="navbar">
-            <a href="{% url 'web:home' %}" class="logo">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #6366f1;">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
-                ZoneIn <span>Review Hub</span>
-            </a>
-            
-            <div class="user-panel">
-                {% if user.is_authenticated %}
-                    <div class="badge-user">
-                        <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
-                        ผู้ใช้งาน: <strong>{{ user.username }}</strong>
-                        {% if user.is_staff %}<span style="font-size: 0.7rem; background: #6366f1; color: #fff; padding: 1px 6px; border-radius: 4px;">ADMIN</span>{% endif %}
-                    </div>
-                    <form method="POST" action="{% url 'web:demo_switch_user' %}" style="display:inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="logout">
-                        <button type="submit" class="btn btn-outline btn-sm">ออกจากระบบ</button>
-                    </form>
-                {% else %}
-                    <span style="color: var(--text-muted); font-size: 0.875rem;">สถานะ: ผู้เยี่ยมชม (Guest)</span>
-                {% endif %}
+        </style>
+        {% block extra_head %}{% endblock %}
+    </head>
+    <body>
+        <header>
+            <div class="navbar">
+                <a href="{% url 'web:home' %}" class="logo">
+                    <svg width="28"
+                         height="28"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2.5"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         style="color: #6366f1">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    ZoneIn <span>Review Hub</span>
+                </a>
             </div>
-        </div>
-    </header>
-
-    <main>
-        {% block content %}{% endblock %}
-    </main>
-
-    <footer>
-        <p>&copy; 2026 ZoneIn Rating & Review System. Built with Django and modern UI patterns.</p>
-    </footer>
-
-    {% block extra_scripts %}{% endblock %}
-</body>
+        </header>
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+        {% block extra_scripts %}{% endblock %}
+    </body>
 </html>
