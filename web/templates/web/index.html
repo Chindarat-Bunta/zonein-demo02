@@ -1,0 +1,1133 @@
+{% extends "web/base.html" %}
+
+{% block title %}ZoneIn - ระบบให้คะแนน, รีวิว และแท็กเพื่อน (Rating & Review System){% endblock %}
+
+{% block extra_head %}
+<style>
+    .grid-layout {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    @media (max-width: 960px) {
+        .grid-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Product Card */
+    .product-hero {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 1.75rem;
+        display: flex;
+        gap: 1.75rem;
+        box-shadow: var(--shadow-card);
+        margin-bottom: 2rem;
+    }
+
+    .product-img {
+        width: 180px;
+        height: 180px;
+        border-radius: var(--radius-md);
+        object-fit: cover;
+        background: #1e293b;
+        border: 1px solid var(--border-color);
+    }
+
+    .product-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .product-badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .product-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: #fff;
+    }
+
+    .product-desc {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+
+    .product-price {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    /* Target Selector Tabs */
+    .target-tabs {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+
+    .target-tab {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 0.6rem 1.1rem;
+        border-radius: var(--radius-md);
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: var(--transition-smooth);
+    }
+
+    .target-tab:hover {
+        background: var(--bg-card-hover);
+        color: #fff;
+    }
+
+    .target-tab.active {
+        background: var(--primary-light);
+        border-color: var(--primary);
+        color: #c7d2fe;
+    }
+
+    /* Summary Card */
+    .summary-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 1.75rem;
+        box-shadow: var(--shadow-card);
+        position: sticky;
+        top: 5rem;
+    }
+
+    .score-banner {
+        text-align: center;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 1.5rem;
+    }
+
+    .big-score {
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1;
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.4rem;
+    }
+
+    .stars-row {
+        display: flex;
+        justify-content: center;
+        gap: 0.25rem;
+        color: var(--star-gold);
+        margin-bottom: 0.35rem;
+    }
+
+    .breakdown-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.6rem;
+        font-size: 0.85rem;
+    }
+
+    .star-label {
+        width: 45px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .progress-bar-bg {
+        flex: 1;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        border-radius: 999px;
+        transition: width 0.4s ease;
+        width: 0%;
+    }
+
+    .breakdown-count {
+        width: 30px;
+        text-align: right;
+        color: var(--text-dim);
+    }
+
+    /* Interactive Review Form */
+    .form-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 1.75rem;
+        box-shadow: var(--shadow-card);
+        margin-bottom: 2rem;
+    }
+
+    .interactive-stars {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin: 0.75rem 0;
+    }
+
+    .star-btn {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 1.85rem;
+        color: #374151;
+        transition: transform 0.15s ease, color 0.15s ease;
+        padding: 0;
+    }
+
+    .star-btn.active, .star-btn.hovered {
+        color: var(--star-gold);
+        filter: drop-shadow(0 0 6px var(--star-gold-glow));
+    }
+
+    .star-btn:hover {
+        transform: scale(1.15);
+    }
+
+    .rating-caption {
+        margin-left: 0.75rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .form-control {
+        width: 100%;
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 0.85rem;
+        color: var(--text-main);
+        font-family: inherit;
+        font-size: 0.95rem;
+        resize: vertical;
+        outline: none;
+        transition: var(--transition-smooth);
+    }
+
+    .form-control:focus {
+        border-color: var(--border-focus);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    /* Friend Tagging Section */
+    .tag-friends-box {
+        margin-top: 0.85rem;
+        margin-bottom: 1.25rem;
+        background: rgba(18, 25, 39, 0.6);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 0.85rem;
+    }
+
+    .tag-friends-title {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .friend-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .friend-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.65rem;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border-color);
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        color: #d1d5db;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+    }
+
+    .friend-chip:hover {
+        background: var(--primary-light);
+        border-color: var(--primary);
+        color: #c7d2fe;
+    }
+
+    .friend-chip.selected {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(236, 72, 153, 0.25));
+        border-color: var(--primary);
+        color: #fff;
+        font-weight: 600;
+    }
+
+    /* Mention & Tag Badges in Reviews */
+    .mention-tag {
+        display: inline-block;
+        background: rgba(99, 102, 241, 0.2);
+        color: #818cf8;
+        padding: 0.05rem 0.4rem;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.88rem;
+    }
+
+    .tagged-friends-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px dashed rgba(255, 255, 255, 0.08);
+        font-size: 0.82rem;
+        color: var(--text-muted);
+    }
+
+    .tagged-user-badge {
+        background: rgba(236, 72, 153, 0.15);
+        border: 1px solid rgba(236, 72, 153, 0.3);
+        color: #f472b6;
+        padding: 0.15rem 0.55rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .you-are-tagged-banner {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(99, 102, 241, 0.2));
+        border: 1px solid rgba(236, 72, 153, 0.4);
+        color: #fbcfe8;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Reviewed status banner */
+    .user-reviewed-box {
+        background: rgba(99, 102, 241, 0.12);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: var(--radius-md);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Review Card */
+    .reviews-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .review-item {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 1.35rem;
+        margin-bottom: 1rem;
+        transition: var(--transition-smooth);
+    }
+
+    .review-item.tagged-highlight {
+        border-color: rgba(236, 72, 153, 0.4);
+        background: rgba(29, 27, 49, 0.85);
+    }
+
+    .review-item:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .reviewer-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .reviewer-name {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #fff;
+    }
+
+    .review-date {
+        font-size: 0.78rem;
+        color: var(--text-dim);
+    }
+
+    .review-comment {
+        color: #d1d5db;
+        font-size: 0.92rem;
+        line-height: 1.55;
+        white-space: pre-line;
+    }
+
+    /* Demo User Switcher Bar */
+    .demo-bar {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px dashed rgba(255, 255, 255, 0.15);
+        border-radius: var(--radius-md);
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .demo-pill {
+        cursor: pointer;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        transition: var(--transition-smooth);
+    }
+
+    .demo-pill:hover, .demo-pill.active {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+    }
+
+    .toast {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: #1f2937;
+        border: 1px solid var(--border-color);
+        padding: 0.85rem 1.35rem;
+        border-radius: var(--radius-sm);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        z-index: 100;
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Quick Demo Persona Switcher -->
+<div class="demo-bar">
+    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+        <span style="color: var(--star-gold);">⚡</span>
+        <strong style="color: #fff;">แถบสลับผู้ใช้งานสำหรับทดสอบ (Demo Users):</strong>
+        <span style="color: var(--text-muted);">คลิกเพื่อสลับ User ทดสอบเขียนรีวิวและแท็กเพื่อน:</span>
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <span class="demo-pill {% if user.username == 'alex_dev' %}active{% endif %}" onclick="switchDemoUser('alex_dev')">👤 alex_dev</span>
+        <span class="demo-pill {% if user.username == 'sarah_ux' %}active{% endif %}" onclick="switchDemoUser('sarah_ux')">👤 sarah_ux</span>
+        <span class="demo-pill {% if user.username == 'john_doe' %}active{% endif %}" onclick="switchDemoUser('john_doe')">👤 john_doe</span>
+        <span class="demo-pill {% if user.username == 'admin' %}active{% endif %}" onclick="switchDemoUser('admin')">🛡️ admin</span>
+        {% if user.is_authenticated %}
+            <span class="demo-pill" onclick="logoutDemoUser()">🚪 Guest (ไม่ล็อกอิน)</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Product Selection Tabs -->
+<div class="target-tabs">
+    {% for p in products %}
+        <div class="target-tab {% if forloop.first %}active{% endif %}" onclick="selectProduct({{ p.id }}, this)">
+            {{ p.name }}
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Main 2-Column Grid -->
+<div class="grid-layout">
+    <!-- Left Column: Product Info, Write Review Form, Reviews List -->
+    <div>
+        <!-- Product Hero Card -->
+        <div class="product-hero" id="productHero">
+            <img src="{{ current_product.image_url|default:'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800' }}" alt="Product" class="product-img" id="heroImg">
+            <div class="product-info">
+                <span class="product-badge">รหัสสินค้า #<span id="heroId">{{ current_product.id }}</span></span>
+                <h1 class="product-title" id="heroTitle">{{ current_product.name }}</h1>
+                <p class="product-desc" id="heroDesc">{{ current_product.description }}</p>
+                <div class="product-price" id="heroPrice">${{ current_product.price }}</div>
+            </div>
+        </div>
+
+        <!-- User Already Reviewed Notice Banner -->
+        <div id="alreadyReviewedBanner" class="user-reviewed-box" style="display: none;">
+            <div>
+                <div style="font-weight: 700; color: #fff; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>✓</span> คุณได้รีวิวสินค้านี้ไปแล้ว
+                </div>
+                <div id="userReviewSnippet" style="font-size: 0.88rem; color: var(--text-muted);"></div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-outline btn-sm" onclick="editMyReview()">แก้ไขรีวิว</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteMyReview()">ลบรีวิว</button>
+            </div>
+        </div>
+
+        <!-- Write / Edit Review Form Card -->
+        <div class="form-card" id="reviewFormCard">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;" id="formTitle">
+                เขียนรีวิวให้คะแนน (Write a Review)
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                ให้คะแนนความพึงพอใจ 1-5 ดาว และแท็กเพื่อนเพื่อแนะนำสินค้านี้
+            </p>
+
+            <input type="hidden" id="editingReviewId" value="">
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block;">
+                    ระดับคะแนนความพึงพอใจ (1-5 ดาว) *
+                </label>
+                <div class="interactive-stars" id="starSelector" onmouseleave="resetStarHover()">
+                    <button type="button" class="star-btn" data-val="1" onmouseover="hoverStars(1)" onclick="selectStars(1)">★</button>
+                    <button type="button" class="star-btn" data-val="2" onmouseover="hoverStars(2)" onclick="selectStars(2)">★</button>
+                    <button type="button" class="star-btn" data-val="3" onmouseover="hoverStars(3)" onclick="selectStars(3)">★</button>
+                    <button type="button" class="star-btn" data-val="4" onmouseover="hoverStars(4)" onclick="selectStars(4)">★</button>
+                    <button type="button" class="star-btn" data-val="5" onmouseover="hoverStars(5)" onclick="selectStars(5)">★</button>
+                    <span class="rating-caption" id="ratingCaption">เลือกระดับดาว</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label for="commentInput" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">
+                    ข้อความรีวิว และความคิดเห็น
+                </label>
+                <textarea id="commentInput" rows="3" class="form-control" placeholder="สินค้าเป็นอย่างไรบ้าง? สามารถพิมพ์ @username เช่น @sarah_ux หรือคลิกปุ่มเพื่อนด้านล่างเพื่อแท็กได้ทันที"></textarea>
+            </div>
+
+            <!-- Friend Tagging Helper -->
+            <div class="tag-friends-box">
+                <div class="tag-friends-title">
+                    <span>👥</span>
+                    <span>แท็กเพื่อนมาดูรีวิวนี้ (คลิกเพื่อแท็ก @mention):</span>
+                </div>
+                <div class="friend-chips" id="availableFriendChips">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <button type="button" class="btn btn-primary" id="btnSubmitReview" onclick="submitReview()">
+                    ส่งรีวิว
+                </button>
+                <button type="button" class="btn btn-outline" id="btnCancelEdit" onclick="cancelEdit()" style="display: none;">
+                    ยกเลิก
+                </button>
+                <span id="formError" style="color: var(--danger); font-size: 0.85rem; margin-left: auto;"></span>
+            </div>
+        </div>
+
+        <!-- Reviews List -->
+        <div>
+            <div class="reviews-header">
+                <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff;">ความคิดเห็นและรีวิวทั้งหมด</h3>
+                <span id="reviewsCountBadge" style="font-size: 0.85rem; color: var(--text-dim);">0 รีวิว</span>
+            </div>
+
+            <div id="reviewsListContainer">
+                <!-- Reviews injected via JavaScript -->
+            </div>
+
+            <!-- Pagination buttons -->
+            <div id="paginationBar" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem;"></div>
+        </div>
+    </div>
+
+    <!-- Right Column: Summary & Breakdown Stats -->
+    <div>
+        <div class="summary-card">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 1.25rem;">
+                สรุปคะแนนรีวิว (Summary)
+            </h3>
+
+            <div class="score-banner">
+                <div class="big-score" id="summaryAvg">0.0</div>
+                <div class="stars-row" id="summaryStarsHeader">
+                    ★★★★★
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);" id="summaryCountText">
+                    คำนวณจาก 0 รีวิว
+                </div>
+            </div>
+
+            <!-- Rating Breakdown (5 to 1 star) -->
+            <div id="breakdownContainer">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast" class="toast"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentTargetId = {{ current_product.id|default:1 }};
+    let selectedRating = 0;
+    let hoveredRating = 0;
+    let currentUserReview = null;
+    let currentPage = 1;
+    let availableUsers = [];
+
+    const ratingDescriptions = {
+        1: "1 ดาว - ต้องปรับปรุง (Terrible)",
+        2: "2 ดาว - พอใช้ (Poor)",
+        3: "3 ดาว - ปานกลาง (Average)",
+        4: "4 ดาว - ดีมาก (Good)",
+        5: "5 ดาว - ยอดเยี่ยมประทับใจ! (Excellent)"
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadAvailableUsers();
+        loadProductSummary();
+        loadReviews(1);
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById("toast");
+        toast.innerText = message;
+        toast.style.borderColor = isError ? "var(--danger)" : "var(--success)";
+        toast.style.display = "block";
+        setTimeout(() => { toast.style.display = "none"; }, 3500);
+    }
+
+    // Load available users for tagging
+    async function loadAvailableUsers() {
+        try {
+            const res = await fetch("/api/users/");
+            if (!res.ok) return;
+            const data = await res.json();
+            availableUsers = data.users || [];
+
+            const container = document.getElementById("availableFriendChips");
+            container.innerHTML = "";
+            availableUsers.forEach(u => {
+                const chip = document.createElement("span");
+                chip.className = "friend-chip";
+                chip.id = `friendChip_${u.username}`;
+                chip.innerHTML = `+ @${u.username}`;
+                chip.onclick = () => tagUserIntoComment(u.username);
+                container.appendChild(chip);
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function tagUserIntoComment(username) {
+        const textarea = document.getElementById("commentInput");
+        const tag = `@${username}`;
+        if (textarea.value.includes(tag)) {
+            textarea.value = textarea.value.replace(new RegExp(`\\s*${tag}`, 'g'), '').trim();
+            highlightSelectedFriendChips();
+        } else {
+            const space = textarea.value.length > 0 && !textarea.value.endsWith(" ") ? " " : "";
+            textarea.value = `${textarea.value}${space}${tag} `;
+            textarea.focus();
+            highlightSelectedFriendChips();
+        }
+    }
+
+    function highlightSelectedFriendChips() {
+        const text = document.getElementById("commentInput").value;
+        availableUsers.forEach(u => {
+            const chip = document.getElementById(`friendChip_${u.username}`);
+            if (!chip) return;
+            if (text.includes(`@${u.username}`)) {
+                chip.classList.add("selected");
+                chip.innerHTML = `✓ @${u.username}`;
+            } else {
+                chip.classList.remove("selected");
+                chip.innerHTML = `+ @${u.username}`;
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const commentEl = document.getElementById("commentInput");
+        if (commentEl) {
+            commentEl.addEventListener("input", highlightSelectedFriendChips);
+        }
+    });
+
+    // Star Selector Logic
+    function hoverStars(rating) {
+        hoveredRating = rating;
+        updateStarVisuals(rating);
+        document.getElementById("ratingCaption").innerText = ratingDescriptions[rating] || "";
+    }
+
+    function resetStarHover() {
+        hoveredRating = 0;
+        updateStarVisuals(selectedRating);
+        document.getElementById("ratingCaption").innerText = selectedRating ? ratingDescriptions[selectedRating] : "เลือกระดับดาว";
+    }
+
+    function selectStars(rating) {
+        selectedRating = rating;
+        updateStarVisuals(rating);
+        document.getElementById("ratingCaption").innerText = ratingDescriptions[rating];
+        document.getElementById("formError").innerText = "";
+    }
+
+    function updateStarVisuals(activeCount) {
+        const buttons = document.querySelectorAll("#starSelector .star-btn");
+        buttons.forEach((btn, index) => {
+            if (index < activeCount) {
+                btn.classList.add("active");
+            } else {
+                btn.classList.remove("active");
+            }
+        });
+    }
+
+    // Tab Switching
+    async function selectProduct(productId, tabElement) {
+        currentTargetId = productId;
+        document.querySelectorAll(".target-tab").forEach(t => t.classList.remove("active"));
+        if (tabElement) tabElement.classList.add("active");
+
+        try {
+            const res = await fetch("/api/products/");
+            const data = await res.json();
+            const product = data.products.find(p => p.id === productId);
+            if (product) {
+                document.getElementById("heroId").innerText = product.id;
+                document.getElementById("heroTitle").innerText = product.name;
+                document.getElementById("heroDesc").innerText = product.description;
+                document.getElementById("heroPrice").innerText = `$${product.price.toFixed(2)}`;
+                if (product.image_url) {
+                    document.getElementById("heroImg").src = product.image_url;
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+
+        cancelEdit();
+        loadProductSummary();
+        loadReviews(1);
+    }
+
+    // Load Summary & Breakdown
+    async function loadProductSummary() {
+        try {
+            const res = await fetch(`/api/reviews/summary/?target_id=${currentTargetId}`);
+            if (!res.ok) return;
+            const data = await res.json();
+
+            document.getElementById("summaryAvg").innerText = data.average_rating.toFixed(1);
+            document.getElementById("summaryCountText").innerText = `คำนวณจาก ${data.review_count} รีวิว`;
+
+            const fullStars = Math.round(data.average_rating);
+            let starStr = "";
+            for (let i = 1; i <= 5; i++) {
+                starStr += i <= fullStars ? "★" : "☆";
+            }
+            document.getElementById("summaryStarsHeader").innerText = starStr;
+
+            const breakdownContainer = document.getElementById("breakdownContainer");
+            breakdownContainer.innerHTML = "";
+            const total = data.review_count || 1;
+
+            for (let star = 5; star >= 1; star--) {
+                const count = data.breakdown[star] || 0;
+                const pct = data.review_count > 0 ? ((count / total) * 100).toFixed(0) : 0;
+
+                const row = document.createElement("div");
+                row.className = "breakdown-row";
+                row.innerHTML = `
+                    <div class="star-label">${star} ★</div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+                    </div>
+                    <div class="breakdown-count">${count}</div>
+                `;
+                breakdownContainer.appendChild(row);
+            }
+
+            // User Review status
+            currentUserReview = data.user_review;
+            const alreadyBox = document.getElementById("alreadyReviewedBanner");
+            const formCard = document.getElementById("reviewFormCard");
+
+            if (data.user_reviewed && currentUserReview) {
+                alreadyBox.style.display = "flex";
+                document.getElementById("userReviewSnippet").innerText = `คะแนนที่คุณให้: ${currentUserReview.rating} ดาว - "${currentUserReview.comment || 'ไม่ได้ระบุข้อความ'}"`;
+                formCard.style.display = "none";
+            } else {
+                alreadyBox.style.display = "none";
+                formCard.style.display = "block";
+            }
+
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function formatCommentWithMentions(comment) {
+        if (!comment) return '<span style="color: var(--text-dim); font-style: italic;">ไม่ได้ระบุข้อความรีวิว</span>';
+        return comment.replace(/@([a-zA-Z0-9_]+)/g, '<span class="mention-tag">@$1</span>');
+    }
+
+    // Load Reviews List
+    async function loadReviews(page = 1) {
+        currentPage = page;
+        const container = document.getElementById("reviewsListContainer");
+        try {
+            const res = await fetch(`/api/reviews/?target_id=${currentTargetId}&page=${page}&page_size=5`);
+            if (!res.ok) {
+                container.innerHTML = `<div style="color: var(--text-dim); text-align: center; padding: 2rem;">ไม่สามารถโหลดรายการรีวิวได้</div>`;
+                return;
+            }
+            const data = await res.json();
+            document.getElementById("reviewsCountBadge").innerText = `${data.count} รีวิว`;
+
+            if (data.results.length === 0) {
+                container.innerHTML = `
+                    <div style="background: var(--bg-card); border: 1px dashed var(--border-color); border-radius: var(--radius-md); padding: 3rem; text-align: center; color: var(--text-muted);">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">✍️</div>
+                        <div style="font-weight: 600; color: #fff; margin-bottom: 0.25rem;">ยังไม่มีรีวิวสำหรับสินค้านี้</div>
+                        <div>ร่วมเป็นคนแรกที่ให้คะแนนและแท็กเพื่อนเพื่อแนะนำสินค้านี้ได้เลย!</div>
+                    </div>
+                `;
+                document.getElementById("paginationBar").innerHTML = "";
+                return;
+            }
+
+            container.innerHTML = data.results.map(r => {
+                const stars = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
+                const dateStr = new Date(r.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+                const initial = (r.username || "U")[0].toUpperCase();
+
+                let actionButtons = "";
+                if (r.is_owner) {
+                    actionButtons = `
+                        <div style="display: flex; gap: 0.4rem;">
+                            <button class="btn btn-outline btn-sm" onclick="editReviewFromCard(${r.id}, ${r.rating}, '${r.comment.replace(/'/g, "\\'")}')">แก้ไข</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteReviewById(${r.id})">ลบ</button>
+                        </div>
+                    `;
+                } else if (r.can_delete) {
+                    actionButtons = `
+                        <button class="btn btn-danger btn-sm" onclick="deleteReviewById(${r.id})">ลบ (Admin)</button>
+                    `;
+                }
+
+                let taggedHtml = "";
+                if (r.tagged_users && r.tagged_users.length > 0) {
+                    const tags = r.tagged_users.map(u => `<span class="tagged-user-badge">@${u.username}</span>`).join(" ");
+                    taggedHtml = `
+                        <div class="tagged-friends-row">
+                            <span>🏷️ เพื่อนที่ถูกแท็ก:</span>
+                            ${tags}
+                        </div>
+                    `;
+                }
+
+                let taggedBanner = "";
+                if (r.is_tagged) {
+                    taggedBanner = `
+                        <div class="you-are-tagged-banner">
+                            ✨ คุณถูกแท็กในรีวิวนี้!
+                        </div>
+                    `;
+                }
+
+                const cardClass = r.is_tagged ? "review-item tagged-highlight" : "review-item";
+
+                return `
+                    <div class="${cardClass}">
+                        ${taggedBanner}
+                        <div class="review-header">
+                            <div class="reviewer-meta">
+                                <div class="avatar">${initial}</div>
+                                <div>
+                                    <div class="reviewer-name">${r.username}</div>
+                                    <div class="review-date">${dateStr}</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="color: var(--star-gold); font-size: 1.1rem; letter-spacing: 1px;">${stars}</div>
+                                ${actionButtons}
+                            </div>
+                        </div>
+                        <div class="review-comment">${formatCommentWithMentions(r.comment)}</div>
+                        ${taggedHtml}
+                    </div>
+                `;
+            }).join("");
+
+            const paginationBar = document.getElementById("paginationBar");
+            if (data.num_pages > 1) {
+                let html = "";
+                if (data.has_previous) {
+                    html += `<button class="btn btn-outline btn-sm" onclick="loadReviews(${currentPage - 1})">ก่อนหน้า</button>`;
+                }
+                html += `<span style="font-size: 0.85rem; color: var(--text-muted); align-self: center;">หน้า ${data.current_page} จาก ${data.num_pages}</span>`;
+                if (data.has_next) {
+                    html += `<button class="btn btn-outline btn-sm" onclick="loadReviews(${currentPage + 1})">ถัดไป</button>`;
+                }
+                paginationBar.innerHTML = html;
+            } else {
+                paginationBar.innerHTML = "";
+            }
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // Submit Review (POST or PUT)
+    async function submitReview() {
+        const errorEl = document.getElementById("formError");
+        errorEl.innerText = "";
+
+        if (!selectedRating) {
+            errorEl.innerText = "กรุณาเลือกระดับดาว 1-5 ดาว";
+            return;
+        }
+
+        const comment = document.getElementById("commentInput").value;
+        const editingId = document.getElementById("editingReviewId").value;
+        const csrfToken = getCookie("csrftoken");
+
+        const btn = document.getElementById("btnSubmitReview");
+        btn.disabled = true;
+        btn.innerText = "กำลังบันทึก...";
+
+        try {
+            let res;
+            if (editingId) {
+                res = await fetch(`/api/reviews/${editingId}/`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                    body: JSON.stringify({ rating: selectedRating, comment: comment })
+                });
+            } else {
+                res = await fetch("/api/reviews/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                    body: JSON.stringify({
+                        target_id: currentTargetId,
+                        rating: selectedRating,
+                        comment: comment
+                    })
+                });
+            }
+
+            const data = await res.json();
+            if (!res.ok) {
+                errorEl.innerText = data.error || "เกิดข้อผิดพลาดในการส่งข้อมูล";
+                showToast(data.error || "ไม่สามารถส่งรีวิวได้", true);
+                btn.disabled = false;
+                btn.innerText = editingId ? "แก้ไขรีวิว" : "ส่งรีวิว";
+                return;
+            }
+
+            showToast(editingId ? "แก้ไขรีวิวสำเร็จเรียบร้อย!" : "ส่งรีวิวและแท็กเพื่อนเรียบร้อยแล้ว!");
+            cancelEdit();
+            loadProductSummary();
+            loadReviews(1);
+
+        } catch (err) {
+            errorEl.innerText = "Network error กรุณาลองใหม่อีกครั้ง";
+            console.error(err);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // Edit Review Trigger
+    function editMyReview() {
+        if (!currentUserReview) return;
+        editReviewFromCard(currentUserReview.id, currentUserReview.rating, currentUserReview.comment);
+    }
+
+    function editReviewFromCard(id, rating, comment) {
+        document.getElementById("editingReviewId").value = id;
+        document.getElementById("formTitle").innerText = "แก้ไขรีวิวของคุณ (Edit Review)";
+        document.getElementById("commentInput").value = comment;
+        highlightSelectedFriendChips();
+        selectStars(rating);
+
+        document.getElementById("alreadyReviewedBanner").style.display = "none";
+        document.getElementById("reviewFormCard").style.display = "block";
+        document.getElementById("btnCancelEdit").style.display = "inline-flex";
+        document.getElementById("btnSubmitReview").innerText = "บันทึกการแก้ไข";
+
+        document.getElementById("reviewFormCard").scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+        document.getElementById("editingReviewId").value = "";
+        document.getElementById("formTitle").innerText = "เขียนรีวิวให้คะแนน (Write a Review)";
+        document.getElementById("commentInput").value = "";
+        highlightSelectedFriendChips();
+        document.getElementById("btnCancelEdit").style.display = "none";
+        document.getElementById("btnSubmitReview").innerText = "ส่งรีวิว";
+        document.getElementById("formError").innerText = "";
+        selectedRating = 0;
+        updateStarVisuals(0);
+        document.getElementById("ratingCaption").innerText = "เลือกระดับดาว";
+
+        if (currentUserReview) {
+            document.getElementById("alreadyReviewedBanner").style.display = "flex";
+            document.getElementById("reviewFormCard").style.display = "none";
+        }
+    }
+
+    // Delete Review
+    async function deleteMyReview() {
+        if (!currentUserReview) return;
+        await deleteReviewById(currentUserReview.id);
+    }
+
+    async function deleteReviewById(reviewId) {
+        if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบรีวิวนี้?")) return;
+
+        const csrfToken = getCookie("csrftoken");
+        try {
+            const res = await fetch(`/api/reviews/${reviewId}/`, {
+                method: "DELETE",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                }
+            });
+
+            if (res.ok) {
+                showToast("ลบรีวิวเรียบร้อยแล้ว");
+                cancelEdit();
+                currentUserReview = null;
+                loadProductSummary();
+                loadReviews(1);
+            } else {
+                const data = await res.json();
+                showToast(data.error || "ไม่สามารถลบรีวิวได้", true);
+            }
+        } catch (e) {
+            console.error(e);
+            showToast("Network error", true);
+        }
+    }
+
+    // Demo user switcher
+    async function switchDemoUser(username) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "{% url 'web:demo_switch_user' %}";
+        form.innerHTML = `
+            <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+            <input type="hidden" name="username" value="${username}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    async function logoutDemoUser() {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "{% url 'web:demo_switch_user' %}";
+        form.innerHTML = `
+            <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+            <input type="hidden" name="action" value="logout">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
+{% endblock %}
