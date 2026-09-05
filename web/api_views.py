@@ -2,7 +2,7 @@ import json
 from django.contrib.auth.models import User
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import F, Q
+from django.db.models import F, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.html import escape
@@ -103,8 +103,11 @@ def travel_posts_list_create_view(request):
             for p in (posts_page.object_list if hasattr(posts_page, "object_list") else posts_page)
         ]
 
+        total_likes = TravelPost.objects.aggregate(total=Sum("likes_count"))["total"] or 0
+
         return JsonResponse({
             "count": paginator.count,
+            "total_likes": total_likes,
             "num_pages": paginator.num_pages,
             "current_page": posts_page.number if hasattr(posts_page, "number") else 1,
             "has_next": posts_page.has_next() if hasattr(posts_page, "has_next") else False,

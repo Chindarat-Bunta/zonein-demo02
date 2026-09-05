@@ -366,8 +366,14 @@
 <div class="feed-container">
     <!-- Feed Top Action Bar -->
     <div class="feed-top-bar">
-        <div class="feed-title-section">
-            <h1>รีวิวสถานที่ท่องเที่ยว</h1>
+        <div class="feed-title-section" style="display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap;">
+            <h1 style="margin: 0;">รีวิวสถานที่ท่องเที่ยว</h1>
+            <span class="total-likes-badge" id="totalLikesBadge" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--text-muted); background: rgba(236, 72, 153, 0.1); border: 1px solid rgba(236, 72, 153, 0.25); padding: 0.2rem 0.65rem; border-radius: 9999px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#ec4899" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                </svg>
+                <span>รวมถูกใจ <strong id="totalFeedLikesCount" style="color: #ec4899;">0</strong> ครั้ง</span>
+            </span>
         </div>
         <button type="button" class="btn btn-create-post" onclick="openCreatePostModal()">
             คุณอยู่ที่ไหน
@@ -688,6 +694,11 @@ async function loadTravelPosts() {
         const data = await res.json();
         const posts = data.results || data.posts || [];
 
+        const totalLikesEl = document.getElementById("totalFeedLikesCount");
+        if (totalLikesEl && typeof data.total_likes !== "undefined") {
+            totalLikesEl.innerText = data.total_likes;
+        }
+
         if (posts.length === 0) {
             container.innerHTML = `
                 <div style="background: var(--bg-card); border: 1px dashed var(--border-color); border-radius: var(--radius-lg); padding: 4rem 2rem; text-align: center; color: var(--text-muted);">
@@ -892,6 +903,8 @@ async function handleToggleLike(postId) {
     // Current state
     const wasLiked = btn.classList.contains("liked");
     const currentCount = parseInt(countEl.innerText, 10) || 0;
+    const totalLikesEl = document.getElementById("totalFeedLikesCount");
+    const currentTotalLikes = totalLikesEl ? (parseInt(totalLikesEl.innerText, 10) || 0) : 0;
 
     // 1. Optimistic Update (Immediate visual response)
     const newLiked = !wasLiked;
@@ -913,6 +926,9 @@ async function handleToggleLike(postId) {
         }
     }
     countEl.innerText = newCount;
+    if (totalLikesEl) {
+        totalLikesEl.innerText = Math.max(0, currentTotalLikes + (newLiked ? 1 : -1));
+    }
 
     // 2. Send API request
     try {
@@ -937,6 +953,7 @@ async function handleToggleLike(postId) {
                 if (svg) { svg.setAttribute("fill", "none"); svg.setAttribute("stroke", "currentColor"); }
             }
             countEl.innerText = currentCount;
+            if (totalLikesEl) { totalLikesEl.innerText = currentTotalLikes; }
             showToast(data.error || "เกิดข้อผิดพลาดในการกดไลค์", true);
             return;
         }
@@ -966,6 +983,7 @@ async function handleToggleLike(postId) {
             if (svg) { svg.setAttribute("fill", "none"); svg.setAttribute("stroke", "currentColor"); }
         }
         countEl.innerText = currentCount;
+        if (totalLikesEl) { totalLikesEl.innerText = currentTotalLikes; }
         showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", true);
     }
 }
