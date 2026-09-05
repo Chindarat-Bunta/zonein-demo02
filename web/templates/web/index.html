@@ -17,6 +17,64 @@
         }
     }
 
+    /* Header Bar with New Post Button */
+    .places-nav-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .target-tabs {
+        display: flex;
+        gap: 0.65rem;
+        overflow-x: auto;
+        padding-bottom: 0.35rem;
+        flex: 1;
+    }
+
+    .target-tab {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 0.6rem 1.1rem;
+        border-radius: var(--radius-md);
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.88rem;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: var(--transition-smooth);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .target-tab:hover {
+        background: var(--bg-card-hover);
+        color: #fff;
+    }
+
+    .target-tab.active {
+        background: var(--primary-light);
+        border-color: var(--primary);
+        color: #c7d2fe;
+    }
+
+    .btn-create-post {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        white-space: nowrap;
+    }
+
+    .btn-create-post:hover {
+        opacity: 0.95;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+    }
+
     /* Place / Location Hero Card */
     .place-hero {
         background: var(--bg-card);
@@ -90,42 +148,6 @@
         color: #d1d5db;
         font-size: 0.95rem;
         line-height: 1.6;
-    }
-
-    /* Target Selector Tabs */
-    .target-tabs {
-        display: flex;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-        overflow-x: auto;
-        padding-bottom: 0.5rem;
-    }
-
-    .target-tab {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        padding: 0.65rem 1.15rem;
-        border-radius: var(--radius-md);
-        color: var(--text-muted);
-        cursor: pointer;
-        font-size: 0.9rem;
-        font-weight: 600;
-        white-space: nowrap;
-        transition: var(--transition-smooth);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .target-tab:hover {
-        background: var(--bg-card-hover);
-        color: #fff;
-    }
-
-    .target-tab.active {
-        background: var(--primary-light);
-        border-color: var(--primary);
-        color: #c7d2fe;
     }
 
     /* Summary Card */
@@ -477,6 +499,68 @@
         border-color: var(--primary);
     }
 
+    /* Modal for Creating Place Post */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1.5rem;
+        animation: fadeIn 0.2s ease;
+    }
+
+    .modal-content {
+        background: #151c2e;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        max-width: 600px;
+        width: 100%;
+        padding: 2rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+        position: relative;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .modal-title {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .modal-close {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.5rem;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .form-group {
+        margin-bottom: 1.15rem;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        display: block;
+        margin-bottom: 0.4rem;
+    }
+
     .toast {
         position: fixed;
         bottom: 2rem;
@@ -504,7 +588,7 @@
     <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
         <span style="color: var(--star-gold);">⚡</span>
         <strong style="color: #fff;">สลับผู้ใช้งานทดสอบ (Demo Users):</strong>
-        <span style="color: var(--text-muted);">คลิกสลับเพื่อทดสอบเขียนรีวิวและแท็กเพื่อนชวนไปเที่ยว:</span>
+        <span style="color: var(--text-muted);">คลิกสลับเพื่อทดสอบโพสต์สถานที่, เขียนรีวิว และแท็กเพื่อน:</span>
     </div>
     <div style="display: flex; gap: 0.5rem; align-items: center;">
         <span class="demo-pill {% if user.username == 'alex_dev' %}active{% endif %}" onclick="switchDemoUser('alex_dev')">👤 alex_dev</span>
@@ -517,20 +601,25 @@
     </div>
 </div>
 
-<!-- Place Selection Tabs -->
-<div class="target-tabs">
-    {% for p in places %}
-        <div class="target-tab {% if forloop.first %}active{% endif %}" onclick="selectPlace({{ p.id }}, this)">
-            <span>📍</span> {{ p.name }}
-        </div>
-    {% endfor %}
+<!-- Places Nav Bar with Create Post Button -->
+<div class="places-nav-bar">
+    <div class="target-tabs" id="placeTabsContainer">
+        {% for p in places %}
+            <div class="target-tab {% if forloop.first %}active{% endif %}" onclick="selectPlace({{ p.id }}, this)" id="tab_place_{{ p.id }}">
+                <span>📍</span> {{ p.name }}
+            </div>
+        {% endfor %}
+    </div>
+    <button type="button" class="btn btn-create-post" onclick="openCreatePlaceModal()">
+        <span>+</span> โพสต์แนะนำสถานที่ใหม่
+    </button>
 </div>
 
 <!-- Main 2-Column Grid -->
 <div class="grid-layout">
     <!-- Left Column: Place Info, Write Review Form, Reviews List -->
     <div>
-        <!-- Place Hero Card (No price, shows category, location & description) -->
+        <!-- Place Hero Card (Shows category, location & description) -->
         <div class="place-hero" id="placeHero">
             <img src="{{ current_place.image_url|default:'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=800' }}" alt="Place" class="place-img" id="heroImg">
             <div class="place-info">
@@ -652,6 +741,50 @@
     </div>
 </div>
 
+<!-- Modal: Create New Place Post -->
+<div class="modal-overlay" id="createPlaceModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">🏞️ โพสต์แนะนำสถานที่ใหม่</h3>
+            <button class="modal-close" onclick="closeCreatePlaceModal()">&times;</button>
+        </div>
+
+        <form id="createPlaceForm" onsubmit="handleCreatePlace(event)">
+            <div class="form-group">
+                <label class="form-label" for="newPlaceName">ชื่อสถานที่ / ชื่อโพสต์แนะนำ *</label>
+                <input type="text" id="newPlaceName" class="form-control" placeholder="เช่น หาดไร่เลย์, ดอยสะโง้, คาเฟ่เรือนไทยริมน้ำ" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="newPlaceCategory">หมวดหมู่</label>
+                    <input type="text" id="newPlaceCategory" class="form-control" placeholder="เช่น สวนสาธารณะ, คาเฟ่, แคมป์ปิ้ง" value="สถานที่ท่องเที่ยว">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newPlaceLocation">ที่ตั้ง / จังหวัด / พิกัด</label>
+                    <input type="text" id="newPlaceLocation" class="form-control" placeholder="เช่น จ.เชียงใหม่, เขตพระนคร กรุงเทพฯ">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="newPlaceDesc">ไฮไลท์ & ที่นี่มีอะไรน่าสนใจบ้าง</label>
+                <textarea id="newPlaceDesc" class="form-control" rows="3" placeholder="อธิบายจุดเด่น บรรยากาศ มุมถ่ายรูป กิจกรรมที่น่าสนใจ หรือเวลาเปิดปิด..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="newPlaceImage">ลิงก์รูปภาพสถานที่ (URL)</label>
+                <input type="url" id="newPlaceImage" class="form-control" placeholder="https://images.unsplash.com/photo-...">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-outline" onclick="closeCreatePlaceModal()">ยกเลิก</button>
+                <button type="submit" class="btn btn-create-post" id="btnSavePlace">บันทึกและสร้างโพสต์</button>
+            </div>
+            <div id="createPlaceError" style="color: var(--danger); font-size: 0.85rem; margin-top: 0.5rem; text-align: right;"></div>
+        </form>
+    </div>
+</div>
+
 <!-- Toast notification -->
 <div id="toast" class="toast"></div>
 {% endblock %}
@@ -700,6 +833,102 @@
         toast.style.borderColor = isError ? "var(--danger)" : "var(--success)";
         toast.style.display = "block";
         setTimeout(() => { toast.style.display = "none"; }, 3500);
+    }
+
+    // Modal Control for Creating New Place Post
+    function openCreatePlaceModal() {
+        document.getElementById("createPlaceModal").style.display = "flex";
+        document.getElementById("newPlaceName").focus();
+        document.getElementById("createPlaceError").innerText = "";
+    }
+
+    function closeCreatePlaceModal() {
+        document.getElementById("createPlaceModal").style.display = "none";
+        document.getElementById("createPlaceForm").reset();
+    }
+
+    async function handleCreatePlace(event) {
+        event.preventDefault();
+        const name = document.getElementById("newPlaceName").value.trim();
+        const category = document.getElementById("newPlaceCategory").value.trim();
+        const location = document.getElementById("newPlaceLocation").value.trim();
+        const description = document.getElementById("newPlaceDesc").value.trim();
+        const image_url = document.getElementById("newPlaceImage").value.trim();
+        const errorEl = document.getElementById("createPlaceError");
+        errorEl.innerText = "";
+
+        if (!name) {
+            errorEl.innerText = "กรุณาระบุชื่อสถานที่";
+            return;
+        }
+
+        const btn = document.getElementById("btnSavePlace");
+        btn.disabled = true;
+        btn.innerText = "กำลังสร้างโพสต์...";
+
+        try {
+            const res = await fetch("/api/places/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+                body: JSON.stringify({
+                    name: name,
+                    category: category,
+                    location: location,
+                    description: description,
+                    image_url: image_url,
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                errorEl.innerText = data.error || "ไม่สามารถสร้างโพสต์ได้";
+                btn.disabled = false;
+                btn.innerText = "บันทึกและสร้างโพสต์";
+                return;
+            }
+
+            showToast("สร้างโพสต์แนะนำสถานที่สำเร็จแล้ว!");
+            closeCreatePlaceModal();
+
+            // Refresh places tabs and select newly created place
+            await reloadPlacesList(data.place.id);
+
+        } catch (e) {
+            console.error(e);
+            errorEl.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "บันทึกและสร้างโพสต์";
+        }
+    }
+
+    async function reloadPlacesList(selectPlaceId) {
+        try {
+            const res = await fetch("/api/places/");
+            const data = await res.json();
+            const places = data.places || data.products || [];
+
+            const container = document.getElementById("placeTabsContainer");
+            container.innerHTML = "";
+            places.forEach(p => {
+                const tab = document.createElement("div");
+                tab.className = `target-tab ${p.id === selectPlaceId ? 'active' : ''}`;
+                tab.id = `tab_place_${p.id}`;
+                tab.innerHTML = `<span>📍</span> ${p.name}`;
+                tab.onclick = () => selectPlace(p.id, tab);
+                container.appendChild(tab);
+            });
+
+            if (selectPlaceId) {
+                const targetTab = document.getElementById(`tab_place_${selectPlaceId}`);
+                selectPlace(selectPlaceId, targetTab);
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     // Load available users for tagging

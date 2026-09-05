@@ -8,9 +8,9 @@ urlpatterns = [
     path("", views.home_view, name="home"),
     path("auth/demo-switch/", views.demo_switch_user_view, name="demo_switch_user"),
 
-    # Places API (Recommended location posts)
-    path("api/places/", views.places_api_view, name="api_places"),
-    path("api/products/", views.places_api_view, name="api_products"),
+    # Places API (Create and List Place recommendation posts)
+    path("api/places/", api_views.places_list_create_view, name="api_places"),
+    path("api/products/", api_views.places_list_create_view, name="api_products"),
 
     # Users API for friend tagging
     path("api/users/", api_views.users_list_api_view, name="api_users"),

@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.html import escape
 from django.views.decorators.http import require_http_methods
 
-from .models import Product, Review
+from .models import Place, Review
 
 
 def _parse_json_body(request):
@@ -83,6 +83,67 @@ def _serialize_review(review, current_user=None):
     }
 
 
+def _serialize_place(place):
+    """Helper to serialize Place instance."""
+    return {
+        "id": place.id,
+        "name": place.name,
+        "category": place.category,
+        "location": place.location,
+        "description": place.description,
+        "image_url": place.image_url,
+        "average_rating": place.average_rating,
+        "review_count": place.review_count,
+        "created_at": place.created_at.isoformat(),
+    }
+
+
+@require_http_methods(["GET", "POST"])
+def places_list_create_view(request):
+    """
+    GET /api/places/ -> List all place recommendation posts
+    POST /api/places/ -> Create a new place recommendation post
+    """
+    if request.method == "GET":
+        places = Place.objects.all().order_by("-created_at")
+        data = [_serialize_place(p) for p in places]
+        return JsonResponse({"places": data, "products": data}, status=200)
+
+    # POST - Create a new Place recommendation post
+    data = _parse_json_body(request)
+    if data is None:
+        return JsonResponse({"error": "Invalid JSON body format."}, status=400)
+
+    name = str(data.get("name", "")).strip()
+    category = str(data.get("category", "")).strip() or "สถานที่ท่องเที่ยว"
+    location = str(data.get("location", "")).strip()
+    description = str(data.get("description", "")).strip()
+    image_url = str(data.get("image_url", "")).strip()
+
+    if not name:
+        return JsonResponse({"error": "กรุณาระบุชื่อสถานที่ (name is required)"}, status=400)
+
+    # Default image if empty
+    if not image_url:
+        image_url = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=60"
+
+    place = Place.objects.create(
+        name=escape(name),
+        category=escape(category),
+        location=escape(location),
+        description=escape(description),
+        image_url=image_url,
+    )
+
+    return JsonResponse(
+        {
+            "message": "สร้างโพสต์แนะนำสถานที่สำเร็จเรียบร้อย!",
+            "place": _serialize_place(place),
+        },
+        status=201,
+    )
+
+
 @require_http_methods(["GET", "POST"])
 def reviews_list_create_view(request):
     """
@@ -99,10 +160,10 @@ def reviews_list_create_view(request):
         except (ValueError, TypeError):
             return JsonResponse({"error": "target_id must be a valid integer."}, status=400)
 
-        product = get_object_or_404(Product, pk=target_id)
+        place = get_object_or_404(Place, pk=target_id)
 
         reviews_qs = (
-            Review.objects.filter(target=product)
+            Review.objects.filter(target=place)
             .select_related("user", "target")
             .prefetch_related("tagged_users")
             .order_by("-created_at")
@@ -153,9 +214,9 @@ def reviews_list_create_view(request):
         return JsonResponse({"error": "target_id is required."}, status=400)
 
     try:
-        product = Product.objects.get(pk=int(target_id))
-    except (ValueError, TypeError, Product.DoesNotExist):
-        return JsonResponse({"error": "Target product does not exist."}, status=404)
+        place = Place.objects.get(pk=int(target_id))
+    except (ValueError, TypeError, Place.DoesNotExist):
+        return JsonResponse({"error": "Target place does not exist."}, status=404)
 
     # Validate rating
     try:
@@ -166,9 +227,9 @@ def reviews_list_create_view(request):
         return JsonResponse({"error": "Rating must be a valid integer between 1 and 5."}, status=400)
 
     # Check for duplicate review
-    if Review.objects.filter(user=request.user, target=product).exists():
+    if Review.objects.filter(user=request.user, target=place).exists():
         return JsonResponse(
-            {"error": "You have already reviewed this product. Please update your existing review instead."},
+            {"error": "You have already reviewed this place. Please update your existing review instead."},
             status=400,
         )
 
@@ -185,21 +246,21 @@ def reviews_list_create_view(request):
     with transaction.atomic():
         review = Review.objects.create(
             user=request.user,
-            target=product,
+            target=place,
             rating=rating,
             comment=sanitized_comment,
         )
         if users_to_tag:
             review.tagged_users.set(users_to_tag)
-        product.update_rating_stats()
+        place.update_rating_stats()
 
     return JsonResponse(
         {
             "message": "Review submitted successfully.",
             "review": _serialize_review(review, request.user),
             "summary": {
-                "average_rating": product.average_rating,
-                "review_count": product.review_count,
+                "average_rating": place.average_rating,
+                "review_count": place.review_count,
             },
         },
         status=201,
@@ -290,17 +351,17 @@ def review_detail_view(request, review_id):
                 status=403,
             )
 
-        product = review.target
+        place = review.target
         with transaction.atomic():
             review.delete()
-            product.update_rating_stats()
+            place.update_rating_stats()
 
         return JsonResponse(
             {
                 "message": "Review deleted successfully.",
                 "summary": {
-                    "average_rating": product.average_rating,
-                    "review_count": product.review_count,
+                    "average_rating": place.average_rating,
+                    "review_count": place.review_count,
                 },
             },
             status=200,
@@ -321,10 +382,10 @@ def reviews_summary_view(request):
     except (ValueError, TypeError):
         return JsonResponse({"error": "target_id must be a valid integer."}, status=400)
 
-    product = get_object_or_404(Product, pk=target_id)
+    place = get_object_or_404(Place, pk=target_id)
 
     distribution = (
-        Review.objects.filter(target=product)
+        Review.objects.filter(target=place)
         .values("rating")
         .annotate(count=Count("rating"))
     )
@@ -334,15 +395,15 @@ def reviews_summary_view(request):
 
     user_review = None
     if request.user.is_authenticated:
-        existing = Review.objects.filter(target=product, user=request.user).prefetch_related("tagged_users").first()
+        existing = Review.objects.filter(target=place, user=request.user).prefetch_related("tagged_users").first()
         if existing:
             user_review = _serialize_review(existing, request.user)
 
     return JsonResponse({
-        "target_id": product.id,
-        "target_name": product.name,
-        "average_rating": product.average_rating,
-        "review_count": product.review_count,
+        "target_id": place.id,
+        "target_name": place.name,
+        "average_rating": place.average_rating,
+        "review_count": place.review_count,
         "breakdown": breakdown,
         "user_reviewed": user_review is not None,
         "user_review": user_review,

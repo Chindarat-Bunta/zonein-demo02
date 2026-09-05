@@ -271,3 +271,21 @@ class RatingReviewAPITests(TestCase):
         usernames = [u["username"] for u in users]
         self.assertIn("author1", usernames)
         self.assertIn("author2", usernames)
+
+    def test_create_place_post_api(self):
+        """POST /api/places/ creates a new Place recommendation post."""
+        response = self.client.post(
+            reverse("web:api_places"),
+            data={
+                "name": "หาดไร่เลย์",
+                "category": "ทะเล & ปีนผา",
+                "location": "จ.กระบี่",
+                "description": "หาดทรายขาว ล้อมรอบด้วยหน้าผาหินปูน เหมาะสำหรับพายเรือคายัคและปีนผา",
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertEqual(data["place"]["name"], "หาดไร่เลย์")
+        self.assertEqual(data["place"]["category"], "ทะเล &amp; ปีนผา")
+        self.assertTrue(Place.objects.filter(name="หาดไร่เลย์").exists())
