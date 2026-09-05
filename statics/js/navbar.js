@@ -97,45 +97,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Mobile drawer toggle
-    let isMobileOpen = false;
-    if (mobileMenuBtn && mobileDrawer) {
-        mobileMenuBtn.addEventListener('click', () => {
-            isMobileOpen = !isMobileOpen;
-            if (isMobileOpen) {
-                mobileDrawer.classList.add('active');
-                mobileMenuBtn.innerHTML = `
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                `;
+    // Mobile drawer toggle & backdrop controls
+    const mobileDrawerBackdrop = document.getElementById('mobileDrawerBackdrop');
+    const drawerCloseBtn = document.getElementById('drawerCloseBtn');
+
+    function openMobileDrawer() {
+        if (!mobileDrawer) return;
+        mobileDrawer.classList.add('active');
+        if (mobileDrawerBackdrop) mobileDrawerBackdrop.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeMobileDrawer() {
+        if (!mobileDrawer) return;
+        mobileDrawer.classList.remove('active');
+        if (mobileDrawerBackdrop) mobileDrawerBackdrop.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (mobileDrawer && mobileDrawer.classList.contains('active')) {
+                closeMobileDrawer();
             } else {
-                mobileDrawer.classList.remove('active');
-                mobileMenuBtn.innerHTML = `
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                `;
+                openMobileDrawer();
             }
         });
     }
 
+    if (drawerCloseBtn) {
+        drawerCloseBtn.addEventListener('click', closeMobileDrawer);
+    }
+
+    if (mobileDrawerBackdrop) {
+        mobileDrawerBackdrop.addEventListener('click', closeMobileDrawer);
+    }
+
+    // Close drawer on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && mobileDrawer && mobileDrawer.classList.contains('active')) {
+            closeMobileDrawer();
+        }
+    });
+
     window.handleMobileTab = function (e, tabId) {
         e.preventDefault();
-        if (mobileDrawer) mobileDrawer.classList.remove('active');
-        isMobileOpen = false;
-        if (mobileMenuBtn) {
-            mobileMenuBtn.innerHTML = `
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            `;
-        }
+        closeMobileDrawer();
         window.switchTab(tabId);
     };
 

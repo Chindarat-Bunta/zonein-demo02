@@ -111,9 +111,37 @@
     </header>
 
     <!-- ==========================================================================
-         4. MOBILE RESPONSIVE DRAWER
+         4. MOBILE RESPONSIVE SIDE DRAWER (SLIDE-OUT FROM RIGHT)
          ========================================================================== -->
-    <div class="mobile-drawer" id="mobileDrawer">
+    <!-- Backdrop overlay for clicking outside to dismiss -->
+    <div class="mobile-drawer-backdrop" id="mobileDrawerBackdrop"></div>
+
+    <!-- Side Drawer Panel -->
+    <aside class="mobile-drawer" id="mobileDrawer" aria-label="Mobile Navigation Drawer">
+        <!-- Drawer Header with Brand & Close Button -->
+        <div class="mobile-drawer-header">
+            <div class="drawer-brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="word-zone">Zone</span>
+                    <span class="word-in">In</span>
+                </div>
+            </div>
+            <button class="drawer-close-btn" id="drawerCloseBtn" aria-label="Close Menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Navigation Links -->
         <div class="mobile-drawer-links">
             <a href="/" class="mobile-tab-btn active" data-tab="home" onclick="handleMobileTab(event, 'home')">
                 <span style="display: flex; align-items: center; gap: 10px;">
@@ -146,11 +174,13 @@
                 <span>→</span>
             </a>
         </div>
+
+        <!-- Auth Buttons -->
         <div class="mobile-drawer-auth">
             <button class="btn-signin" onclick="triggerAuth('Sign In')">Sign In / เข้าสู่ระบบ</button>
             <button class="btn-signup" onclick="triggerAuth('Sign Up')">Sign Up / สมัครสมาชิก</button>
         </div>
-    </div>
+    </aside>
 
     <!-- ==========================================================================
          PAGE CONTENT & DYNAMIC TABS DEMO SHOWCASE
