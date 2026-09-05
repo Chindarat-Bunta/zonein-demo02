@@ -176,7 +176,7 @@ STATICFILES_DIRS = [
 ]
 
 # ==============================================================================
-# Cloudinary Configuration
+# Cloudinary Configuration (Central Image & Media Upload Service)
 # ==============================================================================
 import cloudinary
 
@@ -195,6 +195,13 @@ elif CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
         cloud_name=CLOUDINARY_CLOUD_NAME,
         api_key=CLOUDINARY_API_KEY,
         api_secret=CLOUDINARY_API_SECRET,
+        secure=True,
+    )
+else:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME or "zonein",
+        api_key=CLOUDINARY_API_KEY or "demo_key",
+        api_secret=CLOUDINARY_API_SECRET or "demo_secret",
         secure=True,
     )
 

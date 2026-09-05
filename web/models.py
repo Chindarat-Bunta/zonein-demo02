@@ -1,6 +1,6 @@
-from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.text import slugify
@@ -46,11 +46,11 @@ def create_or_save_user_profile(sender, instance, created, **kwargs):
 
 
 # ==============================================================================
-# 2. Place / Post Model (หน้าเพิ่มโพสต์ / สถานที่: ชื่อ, หมวดหมู่, พิกัด Maps, รูปภาพ)
+# 2. Place / Post Model (สถานที่ท่องเที่ยว / โพสต์แนะนำสถานที่)
 # ==============================================================================
 class Place(models.Model):
     """
-    Represents a place or post created by users:
+    Represents a place or travel post created by users:
     - Title, category, description, and address
     - Coordinates (latitude & longitude) for Google Maps integration
     - Cover image hosted via Cloudinary
@@ -71,11 +71,9 @@ class Place(models.Model):
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default="cafe", verbose_name="หมวดหมู่")
     description = models.TextField(blank=True, verbose_name="รายละเอียดสถานที่")
     address = models.CharField(max_length=255, blank=True, verbose_name="ที่อยู่ / พิกัดตำบล-อำเภอ")
-    
     # Google Maps coordinates
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name="ละติจูด (Google Maps)")
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name="ลองจิจูด (Google Maps)")
-    
     # Cloudinary cover image
     cover_image_url = models.URLField(max_length=500, blank=True, verbose_name="รูปภาพปกสถานที่")
     cover_image_public_id = models.CharField(max_length=200, blank=True, verbose_name="Cloudinary Cover ID")
@@ -117,7 +115,7 @@ class Place(models.Model):
 
 
 # ==============================================================================
-# 3. PlaceImage Model (รูปภาพเพิ่มเติมของสถานที่ / แกลเลอรี)
+# 3. PlaceImage Model (รูปภาพเพิ่มเติมของสถานที่ / แกลเลอรี Cloudinary)
 # ==============================================================================
 class PlaceImage(models.Model):
     """Gallery images for a place, stored in Cloudinary."""
@@ -201,3 +199,135 @@ class PlaceLike(models.Model):
 
     def __str__(self):
         return f"{self.user.username} liked {self.place.name}"
+
+
+# ==============================================================================
+# 7. Notification Model (ระบบการแจ้งเตือน)
+# ==============================================================================
+class Notification(models.Model):
+    """
+    ตาราง Notification เก็บข้อมูลการแจ้งเตือน:
+    - ใครเป็นคนกระทำ (actor / sender): ผู้ใช้ที่ทำแอคชัน (เช่น กดไลก์, เขียนรีวิว)
+    - ผู้รับการแจ้งเตือน (recipient / user): เจ้าของโพสต์ที่ได้รับการแจ้งเตือน
+    - ทำแอคชันอะไร (action_type): ประเภทแอคชัน เช่น like (กดไลก์), review (รีวิว), comment (คอมเมนต์), follow (ติดตาม)
+    - กระทำกับโพสต์ไหน (post / place): โพสต์หรือสถานที่ที่เกี่ยวข้อง
+    - ผู้ใช้กดอ่านหรือยัง (is_read): สถานะว่าเปิดอ่านหรือยัง (True/False)
+    """
+    ACTION_CHOICES = [
+        ("like", "กดไลก์ (Like)"),
+        ("review", "เขียนรีวิว (Review)"),
+        ("comment", "แสดงความคิดเห็น (Comment)"),
+        ("follow", "ติดตาม (Follow)"),
+        ("other", "อื่นๆ (Other)"),
+    ]
+
+    # 1. ใครเป็นคนกระทำ
+    actor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="notifications_sent",
+        verbose_name="ใครเป็นคนกระทำ (Actor / Sender)"
+    )
+
+    # 2. ผู้รับการแจ้งเตือน (เจ้าของโพสต์ / ผู้รับ)
+    recipient = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="notifications_received",
+        verbose_name="ผู้รับการแจ้งเตือน (Recipient)"
+    )
+
+    # 3. ทำแอคชันอะไร (เช่น กดไลก์, รีวิว)
+    action_type = models.CharField(
+        max_length=50,
+        choices=ACTION_CHOICES,
+        default="like",
+        verbose_name="ทำแอคชันอะไร (Action Type)",
+        help_text="ประเภทของแอคชัน เช่น like, review, comment, follow"
+    )
+
+    # 4. กระทำกับโพสต์ไหน
+    post = models.ForeignKey(
+        Place,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+        verbose_name="กระทำกับโพสต์ไหน (Target Post / Place)"
+    )
+
+    # 5. ผู้ใช้กดอ่านหรือยัง (สถานะ is_read)
+    is_read = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name="สถานะกดอ่านแล้วหรือยัง (is_read)"
+    )
+
+    # ข้อความเพิ่มเติม (Optional custom message)
+    message = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name="ข้อความแจ้งเตือน"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="เวลาที่เกิดการกระทำ")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="เวลาที่อัปเดตล่าสุด")
+
+    class Meta:
+        verbose_name = "การแจ้งเตือน (Notification)"
+        verbose_name_plural = "การแจ้งเตือนทั้งหมด (Notifications)"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["recipient", "is_read"]),
+            models.Index(fields=["created_at"]),
+        ]
+
+    def __str__(self):
+        post_info = f" บนโพสต์ '{self.post.name}'" if self.post else ""
+        return f"{self.actor.username} {self.get_action_type_display()}{post_info} -> {self.recipient.username} ({'อ่านแล้ว' if self.is_read else 'ยังไม่อ่าน'})"
+
+    # Property Aliases for developer convenience
+    @property
+    def sender(self):
+        """Alias สำหรับ actor (ใครเป็นคนกระทำ)"""
+        return self.actor
+
+    @property
+    def place(self):
+        """Alias สำหรับ post (กระทำกับโพสต์ไหน)"""
+        return self.post
+
+    def mark_as_read(self):
+        """เปลี่ยนสถานะเป็นอ่านแล้ว"""
+        if not self.is_read:
+            self.is_read = True
+            self.save(update_fields=["is_read", "updated_at"])
+
+    @property
+    def summary_text(self):
+        """สร้างข้อความสรุปการแจ้งเตือนเป็นภาษาไทย"""
+        if self.message:
+            return self.message
+
+        actor_name = getattr(self.actor, "profile", None)
+        actor_display = actor_name.get_display_name() if actor_name else self.actor.username
+        post_name = f"'{self.post.name}'" if self.post else "โพสต์ของคุณ"
+
+        if self.action_type == "like":
+            return f"{actor_display} ได้กดไลก์ {post_name}"
+        elif self.action_type == "review":
+            return f"{actor_display} ได้เขียนรีวิวบน {post_name}"
+        elif self.action_type == "comment":
+            return f"{actor_display} ได้แสดงความคิดเห็นบน {post_name}"
+        elif self.action_type == "follow":
+            return f"{actor_display} ได้เริ่มติดตามคุณ"
+        return f"{actor_display} มีการเคลื่อนไหวใหม่บน {post_name}"
+
+
+# ==============================================================================
+# Backward compatibility aliases
+# ==============================================================================
+TravelPost = Place
+PostLike = PlaceLike
+
