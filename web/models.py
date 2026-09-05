@@ -115,6 +115,52 @@ class Place(models.Model):
     def wishlist_count(self):
         return self.wishlisted_by.count()
 
+    @property
+    def maps_navigation_url(self):
+        """Google Maps direct navigation link (เปิดนำทางทันที)"""
+        if self.latitude and self.longitude:
+            return f"https://www.google.com/maps/dir/?api=1&destination={self.latitude},{self.longitude}"
+        import urllib.parse
+        dest = f"{self.name} {self.address}".strip()
+        return f"https://www.google.com/maps/dir/?api=1&destination={urllib.parse.quote_plus(dest)}"
+
+    @property
+    def maps_search_url(self):
+        """Google Maps search link (ดูตำแหน่งบน Google Maps)"""
+        if self.latitude and self.longitude:
+            return f"https://www.google.com/maps/search/?api=1&query={self.latitude},{self.longitude}"
+        import urllib.parse
+        dest = f"{self.name} {self.address}".strip()
+        return f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote_plus(dest)}"
+
+    @property
+    def maps_embed_url(self):
+        """Google Maps Embed iframe URL for map preview"""
+        if self.latitude and self.longitude:
+            return f"https://maps.google.com/maps?q={self.latitude},{self.longitude}&hl=th&z=15&output=embed"
+        import urllib.parse
+        dest = f"{self.name} {self.address}".strip()
+        return f"https://maps.google.com/maps?q={urllib.parse.quote_plus(dest)}&hl=th&z=15&output=embed"
+
+    @property
+    def rating_breakdown(self):
+        """Calculate review counts and percentages for each star rating (5 down to 1)"""
+        total = self.review_count
+        counts = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+        for r in self.reviews.all():
+            if r.rating in counts:
+                counts[r.rating] += 1
+        breakdown = []
+        for star in range(5, 0, -1):
+            cnt = counts[star]
+            pct = round((cnt / total * 100)) if total > 0 else 0
+            breakdown.append({
+                "star": star,
+                "count": cnt,
+                "percentage": pct,
+            })
+        return breakdown
+
 
 # ==============================================================================
 # 3. PlaceImage Model (รูปภาพเพิ่มเติมของสถานที่ / แกลเลอรี Cloudinary)

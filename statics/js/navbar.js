@@ -180,4 +180,212 @@ document.addEventListener('DOMContentLoaded', () => {
             moveGliderTo(currentActive, false);
         }
     });
+
+    // =========================================================================
+    // SEARCH & EXPLORE FEED INTERACTIVE ENGINE
+    // =========================================================================
+    const searchInput = document.getElementById('exploreSearchInput');
+    const btnClearSearch = document.getElementById('btnClearSearch');
+    const btnSideFilterToggle = document.getElementById('btnSideFilterToggle');
+    const sideFilterPanel = document.getElementById('sideFilterPanel');
+    const filterCountBadge = document.getElementById('filterCountBadge');
+    const quickChips = document.querySelectorAll('.filter-quick-chip');
+    const filterCatSelect = document.getElementById('filterCategorySelect');
+    const filterLocSelect = document.getElementById('filterLocationSelect');
+    const filterRatingSelect = document.getElementById('filterRatingSelect');
+    const filterSortSelect = document.getElementById('filterSortSelect');
+    const btnResetFilters = document.getElementById('btnResetFilters');
+    const btnApplyFilters = document.getElementById('btnApplyFilters');
+    const exploreCards = document.querySelectorAll('.explore-card');
+    const exploreGrid = document.getElementById('exploreMediaGrid');
+
+    // Auto-switch to search tab if URL has #search
+    function checkHashAndSwitch() {
+        const hash = window.location.hash.replace('#', '').toLowerCase();
+        if (hash === 'search' || hash === 'notifications' || hash === 'home') {
+            window.switchTab(hash);
+        }
+    }
+    checkHashAndSwitch();
+    window.addEventListener('hashchange', checkHashAndSwitch);
+
+    // Filter state
+    const filterState = {
+        query: '',
+        category: 'all',
+        location: 'all',
+        minRating: 0,
+        sort: 'recommended',
+    };
+
+    function applyExploreFilters() {
+        let visibleCount = 0;
+
+        exploreCards.forEach(card => {
+            const title = (card.getAttribute('data-title') || '').toLowerCase();
+            const category = card.getAttribute('data-category') || '';
+            const location = card.getAttribute('data-location') || '';
+            const rating = parseFloat(card.getAttribute('data-rating') || '0');
+
+            // 1. Text Query Match
+            const matchesQuery = !filterState.query || title.includes(filterState.query.toLowerCase());
+
+            // 2. Category Match
+            const matchesCat = filterState.category === 'all' || category === filterState.category;
+
+            // 3. Location Match
+            const matchesLoc = filterState.category === 'all' || filterState.location === 'all' || location.includes(filterState.location);
+
+            // 4. Rating Match
+            const matchesRating = filterState.minRating === 0 || rating >= filterState.minRating;
+
+            if (matchesQuery && matchesCat && matchesLoc && matchesRating) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Update active filter badge
+        let activeFilterCount = 0;
+        if (filterState.category !== 'all') activeFilterCount++;
+        if (filterState.location !== 'all') activeFilterCount++;
+        if (filterState.minRating > 0) activeFilterCount++;
+
+        if (filterCountBadge) {
+            if (activeFilterCount > 0) {
+                filterCountBadge.innerText = activeFilterCount;
+                filterCountBadge.style.display = 'inline-flex';
+                if (btnSideFilterToggle) btnSideFilterToggle.classList.add('active');
+            } else {
+                filterCountBadge.style.display = 'none';
+                if (btnSideFilterToggle && (!sideFilterPanel || !sideFilterPanel.classList.contains('open'))) {
+                    btnSideFilterToggle.classList.remove('active');
+                }
+            }
+        }
+    }
+
+    // Live search input listener
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            filterState.query = e.target.value.trim();
+            if (btnClearSearch) {
+                if (filterState.query.length > 0) {
+                    btnClearSearch.classList.add('visible');
+                } else {
+                    btnClearSearch.classList.remove('visible');
+                }
+            }
+            applyExploreFilters();
+        });
+    }
+
+    if (btnClearSearch) {
+        btnClearSearch.addEventListener('click', () => {
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.focus();
+            }
+            btnClearSearch.classList.remove('visible');
+            filterState.query = '';
+            applyExploreFilters();
+        });
+    }
+
+    // Toggle Side Filter Panel ("ซึ่งตรงค้นหาจะมีการกรองข้างๆ")
+    if (btnSideFilterToggle && sideFilterPanel) {
+        btnSideFilterToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isOpen = sideFilterPanel.classList.toggle('open');
+            btnSideFilterToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            if (isOpen) {
+                btnSideFilterToggle.classList.add('active');
+            } else {
+                let activeFilterCount = 0;
+                if (filterState.category !== 'all') activeFilterCount++;
+                if (filterState.location !== 'all') activeFilterCount++;
+                if (filterState.minRating > 0) activeFilterCount++;
+                if (activeFilterCount === 0) {
+                    btnSideFilterToggle.classList.remove('active');
+                }
+            }
+        });
+    }
+
+    // Category Quick Chips
+    quickChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            quickChips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+
+            const cat = chip.getAttribute('data-category') || 'all';
+            filterState.category = cat;
+
+            if (filterCatSelect) {
+                filterCatSelect.value = cat;
+            }
+
+            applyExploreFilters();
+        });
+    });
+
+    // Dropdown Selects in Filter Panel
+    if (filterCatSelect) {
+        filterCatSelect.addEventListener('change', (e) => {
+            const cat = e.target.value;
+            filterState.category = cat;
+            quickChips.forEach(c => {
+                if (c.getAttribute('data-category') === cat) {
+                    c.classList.add('active');
+                } else {
+                    c.classList.remove('active');
+                }
+            });
+            applyExploreFilters();
+        });
+    }
+
+    if (filterLocSelect) {
+        filterLocSelect.addEventListener('change', (e) => {
+            filterState.location = e.target.value;
+            applyExploreFilters();
+        });
+    }
+
+    if (filterRatingSelect) {
+        filterRatingSelect.addEventListener('change', (e) => {
+            filterState.minRating = parseFloat(e.target.value) || 0;
+            applyExploreFilters();
+        });
+    }
+
+    if (btnResetFilters) {
+        btnResetFilters.addEventListener('click', () => {
+            filterState.category = 'all';
+            filterState.location = 'all';
+            filterState.minRating = 0;
+            filterState.query = '';
+            if (searchInput) searchInput.value = '';
+            if (btnClearSearch) btnClearSearch.classList.remove('visible');
+            if (filterCatSelect) filterCatSelect.value = 'all';
+            if (filterLocSelect) filterLocSelect.value = 'all';
+            if (filterRatingSelect) filterRatingSelect.value = '0';
+            quickChips.forEach(c => {
+                if (c.getAttribute('data-category') === 'all') c.classList.add('active');
+                else c.classList.remove('active');
+            });
+            applyExploreFilters();
+        });
+    }
+
+    if (btnApplyFilters && sideFilterPanel) {
+        btnApplyFilters.addEventListener('click', () => {
+            applyExploreFilters();
+            sideFilterPanel.classList.remove('open');
+            if (btnSideFilterToggle) btnSideFilterToggle.setAttribute('aria-expanded', 'false');
+        });
+    }
 });
+
