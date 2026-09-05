@@ -1,11 +1,12 @@
 import json
+import re
+from django.contrib.auth.models import User
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.html import escape
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .models import Product, Review
@@ -21,13 +22,49 @@ def _parse_json_body(request):
     return request.POST
 
 
+def _extract_tagged_users(comment_text, explicit_user_ids=None, explicit_usernames=None):
+    """
+    Extract User queryset based on @mentions in comment and explicit lists.
+    """
+    users_to_tag = set()
+
+    # 1. Parse @username mentions from comment text
+    if comment_text:
+        mentions = re.findall(r"@([a-zA-Z0-9_]+)", comment_text)
+        if mentions:
+            mentioned_users = User.objects.filter(username__in=mentions)
+            users_to_tag.update(mentioned_users)
+
+    # 2. Add explicit IDs if provided
+    if explicit_user_ids and isinstance(explicit_user_ids, list):
+        valid_ids = [uid for uid in explicit_user_ids if str(uid).isdigit()]
+        if valid_ids:
+            users_to_tag.update(User.objects.filter(id__in=valid_ids))
+
+    # 3. Add explicit usernames if provided
+    if explicit_usernames and isinstance(explicit_usernames, list):
+        valid_names = [str(name).strip().lstrip("@") for name in explicit_usernames if str(name).strip()]
+        if valid_names:
+            users_to_tag.update(User.objects.filter(username__in=valid_names))
+
+    return list(users_to_tag)
+
+
 def _serialize_review(review, current_user=None):
-    """Helper to serialize a Review instance to dict."""
+    """Helper to serialize a Review instance to dict including tagged friends."""
     is_owner = False
     is_admin = False
+    is_tagged = False
+
+    tagged_list = [
+        {"id": u.id, "username": u.username}
+        for u in review.tagged_users.all()
+    ]
+
     if current_user and current_user.is_authenticated:
         is_owner = review.user_id == current_user.id
         is_admin = current_user.is_staff or current_user.is_superuser
+        is_tagged = any(u["id"] == current_user.id for u in tagged_list)
 
     return {
         "id": review.id,
@@ -37,6 +74,8 @@ def _serialize_review(review, current_user=None):
         "username": review.user.username,
         "rating": review.rating,
         "comment": review.comment,
+        "tagged_users": tagged_list,
+        "is_tagged": is_tagged,
         "created_at": review.created_at.isoformat(),
         "updated_at": review.updated_at.isoformat(),
         "is_owner": is_owner,
@@ -48,7 +87,7 @@ def _serialize_review(review, current_user=None):
 def reviews_list_create_view(request):
     """
     GET /api/reviews/?target_id=xxx&page=1&page_size=10
-    POST /api/reviews/ (Body: {target_id, rating, comment})
+    POST /api/reviews/ (Body: {target_id, rating, comment, tagged_user_ids?})
     """
     if request.method == "GET":
         target_id = request.GET.get("target_id")
@@ -65,6 +104,7 @@ def reviews_list_create_view(request):
         reviews_qs = (
             Review.objects.filter(target=product)
             .select_related("user", "target")
+            .prefetch_related("tagged_users")
             .order_by("-created_at")
         )
 
@@ -82,7 +122,8 @@ def reviews_list_create_view(request):
             reviews_page = paginator.page(1) if int(page_number or 1) <= 1 else []
 
         serialized_reviews = [
-            _serialize_review(r, request.user) for r in (reviews_page.object_list if hasattr(reviews_page, "object_list") else reviews_page)
+            _serialize_review(r, request.user)
+            for r in (reviews_page.object_list if hasattr(reviews_page, "object_list") else reviews_page)
         ]
 
         return JsonResponse({
@@ -105,6 +146,8 @@ def reviews_list_create_view(request):
     target_id = data.get("target_id")
     rating_raw = data.get("rating")
     comment_raw = data.get("comment", "")
+    explicit_tagged_ids = data.get("tagged_user_ids", [])
+    explicit_tagged_names = data.get("tagged_usernames", [])
 
     if not target_id:
         return JsonResponse({"error": "target_id is required."}, status=400)
@@ -132,6 +175,13 @@ def reviews_list_create_view(request):
     # Sanitize comment for XSS protection
     sanitized_comment = escape(str(comment_raw).strip()) if comment_raw else ""
 
+    # Resolve tagged users
+    users_to_tag = _extract_tagged_users(
+        comment_raw,
+        explicit_user_ids=explicit_tagged_ids,
+        explicit_usernames=explicit_tagged_names,
+    )
+
     with transaction.atomic():
         review = Review.objects.create(
             user=request.user,
@@ -139,6 +189,8 @@ def reviews_list_create_view(request):
             rating=rating,
             comment=sanitized_comment,
         )
+        if users_to_tag:
+            review.tagged_users.set(users_to_tag)
         product.update_rating_stats()
 
     return JsonResponse(
@@ -158,11 +210,11 @@ def reviews_list_create_view(request):
 def review_detail_view(request, review_id):
     """
     GET /api/reviews/<id>/
-    PUT /api/reviews/<id>/ (Body: {rating?, comment?})
+    PUT /api/reviews/<id>/ (Body: {rating?, comment?, tagged_user_ids?})
     DELETE /api/reviews/<id>/
     """
     try:
-        review = Review.objects.select_related("user", "target").get(pk=review_id)
+        review = Review.objects.select_related("user", "target").prefetch_related("tagged_users").get(pk=review_id)
     except Review.DoesNotExist:
         return JsonResponse({"error": "Review not found."}, status=404)
 
@@ -197,14 +249,27 @@ def review_detail_view(request, review_id):
             except (ValueError, TypeError):
                 return JsonResponse({"error": "Rating must be a valid integer between 1 and 5."}, status=400)
 
+        comment_changed = False
         if "comment" in data:
             review.comment = escape(str(data["comment"]).strip())
             updated_fields.append("comment")
+            comment_changed = True
 
-        if updated_fields:
-            with transaction.atomic():
+        with transaction.atomic():
+            if updated_fields:
                 review.save()
                 review.target.update_rating_stats()
+
+            if comment_changed or "tagged_user_ids" in data or "tagged_usernames" in data:
+                users_to_tag = _extract_tagged_users(
+                    data.get("comment", review.comment),
+                    explicit_user_ids=data.get("tagged_user_ids"),
+                    explicit_usernames=data.get("tagged_usernames"),
+                )
+                review.tagged_users.set(users_to_tag)
+
+        # Refresh to get updated tagged users
+        review.refresh_from_db()
 
         return JsonResponse(
             {
@@ -246,7 +311,6 @@ def review_detail_view(request, review_id):
 def reviews_summary_view(request):
     """
     GET /api/reviews/summary/?target_id=xxx
-    Returns rating summary, average, total count, star breakdown (1-5), and current user review status.
     """
     target_id = request.GET.get("target_id")
     if not target_id:
@@ -259,7 +323,6 @@ def reviews_summary_view(request):
 
     product = get_object_or_404(Product, pk=target_id)
 
-    # Star breakdown distribution
     distribution = (
         Review.objects.filter(target=product)
         .values("rating")
@@ -269,10 +332,9 @@ def reviews_summary_view(request):
     for item in distribution:
         breakdown[item["rating"]] = item["count"]
 
-    # Check if current logged in user has already reviewed
     user_review = None
     if request.user.is_authenticated:
-        existing = Review.objects.filter(target=product, user=request.user).first()
+        existing = Review.objects.filter(target=product, user=request.user).prefetch_related("tagged_users").first()
         if existing:
             user_review = _serialize_review(existing, request.user)
 
@@ -285,3 +347,18 @@ def reviews_summary_view(request):
         "user_reviewed": user_review is not None,
         "user_review": user_review,
     }, status=200)
+
+
+@require_http_methods(["GET"])
+def users_list_api_view(request):
+    """
+    GET /api/users/?q=xxx
+    Returns list of users that can be tagged/mentioned.
+    """
+    query = request.GET.get("q", "").strip()
+    users_qs = User.objects.all().order_by("username")
+    if query:
+        users_qs = users_qs.filter(Q(username__icontains=query) | Q(first_name__icontains=query))
+
+    users = [{"id": u.id, "username": u.username} for u in users_qs[:20]]
+    return JsonResponse({"users": users})

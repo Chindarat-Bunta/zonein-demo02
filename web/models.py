@@ -43,6 +43,7 @@ class Review(models.Model):
         help_text="Rating must be an integer between 1 and 5",
     )
     comment = models.TextField(blank=True, default="")
+    tagged_users = models.ManyToManyField(User, related_name="tagged_reviews", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

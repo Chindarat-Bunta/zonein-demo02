@@ -243,6 +243,106 @@
         box-shadow: 0 0 0 3px var(--primary-light);
     }
 
+    /* Friend Tagging Section */
+    .tag-friends-box {
+        margin-top: 0.85rem;
+        margin-bottom: 1.25rem;
+        background: rgba(18, 25, 39, 0.6);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 0.85rem;
+    }
+
+    .tag-friends-title {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .friend-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .friend-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.65rem;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border-color);
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        color: #d1d5db;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+    }
+
+    .friend-chip:hover {
+        background: var(--primary-light);
+        border-color: var(--primary);
+        color: #c7d2fe;
+    }
+
+    .friend-chip.selected {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(236, 72, 153, 0.25));
+        border-color: var(--primary);
+        color: #fff;
+        font-weight: 600;
+    }
+
+    /* Mention & Tag Badges in Reviews */
+    .mention-tag {
+        display: inline-block;
+        background: rgba(99, 102, 241, 0.2);
+        color: #818cf8;
+        padding: 0.05rem 0.4rem;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.88rem;
+    }
+
+    .tagged-friends-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px dashed rgba(255, 255, 255, 0.08);
+        font-size: 0.82rem;
+        color: var(--text-muted);
+    }
+
+    .tagged-user-badge {
+        background: rgba(236, 72, 153, 0.15);
+        border: 1px solid rgba(236, 72, 153, 0.3);
+        color: #f472b6;
+        padding: 0.15rem 0.55rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .you-are-tagged-banner {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(99, 102, 241, 0.2));
+        border: 1px solid rgba(236, 72, 153, 0.4);
+        color: #fbcfe8;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+    }
+
     /* Reviewed status banner */
     .user-reviewed-box {
         background: rgba(99, 102, 241, 0.12);
@@ -270,6 +370,11 @@
         padding: 1.35rem;
         margin-bottom: 1rem;
         transition: var(--transition-smooth);
+    }
+
+    .review-item.tagged-highlight {
+        border-color: rgba(236, 72, 153, 0.4);
+        background: rgba(29, 27, 49, 0.85);
     }
 
     .review-item:hover {
@@ -378,7 +483,7 @@
     <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
         <span style="color: var(--star-gold);">⚡</span>
         <strong style="color: #fff;">Interactive Demo Bar:</strong>
-        <span style="color: var(--text-muted);">Switch personas to test auth, permissions, & duplicate protection:</span>
+        <span style="color: var(--text-muted);">Switch personas to test auth, permissions, & friend tagging:</span>
     </div>
     <div style="display: flex; gap: 0.5rem; align-items: center;">
         <span class="demo-pill {% if user.username == 'alex_dev' %}active{% endif %}" onclick="switchDemoUser('alex_dev')">👤 alex_dev</span>
@@ -435,7 +540,7 @@
                 Write a Review
             </h3>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
-                Rate your experience and leave feedback for others.
+                Rate your experience and tag friends to check out this product.
             </p>
 
             <input type="hidden" id="editingReviewId" value="">
@@ -454,11 +559,22 @@
                 </div>
             </div>
 
-            <div style="margin-bottom: 1.25rem;">
+            <div style="margin-bottom: 1rem;">
                 <label for="commentInput" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">
                     Your Review & Feedback
                 </label>
-                <textarea id="commentInput" rows="3" class="form-control" placeholder="What did you like or dislike? How was the performance?"></textarea>
+                <textarea id="commentInput" rows="3" class="form-control" placeholder="What did you like or dislike? Type @username to mention friends (e.g., @sarah_ux check this out!)"></textarea>
+            </div>
+
+            <!-- Friend Tagging Helper -->
+            <div class="tag-friends-box">
+                <div class="tag-friends-title">
+                    <span>👥</span>
+                    <span>Tag Friends to view this post (Click to mention):</span>
+                </div>
+                <div class="friend-chips" id="availableFriendChips">
+                    <!-- Populated via JS -->
+                </div>
             </div>
 
             <div style="display: flex; gap: 0.75rem; align-items: center;">
@@ -524,6 +640,7 @@
     let hoveredRating = 0;
     let currentUserReview = null;
     let currentPage = 1;
+    let availableUsers = [];
 
     const ratingDescriptions = {
         1: "1 Star - Terrible",
@@ -534,6 +651,7 @@
     };
 
     document.addEventListener("DOMContentLoaded", () => {
+        loadAvailableUsers();
         loadProductSummary();
         loadReviews(1);
     });
@@ -560,6 +678,68 @@
         toast.style.display = "block";
         setTimeout(() => { toast.style.display = "none"; }, 3500);
     }
+
+    // Load available users for tagging
+    async function loadAvailableUsers() {
+        try {
+            const res = await fetch("/api/users/");
+            if (!res.ok) return;
+            const data = await res.json();
+            availableUsers = data.users || [];
+
+            const container = document.getElementById("availableFriendChips");
+            container.innerHTML = "";
+            availableUsers.forEach(u => {
+                const chip = document.createElement("span");
+                chip.className = "friend-chip";
+                chip.id = `friendChip_${u.username}`;
+                chip.innerHTML = `+ @${u.username}`;
+                chip.onclick = () => tagUserIntoComment(u.username);
+                container.appendChild(chip);
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function tagUserIntoComment(username) {
+        const textarea = document.getElementById("commentInput");
+        const tag = `@${username}`;
+        if (textarea.value.includes(tag)) {
+            // Remove tag if already in comment
+            textarea.value = textarea.value.replace(new RegExp(`\\s*${tag}`, 'g'), '').trim();
+            highlightSelectedFriendChips();
+        } else {
+            // Append tag
+            const space = textarea.value.length > 0 && !textarea.value.endsWith(" ") ? " " : "";
+            textarea.value = `${textarea.value}${space}${tag} `;
+            textarea.focus();
+            highlightSelectedFriendChips();
+        }
+    }
+
+    function highlightSelectedFriendChips() {
+        const text = document.getElementById("commentInput").value;
+        availableUsers.forEach(u => {
+            const chip = document.getElementById(`friendChip_${u.username}`);
+            if (!chip) return;
+            if (text.includes(`@${u.username}`)) {
+                chip.classList.add("selected");
+                chip.innerHTML = `✓ @${u.username}`;
+            } else {
+                chip.classList.remove("selected");
+                chip.innerHTML = `+ @${u.username}`;
+            }
+        });
+    }
+
+    // Listen to comment input changes to update chips
+    document.addEventListener("DOMContentLoaded", () => {
+        const commentEl = document.getElementById("commentInput");
+        if (commentEl) {
+            commentEl.addEventListener("input", highlightSelectedFriendChips);
+        }
+    });
 
     // Star Selector Logic
     function hoverStars(rating) {
@@ -598,7 +778,6 @@
         document.querySelectorAll(".target-tab").forEach(t => t.classList.remove("active"));
         if (tabElement) tabElement.classList.add("active");
 
-        // Fetch products list to update hero card
         try {
             const res = await fetch("/api/products/");
             const data = await res.json();
@@ -631,7 +810,6 @@
             document.getElementById("summaryAvg").innerText = data.average_rating.toFixed(1);
             document.getElementById("summaryCountText").innerText = `Based on ${data.review_count} ${data.review_count === 1 ? 'review' : 'reviews'}`;
 
-            // Render Stars in summary header
             const fullStars = Math.round(data.average_rating);
             let starStr = "";
             for (let i = 1; i <= 5; i++) {
@@ -639,7 +817,6 @@
             }
             document.getElementById("summaryStarsHeader").innerText = starStr;
 
-            // Render Breakdown bars
             const breakdownContainer = document.getElementById("breakdownContainer");
             breakdownContainer.innerHTML = "";
             const total = data.review_count || 1;
@@ -679,6 +856,12 @@
         }
     }
 
+    // Render formatted comment with @mention badges
+    function formatCommentWithMentions(comment) {
+        if (!comment) return '<span style="color: var(--text-dim); font-style: italic;">No written comment provided.</span>';
+        return comment.replace(/@([a-zA-Z0-9_]+)/g, '<span class="mention-tag">@$1</span>');
+    }
+
     // Load Reviews List
     async function loadReviews(page = 1) {
         currentPage = page;
@@ -697,7 +880,7 @@
                     <div style="background: var(--bg-card); border: 1px dashed var(--border-color); border-radius: var(--radius-md); padding: 3rem; text-align: center; color: var(--text-muted);">
                         <div style="font-size: 2rem; margin-bottom: 0.5rem;">✍️</div>
                         <div style="font-weight: 600; color: #fff; margin-bottom: 0.25rem;">No reviews yet</div>
-                        <div>Be the first to share your thoughts about this product!</div>
+                        <div>Be the first to share your thoughts and tag friends!</div>
                     </div>
                 `;
                 document.getElementById("paginationBar").innerHTML = "";
@@ -723,8 +906,33 @@
                     `;
                 }
 
+                // Tagged friends badges
+                let taggedHtml = "";
+                if (r.tagged_users && r.tagged_users.length > 0) {
+                    const tags = r.tagged_users.map(u => `<span class="tagged-user-badge">@${u.username}</span>`).join(" ");
+                    taggedHtml = `
+                        <div class="tagged-friends-row">
+                            <span>🏷️ Tagged Friends:</span>
+                            ${tags}
+                        </div>
+                    `;
+                }
+
+                // You are tagged notice
+                let taggedBanner = "";
+                if (r.is_tagged) {
+                    taggedBanner = `
+                        <div class="you-are-tagged-banner">
+                            ✨ You were tagged in this review!
+                        </div>
+                    `;
+                }
+
+                const cardClass = r.is_tagged ? "review-item tagged-highlight" : "review-item";
+
                 return `
-                    <div class="review-item">
+                    <div class="${cardClass}">
+                        ${taggedBanner}
                         <div class="review-header">
                             <div class="reviewer-meta">
                                 <div class="avatar">${initial}</div>
@@ -738,7 +946,8 @@
                                 ${actionButtons}
                             </div>
                         </div>
-                        <div class="review-comment">${r.comment || '<span style="color: var(--text-dim); font-style: italic;">No written comment provided.</span>'}</div>
+                        <div class="review-comment">${formatCommentWithMentions(r.comment)}</div>
+                        ${taggedHtml}
                     </div>
                 `;
             }).join("");
@@ -785,7 +994,6 @@
         try {
             let res;
             if (editingId) {
-                // PUT update
                 res = await fetch(`/api/reviews/${editingId}/`, {
                     method: "PUT",
                     headers: {
@@ -795,7 +1003,6 @@
                     body: JSON.stringify({ rating: selectedRating, comment: comment })
                 });
             } else {
-                // POST create
                 res = await fetch("/api/reviews/", {
                     method: "POST",
                     headers: {
@@ -819,7 +1026,7 @@
                 return;
             }
 
-            showToast(editingId ? "Review updated successfully!" : "Review submitted successfully!");
+            showToast(editingId ? "Review updated successfully!" : "Review submitted with tagged friends!");
             cancelEdit();
             loadProductSummary();
             loadReviews(1);
@@ -842,6 +1049,7 @@
         document.getElementById("editingReviewId").value = id;
         document.getElementById("formTitle").innerText = "Edit Your Review";
         document.getElementById("commentInput").value = comment;
+        highlightSelectedFriendChips();
         selectStars(rating);
 
         document.getElementById("alreadyReviewedBanner").style.display = "none";
@@ -856,6 +1064,7 @@
         document.getElementById("editingReviewId").value = "";
         document.getElementById("formTitle").innerText = "Write a Review";
         document.getElementById("commentInput").value = "";
+        highlightSelectedFriendChips();
         document.getElementById("btnCancelEdit").style.display = "none";
         document.getElementById("btnSubmitReview").innerText = "Submit Review";
         document.getElementById("formError").innerText = "";

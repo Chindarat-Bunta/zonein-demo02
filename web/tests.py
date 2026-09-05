@@ -233,3 +233,39 @@ class RatingReviewAPITests(TestCase):
         self.assertEqual(data["num_pages"], 3)
         self.assertEqual(len(data["results"]), 5)
         self.assertTrue(data["has_next"])
+
+    def test_tagging_friends_in_review(self):
+        """Review creation with @mentions and explicit tagged_user_ids should link tagged users."""
+        friend = User.objects.create_user(username="sarah_friend", password="password123")
+        self.client.force_login(self.user1)
+
+        response = self.client.post(
+            reverse("web:api_reviews_list_create"),
+            data={
+                "target_id": self.product.id,
+                "rating": 5,
+                "comment": "Check this out @sarah_friend it is amazing!",
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        tagged_names = [u["username"] for u in data["review"]["tagged_users"]]
+        self.assertIn("sarah_friend", tagged_names)
+
+        # Log in as friend and verify is_tagged is True
+        self.client.force_login(friend)
+        res_list = self.client.get(
+            f"{reverse('web:api_reviews_list_create')}?target_id={self.product.id}"
+        )
+        review_data = res_list.json()["results"][0]
+        self.assertTrue(review_data["is_tagged"])
+
+    def test_users_list_api(self):
+        """GET /api/users/ returns searchable user list for autocomplete tagging."""
+        response = self.client.get(f"{reverse('web:api_users')}?q=author")
+        self.assertEqual(response.status_code, 200)
+        users = response.json()["users"]
+        usernames = [u["username"] for u in users]
+        self.assertIn("author1", usernames)
+        self.assertIn("author2", usernames)

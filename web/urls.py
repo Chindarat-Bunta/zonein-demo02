@@ -11,6 +11,9 @@ urlpatterns = [
     # Products API
     path("api/products/", views.products_api_view, name="api_products"),
 
+    # Users API for friend tagging
+    path("api/users/", api_views.users_list_api_view, name="api_users"),
+
     # Rating & Review API Endpoints
     path("api/reviews/", api_views.reviews_list_create_view, name="api_reviews_list_create"),
     path("api/reviews/summary/", api_views.reviews_summary_view, name="api_reviews_summary"),
