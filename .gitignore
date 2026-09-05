@@ -1,0 +1,35 @@
+# Environments
+env/
+venv/
+.venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django database
+*.sqlite3
+db.sqlite3
+db.sqlite3-journal
+
+# Django static files collected
+staticfiles/
+staticfiles_build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel/
+
+# IDE / Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
