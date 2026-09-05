@@ -97,10 +97,50 @@
         flex-shrink: 0;
     }
 
+    .author-name-row {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+    }
+
     .author-name {
         font-weight: 700;
         font-size: 0.98rem;
         color: #fff;
+    }
+
+    .btn-follow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: rgba(99, 102, 241, 0.12);
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        color: #818cf8;
+        padding: 0.15rem 0.65rem;
+        border-radius: var(--radius-full);
+        font-size: 0.76rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        font-family: inherit;
+    }
+
+    .btn-follow:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+
+    .btn-follow.following {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--border-color);
+        color: var(--text-muted);
+    }
+
+    .btn-follow.following:hover {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(239, 68, 68, 0.35);
+        color: #f87171;
     }
 
     .review-time {
@@ -403,10 +443,37 @@ let hasNextReviewPage = false;
 let isLoadingReviews = false;
 const likedReviewsMap = new Map();
 const reviewsDataMap = new Map();
+const followedAuthorsSet = new Set();
 
 document.addEventListener("DOMContentLoaded", () => {
     loadRecentReviews(1);
 });
+
+function toggleFollowAuthor(event, authorId, username) {
+    event.stopPropagation();
+    const isFollowing = followedAuthorsSet.has(authorId);
+    if (isFollowing) {
+        followedAuthorsSet.delete(authorId);
+        showToast(`ยกเลิกการติดตาม ${username} แล้ว`);
+    } else {
+        followedAuthorsSet.add(authorId);
+        showToast(`ติดตาม ${username} เรียบร้อยแล้ว`);
+    }
+    updateFollowButtons(authorId, !isFollowing);
+}
+
+function updateFollowButtons(authorId, isFollowing) {
+    const buttons = document.querySelectorAll(`.btn-follow[data-author-id="${authorId}"]`);
+    buttons.forEach(btn => {
+        if (isFollowing) {
+            btn.classList.add("following");
+            btn.innerText = "กำลังติดตาม";
+        } else {
+            btn.classList.remove("following");
+            btn.innerText = "ติดตาม";
+        }
+    });
+}
 
 function showToast(message) {
     const toast = document.getElementById("toast");
@@ -549,13 +616,25 @@ function renderReviewCardHtml(r) {
         </div>
     `).join("");
 
+    const authorId = r.author?.id || 0;
+    const authorUsername = r.author?.username || 'นักเดินทาง';
+    const isFollowing = followedAuthorsSet.has(authorId);
+
     return `
         <article class="review-card" id="review_${r.id}">
             <div class="review-header">
                 <div class="review-author">
                     <div class="author-avatar">${authorInitial}</div>
                     <div>
-                        <div class="author-name">${r.author?.username || 'นักเดินทาง'}</div>
+                        <div class="author-name-row">
+                            <span class="author-name">${authorUsername}</span>
+                            <button type="button" 
+                                    class="btn-follow ${isFollowing ? 'following' : ''}" 
+                                    data-author-id="${authorId}" 
+                                    onclick="toggleFollowAuthor(event, ${authorId}, '${authorUsername}')">
+                                ${isFollowing ? 'กำลังติดตาม' : 'ติดตาม'}
+                            </button>
+                        </div>
                         <div class="review-time">${dateFormatted}</div>
                     </div>
                 </div>
