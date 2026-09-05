@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.html import escape
 from django.views.decorators.http import require_http_methods
 
-from .models import PostLike, TravelPost
+from .models import PostComment, PostLike, TravelPost
 
 
 def _parse_json_body(request):
@@ -54,11 +54,33 @@ def _serialize_post(post, current_user=None):
         "content": post.content,
         "image_url": post.image_url,
         "likes_count": post.likes_count,
+        "comments_count": post.comments_count,
         "is_liked": is_liked,
         "is_owner": is_owner,
         "can_delete": True,  # User can delete posts
         "created_at": post.created_at.isoformat(),
         "updated_at": post.updated_at.isoformat(),
+    }
+
+
+def _serialize_comment(comment, current_user=None):
+    """Serialize a PostComment instance."""
+    can_delete = True
+    if current_user and current_user.is_authenticated:
+        can_delete = (
+            comment.user_id == current_user.id
+            or comment.post.author_id == current_user.id
+            or current_user.is_staff
+            or current_user.is_superuser
+        )
+    return {
+        "id": comment.id,
+        "post_id": comment.post_id,
+        "author_id": comment.user_id,
+        "author_name": comment.user.username,
+        "content": comment.content,
+        "can_delete": can_delete,
+        "created_at": comment.created_at.isoformat(),
     }
 
 
@@ -312,6 +334,98 @@ def post_likes_list_view(request, post_id):
             "count": paginator.count,
             "num_pages": paginator.num_pages,
             "current_page": likes_page.number if hasattr(likes_page, "number") else 1,
+        },
+        status=200,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+def post_comments_list_create_view(request, post_id):
+    """
+    GET /api/posts/<id>/comments/ -> List all comments on a post
+    POST /api/posts/<id>/comments/ -> Add a new comment to a post
+    """
+    post = get_object_or_404(TravelPost, pk=post_id)
+
+    if request.method == "GET":
+        comments_qs = PostComment.objects.filter(post=post).select_related("user").order_by("created_at")
+        comments_list = [_serialize_comment(c, request.user) for c in comments_qs]
+        return JsonResponse(
+            {
+                "post_id": post.id,
+                "comments_count": post.comments_count,
+                "comments": comments_list,
+            },
+            status=200,
+        )
+
+    # POST - Create comment
+    user = _get_current_or_default_user(request)
+    data = _parse_json_body(request)
+    if not data:
+        return JsonResponse({"error": "Invalid request format"}, status=400)
+
+    content = str(data.get("content", "")).strip()
+    if not content:
+        return JsonResponse({"error": "กรุณากรอกข้อความความคิดเห็น"}, status=400)
+
+    if len(content) > 1000:
+        return JsonResponse({"error": "ความคิดเห็นต้องไม่เกิน 1,000 ตัวอักษร"}, status=400)
+
+    # Sanitize content
+    sanitized_content = escape(content)
+
+    with transaction.atomic():
+        comment = PostComment.objects.create(
+            user=user,
+            post=post,
+            content=sanitized_content,
+        )
+        TravelPost.objects.filter(pk=post_id).update(comments_count=F("comments_count") + 1)
+        post.refresh_from_db(fields=["comments_count"])
+
+    return JsonResponse(
+        {
+            "message": "เพิ่มความคิดเห็นเรียบร้อยแล้ว",
+            "comment": _serialize_comment(comment, request.user),
+            "comments_count": post.comments_count,
+        },
+        status=201,
+    )
+
+
+@require_http_methods(["DELETE"])
+def post_comment_delete_view(request, post_id, comment_id):
+    """
+    DELETE /api/posts/<post_id>/comments/<comment_id>/ -> Delete a comment
+    """
+    post = get_object_or_404(TravelPost, pk=post_id)
+    comment = get_object_or_404(PostComment, pk=comment_id, post=post)
+
+    user = _get_current_or_default_user(request)
+    can_delete = (
+        not request.user.is_authenticated  # Demo mode fallback
+        or comment.user_id == user.id
+        or post.author_id == user.id
+        or user.is_staff
+        or user.is_superuser
+    )
+
+    if not can_delete:
+        return JsonResponse({"error": "คุณไม่มีสิทธิ์ลบความคิดเห็นนี้"}, status=403)
+
+    with transaction.atomic():
+        comment.delete()
+        # Atomic decrement, ensuring not negative
+        current_count = TravelPost.objects.filter(pk=post_id).values_list("comments_count", flat=True).first() or 0
+        if current_count > 0:
+            TravelPost.objects.filter(pk=post_id).update(comments_count=F("comments_count") - 1)
+        post.refresh_from_db(fields=["comments_count"])
+
+    return JsonResponse(
+        {
+            "message": "ลบความคิดเห็นเรียบร้อยแล้ว",
+            "comments_count": post.comments_count,
         },
         status=200,
     )

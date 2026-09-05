@@ -260,3 +260,116 @@ class PostLikeAPITests(TestCase):
         self.assertEqual(post_item2["likes_count"], 1)
         self.assertFalse(post_item2["is_liked"])
 
+
+class PostCommentAPITests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.author = User.objects.create_user(username="author_user", password="password123")
+        self.commenter1 = User.objects.create_user(username="commenter_one", password="password123")
+        self.commenter2 = User.objects.create_user(username="commenter_two", password="password123")
+        self.post = TravelPost.objects.create(
+            author=self.author,
+            place_name="ดอยม่อนแจ่ม",
+            rating=5,
+            content="บรรยากาศดีมาก อากาศเย็นสบาย",
+        )
+
+    def test_add_comment_to_post(self):
+        """POST /api/posts/<id>/comments/ creates a comment and increments comments_count."""
+        self.client.force_login(self.commenter1)
+        res = self.client.post(
+            reverse("web:api_post_comments", args=[self.post.id]),
+            data={"content": "น่าไปมากเลยครับ ขอบคุณที่รีวิวครับ"},
+            content_type="application/json",
+        )
+        self.assertEqual(res.status_code, 201)
+        data = res.json()
+        self.assertEqual(data["comment"]["author_name"], "commenter_one")
+        self.assertEqual(data["comment"]["content"], "น่าไปมากเลยครับ ขอบคุณที่รีวิวครับ")
+        self.assertEqual(data["comments_count"], 1)
+
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.comments_count, 1)
+
+    def test_get_post_comments_list(self):
+        """GET /api/posts/<id>/comments/ returns all comments in chronological order."""
+        self.client.force_login(self.commenter1)
+        self.client.post(
+            reverse("web:api_post_comments", args=[self.post.id]),
+            data={"content": "คอมเมนต์ที่ 1"},
+            content_type="application/json",
+        )
+
+        self.client.force_login(self.commenter2)
+        self.client.post(
+            reverse("web:api_post_comments", args=[self.post.id]),
+            data={"content": "คอมเมนต์ที่ 2"},
+            content_type="application/json",
+        )
+
+        res = self.client.get(reverse("web:api_post_comments", args=[self.post.id]))
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["comments_count"], 2)
+        self.assertEqual(len(data["comments"]), 2)
+        self.assertEqual(data["comments"][0]["content"], "คอมเมนต์ที่ 1")
+        self.assertEqual(data["comments"][1]["content"], "คอมเมนต์ที่ 2")
+
+    def test_delete_comment(self):
+        """DELETE /api/posts/<id>/comments/<comment_id>/ deletes comment and decrements count."""
+        self.client.force_login(self.commenter1)
+        res_create = self.client.post(
+            reverse("web:api_post_comments", args=[self.post.id]),
+            data={"content": "ความคิดเห็นชั่วคราว"},
+            content_type="application/json",
+        )
+        comment_id = res_create.json()["comment"]["id"]
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.comments_count, 1)
+
+        # Delete comment
+        res_del = self.client.delete(reverse("web:api_post_comment_delete", args=[self.post.id, comment_id]))
+        self.assertEqual(res_del.status_code, 200)
+        self.assertEqual(res_del.json()["comments_count"], 0)
+
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.comments_count, 0)
+
+    def test_unauthorized_user_cannot_delete_others_comment(self):
+        """User cannot delete another user's comment."""
+        self.client.force_login(self.commenter1)
+        res_create = self.client.post(
+            reverse("web:api_post_comments", args=[self.post.id]),
+            data={"content": "ความคิดเห็นของคนแรก"},
+            content_type="application/json",
+        )
+        comment_id = res_create.json()["comment"]["id"]
+
+        # Attempt delete as commenter2
+        self.client.force_login(self.commenter2)
+        res_del = self.client.delete(reverse("web:api_post_comment_delete", args=[self.post.id, comment_id]))
+        self.assertEqual(res_del.status_code, 403)
+
+    def test_empty_comment_rejected(self):
+        """Empty or whitespace comment should return 400 error."""
+        self.client.force_login(self.commenter1)
+        res = self.client.post(
+            reverse("web:api_post_comments", args=[self.post.id]),
+            data={"content": "   "},
+            content_type="application/json",
+        )
+        self.assertEqual(res.status_code, 400)
+
+    def test_comment_xss_sanitized(self):
+        """Script tags in comment content should be escaped."""
+        self.client.force_login(self.commenter1)
+        res = self.client.post(
+            reverse("web:api_post_comments", args=[self.post.id]),
+            data={"content": "<script>alert('xss')</script> สวยมาก"},
+            content_type="application/json",
+        )
+        self.assertEqual(res.status_code, 201)
+        self.assertNotIn("<script>", res.json()["comment"]["content"])
+        self.assertIn("&lt;script&gt;", res.json()["comment"]["content"])
+
+
