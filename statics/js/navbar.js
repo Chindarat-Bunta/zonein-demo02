@@ -155,7 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.triggerAuth = function (actionName) {
-        alert(`[Zone In]: กำลังเปิดหน้าต่าง ${actionName}`);
+        if (actionName && actionName.toLowerCase().includes('in')) {
+            window.location.href = '/signin/';
+        } else {
+            window.location.href = '/signup/';
+        }
     };
 
     // Handler for Floating Action Button (Post)
