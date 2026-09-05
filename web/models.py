@@ -4,12 +4,13 @@ from django.db import models, transaction
 from django.db.models import Avg, Count
 
 
-class Product(models.Model):
-    """Product/Service target that can be reviewed."""
+class Place(models.Model):
+    """Place / Location post that can be recommended and reviewed."""
 
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, default="")
-    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    name = models.CharField(max_length=255, help_text="ชื่อสถานที่ / ชื่อโพสต์แนะนำ")
+    category = models.CharField(max_length=100, blank=True, default="สถานที่ท่องเที่ยว", help_text="หมวดหมู่ เช่น คาเฟ่, สวนสาธารณะ, แคมป์ปิ้ง")
+    location = models.CharField(max_length=255, blank=True, default="", help_text="ที่ตั้ง / จังหวัด / พิกัด")
+    description = models.TextField(blank=True, default="", help_text="ไฮไลท์และรายละเอียดว่าที่นี่มีอะไรน่าสนใจ")
     image_url = models.URLField(blank=True, default="")
     average_rating = models.FloatField(default=0.0)
     review_count = models.PositiveIntegerField(default=0)
@@ -17,11 +18,11 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "products"
+        db_table = "places"
         ordering = ["-created_at"]
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.location})" if self.location else self.name
 
     @transaction.atomic
     def update_rating_stats(self):
@@ -35,16 +36,20 @@ class Product(models.Model):
         self.save(update_fields=["average_rating", "review_count", "updated_at"])
 
 
+# Alias for backward compatibility
+Product = Place
+
+
 class Review(models.Model):
-    """User review with 1-5 star rating and comment for a product/service."""
+    """User review with 1-5 star rating, comment, and tagged friends for a place."""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviews")
     target = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="reviews"
+        Place, on_delete=models.CASCADE, related_name="reviews"
     )
     rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Rating must be an integer between 1 and 5",
+        help_text="คะแนนดาว 1-5 ดาว",
     )
     comment = models.TextField(blank=True, default="")
     tagged_users = models.ManyToManyField(

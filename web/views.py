@@ -4,29 +4,32 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
-from .models import Product, Review
+from .models import Place, Review
 
 
 def _ensure_sample_data():
-    """Ensure some initial demo products and users exist."""
-    if Product.objects.count() == 0:
-        p1 = Product.objects.create(
-            name="ZoneIn Wireless Noise-Cancelling Headphones",
-            description="Ultra-premium active noise-cancelling headphones with 40-hour battery life and spatial audio support.",
-            price=299.00,
-            image_url="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=60",
+    """Ensure sample place recommendation posts exist."""
+    if Place.objects.count() == 0:
+        p1 = Place.objects.create(
+            name="สวนป่าเบญจกิติ (Benchakitti Forest Park)",
+            category="สวนสาธารณะ & พื้นที่สีเขียว",
+            location="เขตคลองเตย กรุงเทพมหานคร",
+            description="สวนสาธารณะใจกลางกรุงขนาดใหญ่ มี Skywalk ทอดยาวรอบบึงน้ำและพื้นที่ป่าชุ่มน้ำ เหมาะสำหรับเดินเล่น วิ่งออกกำลังกาย ปั่นจักรยาน ชมนก และถ่ายรูปวิวเมืองยามเย็น",
+            image_url="https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=800&auto=format&fit=crop&q=60",
         )
-        p2 = Product.objects.create(
-            name="ZoneIn Ergonomic Mechanical Keyboard",
-            description="Custom mechanical keyboard featuring hot-swappable tactile switches, gasket mount, and RGB lighting.",
-            price=149.50,
-            image_url="https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&auto=format&fit=crop&q=60",
+        p2 = Place.objects.create(
+            name="Riva Floating Cafe (คาเฟ่แพริมน้ำ)",
+            category="คาเฟ่ & จุดเช็คอินถ่ายรูป",
+            location="อ.สามพราน จ.นครปฐม",
+            description="คาเฟ่แพริมแม่น้ำท่าจีนบรรยากาศสุดชิลล์ นั่งห้อยขาริมน้ำ จิบกาแฟสด ทานเบเกอรี่โฮมเมด ลมพัดเย็นสบาย เหมาะกับการพักผ่อนช่วงวันหยุดสุดสัปดาห์",
+            image_url="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&auto=format&fit=crop&q=60",
         )
-        p3 = Product.objects.create(
-            name="ZoneIn Ultra-Wide Gaming Monitor 34\"",
-            description="144Hz curved display with 1ms response time and HDR600 for immersive gaming and productivity.",
-            price=499.99,
-            image_url="https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=800&auto=format&fit=crop&q=60",
+        p3 = Place.objects.create(
+            name="จุดชมวิวผาเดียวดาย & ลานกางเต็นท์ลำตะคอง",
+            category="ธรรมชาติ & แคมป์ปิ้ง",
+            location="อุทยานแห่งชาติเขาใหญ่ จ.นครราชสีมา",
+            description="จุดชมวิวหน้าผาสูงชมทะเลหมอกและทิวเขาเขียวขจี อากาศเย็นสบายตลอดปี พร้อมลานกางเต็นท์ริมธารน้ำใส ดูดาวตอนกลางคืนและส่องสัตว์ป่า",
+            image_url="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=60",
         )
 
         u1, _ = User.objects.get_or_create(username="alex_dev", defaults={"email": "alex@example.com"})
@@ -36,38 +39,38 @@ def _ensure_sample_data():
         r1, _ = Review.objects.get_or_create(
             user=u1,
             target=p1,
-            defaults={"rating": 5, "comment": "Sound quality is phenomenal! @sarah_ux check this out!"},
+            defaults={"rating": 5, "comment": "บรรยากาศดีมาก ลมพัดสบายช่วงเย็น แนะนำให้มาถ่ายรูปบนสกายวอล์ก @sarah_ux วันหยุดนี้ไปกัน!"},
         )
         r1.tagged_users.add(u2)
 
         Review.objects.get_or_create(
             user=u2,
             target=p1,
-            defaults={"rating": 4, "comment": "Very comfortable for long working hours."},
+            defaults={"rating": 4, "comment": "ต้นไม้ร่มรื่น วิวตึกตัดกับธรรมชาติสวยมาก แนะนำให้พกน้ำดื่มมาด้วย"},
         )
         p1.update_rating_stats()
 
         Review.objects.get_or_create(
             user=u3,
             target=p2,
-            defaults={"rating": 5, "comment": "Typing feel is buttery smooth. Best keyboard I have ever owned."},
+            defaults={"rating": 5, "comment": "ขนมเค้กอร่อย กาแฟหอม นั่งห้อยขาริมน้ำฟินสุดๆ"},
         )
         p2.update_rating_stats()
 
 
 def home_view(request):
-    """Render the main interactive showcase UI page."""
+    """Render the main place recommendation showcase UI page."""
     _ensure_sample_data()
-    products = Product.objects.all().order_by("id")
-    current_product = products.first()
+    places = Place.objects.all().order_by("id")
+    current_place = places.first()
     users = User.objects.all().order_by("id")[:5]
 
     return render(
         request,
         "web/index.html",
         {
-            "products": products,
-            "current_product": current_product,
+            "places": places,
+            "current_place": current_place,
             "demo_users": users,
             "user": request.user,
         },
@@ -75,22 +78,23 @@ def home_view(request):
 
 
 @require_http_methods(["GET"])
-def products_api_view(request):
-    """Return list of products."""
-    products = Product.objects.all().order_by("id")
+def places_api_view(request):
+    """Return list of places."""
+    places = Place.objects.all().order_by("id")
     data = [
         {
             "id": p.id,
             "name": p.name,
+            "category": p.category,
+            "location": p.location,
             "description": p.description,
-            "price": float(p.price),
             "image_url": p.image_url,
             "average_rating": p.average_rating,
             "review_count": p.review_count,
         }
-        for p in products
+        for p in places
     ]
-    return JsonResponse({"products": data})
+    return JsonResponse({"places": data, "products": data})
 
 
 @require_http_methods(["POST", "GET"])

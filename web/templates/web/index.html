@@ -1,6 +1,6 @@
 {% extends "web/base.html" %}
 
-{% block title %}ZoneIn - ระบบให้คะแนน, รีวิว และแท็กเพื่อน (Rating & Review System){% endblock %}
+{% block title %}ZoneIn - โพสต์แนะนำสถานที่ & รีวิวให้คะแนนสถานที่ (Place Reviews & Tag Friends){% endblock %}
 
 {% block extra_head %}
 <style>
@@ -17,8 +17,8 @@
         }
     }
 
-    /* Product Card */
-    .product-hero {
+    /* Place / Location Hero Card */
+    .place-hero {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
         border-radius: var(--radius-lg);
@@ -29,49 +29,67 @@
         margin-bottom: 2rem;
     }
 
-    .product-img {
-        width: 180px;
-        height: 180px;
+    .place-img {
+        width: 220px;
+        height: 200px;
         border-radius: var(--radius-md);
         object-fit: cover;
         background: #1e293b;
         border: 1px solid var(--border-color);
     }
 
-    .product-info {
+    .place-info {
         flex: 1;
         display: flex;
         flex-direction: column;
         justify-content: center;
     }
 
-    .product-badge {
-        display: inline-block;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--primary);
-        margin-bottom: 0.5rem;
+    .place-meta-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.6rem;
     }
 
-    .product-title {
-        font-size: 1.5rem;
+    .category-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.78rem;
         font-weight: 700;
-        margin-bottom: 0.5rem;
-        color: #fff;
+        background: var(--primary-light);
+        color: #c7d2fe;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        padding: 0.2rem 0.65rem;
+        border-radius: 999px;
     }
 
-    .product-desc {
+    .location-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.06);
         color: var(--text-muted);
-        font-size: 0.95rem;
-        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+        padding: 0.2rem 0.65rem;
+        border-radius: 999px;
     }
 
-    .product-price {
-        font-size: 1.35rem;
+    .place-title {
+        font-size: 1.6rem;
         font-weight: 800;
+        margin-bottom: 0.6rem;
         color: #fff;
+        line-height: 1.3;
+    }
+
+    .place-desc {
+        color: #d1d5db;
+        font-size: 0.95rem;
+        line-height: 1.6;
     }
 
     /* Target Selector Tabs */
@@ -86,7 +104,7 @@
     .target-tab {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
-        padding: 0.6rem 1.1rem;
+        padding: 0.65rem 1.15rem;
         border-radius: var(--radius-md);
         color: var(--text-muted);
         cursor: pointer;
@@ -94,6 +112,9 @@
         font-weight: 600;
         white-space: nowrap;
         transition: var(--transition-smooth);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .target-tab:hover {
@@ -482,8 +503,8 @@
 <div class="demo-bar">
     <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
         <span style="color: var(--star-gold);">⚡</span>
-        <strong style="color: #fff;">แถบสลับผู้ใช้งานสำหรับทดสอบ (Demo Users):</strong>
-        <span style="color: var(--text-muted);">คลิกเพื่อสลับ User ทดสอบเขียนรีวิวและแท็กเพื่อน:</span>
+        <strong style="color: #fff;">สลับผู้ใช้งานทดสอบ (Demo Users):</strong>
+        <span style="color: var(--text-muted);">คลิกสลับเพื่อทดสอบเขียนรีวิวและแท็กเพื่อนชวนไปเที่ยว:</span>
     </div>
     <div style="display: flex; gap: 0.5rem; align-items: center;">
         <span class="demo-pill {% if user.username == 'alex_dev' %}active{% endif %}" onclick="switchDemoUser('alex_dev')">👤 alex_dev</span>
@@ -496,27 +517,29 @@
     </div>
 </div>
 
-<!-- Product Selection Tabs -->
+<!-- Place Selection Tabs -->
 <div class="target-tabs">
-    {% for p in products %}
-        <div class="target-tab {% if forloop.first %}active{% endif %}" onclick="selectProduct({{ p.id }}, this)">
-            {{ p.name }}
+    {% for p in places %}
+        <div class="target-tab {% if forloop.first %}active{% endif %}" onclick="selectPlace({{ p.id }}, this)">
+            <span>📍</span> {{ p.name }}
         </div>
     {% endfor %}
 </div>
 
 <!-- Main 2-Column Grid -->
 <div class="grid-layout">
-    <!-- Left Column: Product Info, Write Review Form, Reviews List -->
+    <!-- Left Column: Place Info, Write Review Form, Reviews List -->
     <div>
-        <!-- Product Hero Card -->
-        <div class="product-hero" id="productHero">
-            <img src="{{ current_product.image_url|default:'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800' }}" alt="Product" class="product-img" id="heroImg">
-            <div class="product-info">
-                <span class="product-badge">รหัสสินค้า #<span id="heroId">{{ current_product.id }}</span></span>
-                <h1 class="product-title" id="heroTitle">{{ current_product.name }}</h1>
-                <p class="product-desc" id="heroDesc">{{ current_product.description }}</p>
-                <div class="product-price" id="heroPrice">${{ current_product.price }}</div>
+        <!-- Place Hero Card (No price, shows category, location & description) -->
+        <div class="place-hero" id="placeHero">
+            <img src="{{ current_place.image_url|default:'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=800' }}" alt="Place" class="place-img" id="heroImg">
+            <div class="place-info">
+                <div class="place-meta-badges">
+                    <span class="category-badge" id="heroCategory">🌲 {{ current_place.category|default:'สถานที่ท่องเที่ยว' }}</span>
+                    <span class="location-badge" id="heroLocation">📍 {{ current_place.location|default:'ประเทศไทย' }}</span>
+                </div>
+                <h1 class="place-title" id="heroTitle">{{ current_place.name }}</h1>
+                <p class="place-desc" id="heroDesc">{{ current_place.description }}</p>
             </div>
         </div>
 
@@ -524,7 +547,7 @@
         <div id="alreadyReviewedBanner" class="user-reviewed-box" style="display: none;">
             <div>
                 <div style="font-weight: 700; color: #fff; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.5rem;">
-                    <span>✓</span> คุณได้รีวิวสินค้านี้ไปแล้ว
+                    <span>✓</span> คุณได้รีวิวสถานที่นี้ไปแล้ว
                 </div>
                 <div id="userReviewSnippet" style="font-size: 0.88rem; color: var(--text-muted);"></div>
             </div>
@@ -537,17 +560,17 @@
         <!-- Write / Edit Review Form Card -->
         <div class="form-card" id="reviewFormCard">
             <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;" id="formTitle">
-                เขียนรีวิวให้คะแนน (Write a Review)
+                เขียนรีวิวสถานที่ & ชวนเพื่อน (Write a Review)
             </h3>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
-                ให้คะแนนความพึงพอใจ 1-5 ดาว และแท็กเพื่อนเพื่อแนะนำสินค้านี้
+                แชร์ประสบการณ์ ความประทับใจ จุดถ่ายรูป หรือแนะนำสิ่งที่น่าสนใจในสถานที่นี้
             </p>
 
             <input type="hidden" id="editingReviewId" value="">
 
             <div style="margin-bottom: 1.25rem;">
                 <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block;">
-                    ระดับคะแนนความพึงพอใจ (1-5 ดาว) *
+                    ให้คะแนนความประทับใจ (1-5 ดาว) *
                 </label>
                 <div class="interactive-stars" id="starSelector" onmouseleave="resetStarHover()">
                     <button type="button" class="star-btn" data-val="1" onmouseover="hoverStars(1)" onclick="selectStars(1)">★</button>
@@ -561,16 +584,16 @@
 
             <div style="margin-bottom: 1rem;">
                 <label for="commentInput" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">
-                    ข้อความรีวิว และความคิดเห็น
+                    ข้อความรีวิว และแนะนำเพื่อน
                 </label>
-                <textarea id="commentInput" rows="3" class="form-control" placeholder="สินค้าเป็นอย่างไรบ้าง? สามารถพิมพ์ @username เช่น @sarah_ux หรือคลิกปุ่มเพื่อนด้านล่างเพื่อแท็กได้ทันที"></textarea>
+                <textarea id="commentInput" rows="3" class="form-control" placeholder="ที่นี่บรรยากาศเป็นยังไง มีอะไรน่าสนใจบ้าง? สามารถพิมพ์ @username เช่น @sarah_ux หรือคลิกปุ่มเพื่อนด้านล่างเพื่อแท็กได้ทันที"></textarea>
             </div>
 
             <!-- Friend Tagging Helper -->
             <div class="tag-friends-box">
                 <div class="tag-friends-title">
                     <span>👥</span>
-                    <span>แท็กเพื่อนมาดูรีวิวนี้ (คลิกเพื่อแท็ก @mention):</span>
+                    <span>แท็กเพื่อนชวนมาเที่ยว (คลิกเพื่อแท็ก @mention):</span>
                 </div>
                 <div class="friend-chips" id="availableFriendChips">
                     <!-- Populated via JS -->
@@ -579,7 +602,7 @@
 
             <div style="display: flex; gap: 0.75rem; align-items: center;">
                 <button type="button" class="btn btn-primary" id="btnSubmitReview" onclick="submitReview()">
-                    ส่งรีวิว
+                    ส่งรีวิวสถานที่
                 </button>
                 <button type="button" class="btn btn-outline" id="btnCancelEdit" onclick="cancelEdit()" style="display: none;">
                     ยกเลิก
@@ -591,7 +614,7 @@
         <!-- Reviews List -->
         <div>
             <div class="reviews-header">
-                <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff;">ความคิดเห็นและรีวิวทั้งหมด</h3>
+                <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff;">รีวิวจากผู้ที่เคยมาเยือน</h3>
                 <span id="reviewsCountBadge" style="font-size: 0.85rem; color: var(--text-dim);">0 รีวิว</span>
             </div>
 
@@ -608,7 +631,7 @@
     <div>
         <div class="summary-card">
             <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 1.25rem;">
-                สรุปคะแนนรีวิว (Summary)
+                สรุปคะแนนสถานที่ (Review Summary)
             </h3>
 
             <div class="score-banner">
@@ -635,7 +658,7 @@
 
 {% block extra_scripts %}
 <script>
-    let currentTargetId = {{ current_product.id|default:1 }};
+    let currentTargetId = {{ current_place.id|default:1 }};
     let selectedRating = 0;
     let hoveredRating = 0;
     let currentUserReview = null;
@@ -652,7 +675,7 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         loadAvailableUsers();
-        loadProductSummary();
+        loadPlaceSummary();
         loadReviews(1);
     });
 
@@ -769,23 +792,23 @@
         });
     }
 
-    // Tab Switching
-    async function selectProduct(productId, tabElement) {
-        currentTargetId = productId;
+    // Place Tab Switching
+    async function selectPlace(placeId, tabElement) {
+        currentTargetId = placeId;
         document.querySelectorAll(".target-tab").forEach(t => t.classList.remove("active"));
         if (tabElement) tabElement.classList.add("active");
 
         try {
-            const res = await fetch("/api/products/");
+            const res = await fetch("/api/places/");
             const data = await res.json();
-            const product = data.products.find(p => p.id === productId);
-            if (product) {
-                document.getElementById("heroId").innerText = product.id;
-                document.getElementById("heroTitle").innerText = product.name;
-                document.getElementById("heroDesc").innerText = product.description;
-                document.getElementById("heroPrice").innerText = `$${product.price.toFixed(2)}`;
-                if (product.image_url) {
-                    document.getElementById("heroImg").src = product.image_url;
+            const place = (data.places || data.products || []).find(p => p.id === placeId);
+            if (place) {
+                document.getElementById("heroTitle").innerText = place.name;
+                document.getElementById("heroCategory").innerText = `🌲 ${place.category || 'สถานที่ท่องเที่ยว'}`;
+                document.getElementById("heroLocation").innerText = `📍 ${place.location || 'ประเทศไทย'}`;
+                document.getElementById("heroDesc").innerText = place.description;
+                if (place.image_url) {
+                    document.getElementById("heroImg").src = place.image_url;
                 }
             }
         } catch (e) {
@@ -793,12 +816,12 @@
         }
 
         cancelEdit();
-        loadProductSummary();
+        loadPlaceSummary();
         loadReviews(1);
     }
 
     // Load Summary & Breakdown
-    async function loadProductSummary() {
+    async function loadPlaceSummary() {
         try {
             const res = await fetch(`/api/reviews/summary/?target_id=${currentTargetId}`);
             if (!res.ok) return;
@@ -874,9 +897,9 @@
             if (data.results.length === 0) {
                 container.innerHTML = `
                     <div style="background: var(--bg-card); border: 1px dashed var(--border-color); border-radius: var(--radius-md); padding: 3rem; text-align: center; color: var(--text-muted);">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">✍️</div>
-                        <div style="font-weight: 600; color: #fff; margin-bottom: 0.25rem;">ยังไม่มีรีวิวสำหรับสินค้านี้</div>
-                        <div>ร่วมเป็นคนแรกที่ให้คะแนนและแท็กเพื่อนเพื่อแนะนำสินค้านี้ได้เลย!</div>
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏕️</div>
+                        <div style="font-weight: 600; color: #fff; margin-bottom: 0.25rem;">ยังไม่มีรีวิวสำหรับสถานที่นี้</div>
+                        <div>เป็นคนแรกที่มารีวิวความประทับใจและแท็กเพื่อนชวนไปเที่ยวกันได้เลย!</div>
                     </div>
                 `;
                 document.getElementById("paginationBar").innerHTML = "";
@@ -907,7 +930,7 @@
                     const tags = r.tagged_users.map(u => `<span class="tagged-user-badge">@${u.username}</span>`).join(" ");
                     taggedHtml = `
                         <div class="tagged-friends-row">
-                            <span>🏷️ เพื่อนที่ถูกแท็ก:</span>
+                            <span>🏷️ แท็กเพื่อน:</span>
                             ${tags}
                         </div>
                     `;
@@ -917,7 +940,7 @@
                 if (r.is_tagged) {
                     taggedBanner = `
                         <div class="you-are-tagged-banner">
-                            ✨ คุณถูกแท็กในรีวิวนี้!
+                            ✨ คุณถูกแท็กชวนไปเที่ยวในรีวิวนี้!
                         </div>
                     `;
                 }
@@ -1015,13 +1038,13 @@
                 errorEl.innerText = data.error || "เกิดข้อผิดพลาดในการส่งข้อมูล";
                 showToast(data.error || "ไม่สามารถส่งรีวิวได้", true);
                 btn.disabled = false;
-                btn.innerText = editingId ? "แก้ไขรีวิว" : "ส่งรีวิว";
+                btn.innerText = editingId ? "แก้ไขรีวิว" : "ส่งรีวิวสถานที่";
                 return;
             }
 
             showToast(editingId ? "แก้ไขรีวิวสำเร็จเรียบร้อย!" : "ส่งรีวิวและแท็กเพื่อนเรียบร้อยแล้ว!");
             cancelEdit();
-            loadProductSummary();
+            loadPlaceSummary();
             loadReviews(1);
 
         } catch (err) {
@@ -1055,11 +1078,11 @@
 
     function cancelEdit() {
         document.getElementById("editingReviewId").value = "";
-        document.getElementById("formTitle").innerText = "เขียนรีวิวให้คะแนน (Write a Review)";
+        document.getElementById("formTitle").innerText = "เขียนรีวิวสถานที่ & ชวนเพื่อน (Write a Review)";
         document.getElementById("commentInput").value = "";
         highlightSelectedFriendChips();
         document.getElementById("btnCancelEdit").style.display = "none";
-        document.getElementById("btnSubmitReview").innerText = "ส่งรีวิว";
+        document.getElementById("btnSubmitReview").innerText = "ส่งรีวิวสถานที่";
         document.getElementById("formError").innerText = "";
         selectedRating = 0;
         updateStarVisuals(0);
@@ -1093,7 +1116,7 @@
                 showToast("ลบรีวิวเรียบร้อยแล้ว");
                 cancelEdit();
                 currentUserReview = null;
-                loadProductSummary();
+                loadPlaceSummary();
                 loadReviews(1);
             } else {
                 const data = await res.json();

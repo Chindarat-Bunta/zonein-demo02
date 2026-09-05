@@ -4,71 +4,72 @@ from django.db import IntegrityError
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from .models import Product, Review
+from .models import Place, Review
 
 
 class RatingReviewModelTests(TestCase):
     def setUp(self):
         self.user1 = User.objects.create_user(username="user1", password="password123")
         self.user2 = User.objects.create_user(username="user2", password="password123")
-        self.product = Product.objects.create(
-            name="Test Gadget",
-            description="High tech gadget",
-            price=99.99,
+        self.place = Place.objects.create(
+            name="สวนป่าเบญจกิติ",
+            category="สวนสาธารณะ",
+            location="กรุงเทพฯ",
+            description="สวนสาธารณะใจกลางเมือง",
         )
 
     def test_rating_validators_on_model(self):
         """Review model validation should reject rating < 1 or > 5."""
-        invalid_low = Review(user=self.user1, target=self.product, rating=0)
+        invalid_low = Review(user=self.user1, target=self.place, rating=0)
         with self.assertRaises(ValidationError):
             invalid_low.full_clean()
 
-        invalid_high = Review(user=self.user1, target=self.product, rating=6)
+        invalid_high = Review(user=self.user1, target=self.place, rating=6)
         with self.assertRaises(ValidationError):
             invalid_high.full_clean()
 
-        valid_review = Review(user=self.user1, target=self.product, rating=5)
+        valid_review = Review(user=self.user1, target=self.place, rating=5)
         valid_review.full_clean()  # should not raise
 
     def test_unique_user_target_constraint(self):
-        """One user can only create one review per target product."""
-        Review.objects.create(user=self.user1, target=self.product, rating=5, comment="First review")
+        """One user can only create one review per target place."""
+        Review.objects.create(user=self.user1, target=self.place, rating=5, comment="First review")
         with self.assertRaises(IntegrityError):
-            Review.objects.create(user=self.user1, target=self.product, rating=4, comment="Duplicate review")
+            Review.objects.create(user=self.user1, target=self.place, rating=4, comment="Duplicate review")
 
     def test_recalculate_average_rating_and_count(self):
         """Average rating and review count must update accurately on create, update, and delete."""
-        self.assertEqual(self.product.average_rating, 0.0)
-        self.assertEqual(self.product.review_count, 0)
+        self.assertEqual(self.place.average_rating, 0.0)
+        self.assertEqual(self.place.review_count, 0)
 
         # 1. First review: 5 stars
-        r1 = Review.objects.create(user=self.user1, target=self.product, rating=5)
-        self.product.update_rating_stats()
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.review_count, 1)
-        self.assertEqual(self.product.average_rating, 5.0)
+        r1 = Review.objects.create(user=self.user1, target=self.place, rating=5)
+        self.place.update_rating_stats()
+        self.place.refresh_from_db()
+        self.assertEqual(self.place.review_count, 1)
+        self.assertEqual(self.place.average_rating, 5.0)
 
         # 2. Second review: 4 stars -> (5 + 4) / 2 = 4.5
-        r2 = Review.objects.create(user=self.user2, target=self.product, rating=4)
-        self.product.update_rating_stats()
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.review_count, 2)
-        self.assertEqual(self.product.average_rating, 4.5)
+        r2 = Review.objects.create(user=self.user2, target=self.place, rating=4)
+        self.place.update_rating_stats()
+        self.place.refresh_from_db()
+        self.assertEqual(self.place.review_count, 2)
+        self.assertEqual(self.place.average_rating, 4.5)
 
         # 3. Update review: r2 from 4 stars to 2 stars -> (5 + 2) / 2 = 3.5
         r2.rating = 2
         r2.save()
-        self.product.update_rating_stats()
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.review_count, 2)
-        self.assertEqual(self.product.average_rating, 3.5)
+        self.place.update_rating_stats()
+        self.place.refresh_from_db()
+        self.assertEqual(self.place.review_count, 2)
+        self.assertEqual(self.place.average_rating, 3.5)
 
         # 4. Delete review: delete r1 -> remaining: r2 (2 stars) -> avg 2.0, count 1
         r1.delete()
-        self.product.update_rating_stats()
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.review_count, 1)
-        self.assertEqual(self.product.average_rating, 2.0)
+        self.place.update_rating_stats()
+        self.place.refresh_from_db()
+        self.assertEqual(self.place.review_count, 1)
+        self.assertEqual(self.place.average_rating, 2.0)
 
 
 class RatingReviewAPITests(TestCase):
@@ -77,17 +78,18 @@ class RatingReviewAPITests(TestCase):
         self.user1 = User.objects.create_user(username="author1", password="password123")
         self.user2 = User.objects.create_user(username="author2", password="password123")
         self.admin_user = User.objects.create_superuser(username="admin", password="password123", email="admin@example.com")
-        self.product = Product.objects.create(
-            name="Smart Watch",
-            description="Fitness tracker smartwatch",
-            price=199.00,
+        self.place = Place.objects.create(
+            name="Riva Floating Cafe",
+            category="คาเฟ่ริมน้ำ",
+            location="นครปฐม",
+            description="คาเฟ่แพริมน้ำ",
         )
 
     def test_unauthenticated_user_cannot_create_review(self):
         """POST /api/reviews/ should return 401 for unauthenticated users."""
         response = self.client.post(
             reverse("web:api_reviews_list_create"),
-            data={"target_id": self.product.id, "rating": 5, "comment": "Great!"},
+            data={"target_id": self.place.id, "rating": 5, "comment": "Great!"},
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 401)
@@ -97,17 +99,17 @@ class RatingReviewAPITests(TestCase):
         self.client.force_login(self.user1)
         response = self.client.post(
             reverse("web:api_reviews_list_create"),
-            data={"target_id": self.product.id, "rating": 5, "comment": "Awesome watch!"},
+            data={"target_id": self.place.id, "rating": 5, "comment": "Awesome place!"},
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
         data = response.json()
         self.assertEqual(data["review"]["rating"], 5)
-        self.assertEqual(data["review"]["comment"], "Awesome watch!")
+        self.assertEqual(data["review"]["comment"], "Awesome place!")
 
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.review_count, 1)
-        self.assertEqual(self.product.average_rating, 5.0)
+        self.place.refresh_from_db()
+        self.assertEqual(self.place.review_count, 1)
+        self.assertEqual(self.place.average_rating, 5.0)
 
     def test_validation_rating_out_of_range(self):
         """Rating outside 1-5 should return 400 Bad Request."""
@@ -115,7 +117,7 @@ class RatingReviewAPITests(TestCase):
         for invalid_rating in [0, 6, -1, 10, "invalid"]:
             response = self.client.post(
                 reverse("web:api_reviews_list_create"),
-                data={"target_id": self.product.id, "rating": invalid_rating, "comment": "Bad"},
+                data={"target_id": self.place.id, "rating": invalid_rating, "comment": "Bad"},
                 content_type="application/json",
             )
             self.assertEqual(response.status_code, 400)
@@ -126,7 +128,7 @@ class RatingReviewAPITests(TestCase):
         # First submission
         res1 = self.client.post(
             reverse("web:api_reviews_list_create"),
-            data={"target_id": self.product.id, "rating": 4, "comment": "Good"},
+            data={"target_id": self.place.id, "rating": 4, "comment": "Good"},
             content_type="application/json",
         )
         self.assertEqual(res1.status_code, 201)
@@ -134,7 +136,7 @@ class RatingReviewAPITests(TestCase):
         # Second submission
         res2 = self.client.post(
             reverse("web:api_reviews_list_create"),
-            data={"target_id": self.product.id, "rating": 5, "comment": "Trying again"},
+            data={"target_id": self.place.id, "rating": 5, "comment": "Trying again"},
             content_type="application/json",
         )
         self.assertEqual(res2.status_code, 400)
@@ -146,7 +148,7 @@ class RatingReviewAPITests(TestCase):
         malicious_input = "<script>alert('XSS')</script><b>Bold</b>"
         response = self.client.post(
             reverse("web:api_reviews_list_create"),
-            data={"target_id": self.product.id, "rating": 5, "comment": malicious_input},
+            data={"target_id": self.place.id, "rating": 5, "comment": malicious_input},
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
@@ -156,8 +158,8 @@ class RatingReviewAPITests(TestCase):
 
     def test_update_review_ownership_and_stats(self):
         """Owner can edit their review and average rating updates accordingly."""
-        review = Review.objects.create(user=self.user1, target=self.product, rating=3, comment="Average")
-        self.product.update_rating_stats()
+        review = Review.objects.create(user=self.user1, target=self.place, rating=3, comment="Average")
+        self.place.update_rating_stats()
 
         # User 2 tries to edit User 1's review -> 403 Forbidden
         self.client.force_login(self.user2)
@@ -177,14 +179,14 @@ class RatingReviewAPITests(TestCase):
         )
         self.assertEqual(res_ok.status_code, 200)
 
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.average_rating, 5.0)
+        self.place.refresh_from_db()
+        self.assertEqual(self.place.average_rating, 5.0)
 
     def test_delete_review_permission(self):
         """Review author or Admin can delete review, others cannot."""
-        review = Review.objects.create(user=self.user1, target=self.product, rating=5, comment="Top")
-        self.product.update_rating_stats()
-        self.assertEqual(self.product.review_count, 1)
+        review = Review.objects.create(user=self.user1, target=self.place, rating=5, comment="Top")
+        self.place.update_rating_stats()
+        self.assertEqual(self.place.review_count, 1)
 
         # User 2 cannot delete
         self.client.force_login(self.user2)
@@ -196,18 +198,18 @@ class RatingReviewAPITests(TestCase):
         res_admin = self.client.delete(reverse("web:api_review_detail", args=[review.id]))
         self.assertEqual(res_admin.status_code, 200)
 
-        self.product.refresh_from_db()
-        self.assertEqual(self.product.review_count, 0)
-        self.assertEqual(self.product.average_rating, 0.0)
+        self.place.refresh_from_db()
+        self.assertEqual(self.place.review_count, 0)
+        self.assertEqual(self.place.average_rating, 0.0)
 
     def test_reviews_summary_and_breakdown(self):
         """Summary endpoint returns correct average, total, star breakdown, and user status."""
-        Review.objects.create(user=self.user1, target=self.product, rating=5)
-        Review.objects.create(user=self.user2, target=self.product, rating=4)
-        self.product.update_rating_stats()
+        Review.objects.create(user=self.user1, target=self.place, rating=5)
+        Review.objects.create(user=self.user2, target=self.place, rating=4)
+        self.place.update_rating_stats()
 
         self.client.force_login(self.user1)
-        response = self.client.get(f"{reverse('web:api_reviews_summary')}?target_id={self.product.id}")
+        response = self.client.get(f"{reverse('web:api_reviews_summary')}?target_id={self.place.id}")
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["average_rating"], 4.5)
@@ -222,10 +224,10 @@ class RatingReviewAPITests(TestCase):
         # Create 15 reviews
         for i in range(15):
             u = User.objects.create_user(username=f"user_{i}", password="password")
-            Review.objects.create(user=u, target=self.product, rating=4, comment=f"Comment {i}")
+            Review.objects.create(user=u, target=self.place, rating=4, comment=f"Comment {i}")
 
         response = self.client.get(
-            f"{reverse('web:api_reviews_list_create')}?target_id={self.product.id}&page=1&page_size=5"
+            f"{reverse('web:api_reviews_list_create')}?target_id={self.place.id}&page=1&page_size=5"
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -242,7 +244,7 @@ class RatingReviewAPITests(TestCase):
         response = self.client.post(
             reverse("web:api_reviews_list_create"),
             data={
-                "target_id": self.product.id,
+                "target_id": self.place.id,
                 "rating": 5,
                 "comment": "Check this out @sarah_friend it is amazing!",
             },
@@ -256,7 +258,7 @@ class RatingReviewAPITests(TestCase):
         # Log in as friend and verify is_tagged is True
         self.client.force_login(friend)
         res_list = self.client.get(
-            f"{reverse('web:api_reviews_list_create')}?target_id={self.product.id}"
+            f"{reverse('web:api_reviews_list_create')}?target_id={self.place.id}"
         )
         review_data = res_list.json()["results"][0]
         self.assertTrue(review_data["is_tagged"])
