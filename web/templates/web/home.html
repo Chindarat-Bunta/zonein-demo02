@@ -1,9 +1,7 @@
 {% extends "web/base.html" %}
-
 {% block title %}ZoneIn - หน้าแรก ฟีดรีวิวล่าสุด{% endblock %}
-
 {% block extra_head %}
-<style>
+    <style>
     /* Hero Banner */
     .hero-banner {
         margin-bottom: 2.25rem;
@@ -271,9 +269,8 @@
         text-align: center;
         color: var(--text-muted);
     }
-</style>
+    </style>
 {% endblock %}
-
 {% block content %}
     <!-- Hero Banner -->
     <div class="hero-banner">
@@ -282,7 +279,6 @@
             <p>แหล่งรวมจุดเช็คอิน คาเฟ่ ธรรมชาติ และทริปการเดินทางจากเพื่อนนักเดินทางทั่วประเทศไทย</p>
         </div>
     </div>
-
     <!-- Recent Reviews Feed -->
     <section>
         <div class="section-header">
@@ -293,22 +289,21 @@
                 <p class="section-subtitle">แชร์ประสบการณ์ ความประทับใจ และรูปถ่ายจากนักเดินทาง</p>
             </div>
         </div>
-
         <div class="feed-container" id="recentReviewsFeed">
             <!-- Skeleton Slices -->
             <div class="skeleton" style="height: 200px;"></div>
             <div class="skeleton" style="height: 200px;"></div>
             <div class="skeleton" style="height: 200px;"></div>
         </div>
-
-        <button type="button" id="btnLoadMoreReviews" class="btn-load-more" onclick="loadMoreReviews()" style="display: none;">
-            โหลดรีวิวเพิ่มเติม
-        </button>
+        <button type="button"
+                id="btnLoadMoreReviews"
+                class="btn-load-more"
+                onclick="loadMoreReviews()"
+                style="display: none">โหลดรีวิวเพิ่มเติม</button>
     </section>
 {% endblock %}
-
 {% block extra_scripts %}
-<script>
+    <script>
 let currentReviewPage = 1;
 let hasNextReviewPage = false;
 let isLoadingReviews = false;
@@ -513,5 +508,5 @@ function shareReview(reviewId) {
         showToast("คัดลอกลิงก์เรียบร้อยแล้ว");
     }
 }
-</script>
+    </script>
 {% endblock %}
