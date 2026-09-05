@@ -64,11 +64,14 @@
 
         <div class="place-card-footer">
             <span class="place-address-snippet" title="{{ place.address }}">
-                <i class="fa-regular fa-map"></i> {{ place.address|truncatechars:35 }}
+                <i class="fa-regular fa-map"></i> {{ place.address|truncatechars:28 }}
             </span>
-            <a href="{% url 'web:place_detail' place.slug %}" class="btn-card-view">
-                ดูรีวิว <i class="fa-solid fa-arrow-right"></i>
-            </a>
+            <div class="card-footer-actions">
+                {% include 'components/maps_button.html' with place=place variant='outline' size='sm' text='นำทาง' %}
+                <a href="{% url 'web:place_detail' place.slug %}" class="btn-card-view">
+                    ดูรีวิว <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
         </div>
     </div>
 </article>

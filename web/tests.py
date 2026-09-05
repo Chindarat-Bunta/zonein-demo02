@@ -151,3 +151,64 @@ class WishlistTestCase(TestCase):
         self.assertEqual(len(data["places"]), 1)
         self.assertEqual(data["places"][0]["name"], "Nana Coffee Roasters")
 
+
+class MapIntegrationTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.cat = Category.objects.create(name="คาเฟ่", slug="cafe", icon="fa-mug-hot")
+        self.loc = Location.objects.create(city="กรุงเทพมหานคร", zone="อารีย์", slug="bkk-ari")
+        
+        # Place with coordinates
+        self.place_with_gps = Place.objects.create(
+            name="Factory Coffee",
+            slug="factory-coffee",
+            category=self.cat,
+            location=self.loc,
+            latitude=13.753820,
+            longitude=100.534010,
+            address="พญาไท กทม.",
+            description="Specialty coffee",
+        )
+
+        # Place without coordinates (fallback to destination name)
+        self.place_no_gps = Place.objects.create(
+            name="Hidden Gem Cafe",
+            slug="hidden-gem-cafe",
+            category=self.cat,
+            location=self.loc,
+            latitude=None,
+            longitude=None,
+            address="อารีย์สัมพันธ์ 1",
+            description="คาเฟ่ลับ",
+        )
+
+    def test_coordinates_validation_and_navigation_url(self):
+        self.assertTrue(self.place_with_gps.has_coordinates)
+        self.assertEqual(
+            self.place_with_gps.maps_navigation_url,
+            "https://www.google.com/maps/dir/?api=1&destination=13.75382,100.53401",
+        )
+
+        self.assertFalse(self.place_no_gps.has_coordinates)
+        self.assertIn(
+            "https://www.google.com/maps/dir/?api=1&destination=",
+            self.place_no_gps.maps_navigation_url,
+        )
+        self.assertIn("Hidden", self.place_no_gps.maps_navigation_url)
+
+    def test_maps_button_rendered_in_detail_page(self):
+        response = self.client.get(reverse("web:place_detail", kwargs={"slug": self.place_with_gps.slug}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'target="_blank"')
+        self.assertContains(response, 'rel="noopener noreferrer"')
+        self.assertContains(response, "13.75382,100.53401")
+        self.assertContains(response, "นำทางด้วย Google Maps")
+        self.assertContains(response, "พิกัด GPS:")
+
+    def test_maps_button_rendered_in_place_card(self):
+        response = self.client.get(reverse("web:index"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "btn-google-maps")
+        self.assertContains(response, "นำทาง")
+
+

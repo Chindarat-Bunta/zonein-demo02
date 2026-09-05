@@ -136,6 +136,10 @@ def api_places_view(request):
                 "tags": p.tag_list,
                 "is_featured": p.is_featured,
                 "is_wishlisted": p.id in wishlist_ids,
+                "latitude": float(p.latitude) if p.latitude is not None else None,
+                "longitude": float(p.longitude) if p.longitude is not None else None,
+                "has_coordinates": p.has_coordinates,
+                "maps_navigation_url": p.maps_navigation_url,
             }
         )
 
@@ -277,6 +281,10 @@ def api_wishlist_list_view(request):
                 "price_display": p.price_display,
                 "tags": p.tag_list,
                 "is_featured": p.is_featured,
+                "latitude": float(p.latitude) if p.latitude is not None else None,
+                "longitude": float(p.longitude) if p.longitude is not None else None,
+                "has_coordinates": p.has_coordinates,
+                "maps_navigation_url": p.maps_navigation_url,
             }
         )
 

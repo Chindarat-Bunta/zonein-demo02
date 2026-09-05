@@ -54,6 +54,13 @@
                     <span>{{ place.address }}</span>
                 </div>
 
+                {% if place.has_coordinates %}
+                <div class="detail-coords-badge">
+                    <i class="fa-solid fa-crosshairs"></i>
+                    <span>พิกัด GPS: {{ place.latitude|floatformat:4 }}, {{ place.longitude|floatformat:4 }}</span>
+                </div>
+                {% endif %}
+
                 {% if place.tag_list %}
                 <div class="detail-tags-group">
                     {% for tag in place.tag_list %}
@@ -72,9 +79,7 @@
                         <i class="fa-solid fa-heart icon-heart"></i> 
                         <span class="wishlist-btn-text">{% if is_wishlisted or place.id in wishlist_ids %}บันทึกแล้วในรายการโปรด{% else %}บันทึกเป็นสถานที่โปรด{% endif %}</span>
                     </button>
-                    <a href="https://maps.google.com/?q={{ place.name }}+{{ place.address }}" target="_blank" rel="noopener" class="btn-primary-map">
-                        <i class="fa-solid fa-map-location-dot"></i> ดูแผนที่
-                    </a>
+                    {% include 'components/maps_button.html' with place=place variant='primary' size='md' text='นำทางด้วย Google Maps' %}
                     <a href="{% url 'web:index' %}" class="btn-secondary-back">
                         <i class="fa-solid fa-arrow-left"></i> กลับไปค้นหา
                     </a>

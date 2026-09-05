@@ -76,6 +76,20 @@ class Place(models.Model):
         help_text="คั่นด้วยเครื่องหมายจุลภาค เช่น กาแฟดี, มีที่จอดรถ, วิวหลักล้าน",
         verbose_name="แท็กคำค้นหา",
     )
+    latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        verbose_name="ละติจูด (Latitude)",
+    )
+    longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        verbose_name="ลองจิจูด (Longitude)",
+    )
     is_featured = models.BooleanField(default=False, verbose_name="สถานที่แนะนำ")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -97,6 +111,31 @@ class Place(models.Model):
         if not self.tags:
             return []
         return [t.strip() for t in self.tags.split(",") if t.strip()]
+
+    @property
+    def has_coordinates(self):
+        if self.latitude is not None and self.longitude is not None:
+            try:
+                lat = float(self.latitude)
+                lng = float(self.longitude)
+                return -90.0 <= lat <= 90.0 and -180.0 <= lng <= 180.0
+            except (ValueError, TypeError):
+                return False
+        return False
+
+    @property
+    def maps_navigation_url(self):
+        import urllib.parse
+        if self.has_coordinates:
+            lat = f"{float(self.latitude):.6f}".rstrip('0').rstrip('.')
+            lng = f"{float(self.longitude):.6f}".rstrip('0').rstrip('.')
+            return f"https://www.google.com/maps/dir/?api=1&destination={lat},{lng}"
+        # Fallback to destination name or address
+        query = self.name
+        if self.address:
+            query = f"{self.name} {self.address}"
+        encoded_dest = urllib.parse.quote_plus(query)
+        return f"https://www.google.com/maps/dir/?api=1&destination={encoded_dest}"
 
 
 class Wishlist(models.Model):

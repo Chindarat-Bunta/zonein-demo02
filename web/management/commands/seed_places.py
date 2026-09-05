@@ -45,7 +45,7 @@ class Command(BaseCommand):
             )
             loc_objs[l["slug"]] = obj
 
-        # 3. Places
+        # 3. Places with GPS Coordinates
         places_data = [
             {
                 "name": "Factory Coffee - Specialty BKK",
@@ -55,6 +55,8 @@ class Command(BaseCommand):
                 "rating": 4.9,
                 "review_count": 348,
                 "price_level": 2,
+                "latitude": 13.753820,
+                "longitude": 100.534010,
                 "address": "49 ถนนพญาไท แขวงถนนพญาไท เขตราชเทวี กรุงเทพฯ",
                 "image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&auto=format&fit=crop&q=80",
                 "description": "ร้านกาแฟระดับแชมป์การันตีรางวัลมากมาย โดดเด่นด้วย Specialty Coffee เมนู Signature หลากหลาย นั่งชิลล์คุยงานสบาย พร้อมบาริสต้ามืออาชีพแนะนำเมล็ด",
@@ -69,6 +71,8 @@ class Command(BaseCommand):
                 "rating": 4.8,
                 "review_count": 215,
                 "price_level": 2,
+                "latitude": 13.780130,
+                "longitude": 100.544620,
                 "address": "ซอยอารีย์ 4 ฝั่งเหนือ แขวงพญาไท เขตพญาไท กรุงเทพฯ",
                 "image_url": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&auto=format&fit=crop&q=80",
                 "description": "คาเฟ่บรรยากาศสวนทรอปิคอลใจกลางอารีย์ มุมถ่ายรูปเพียบ มีเบเกอรี่และกาแฟ House Blend หลากหลายเมล็ด เหมาะกับคนชอบถ่ายรูปและนั่งพักผ่อน",
@@ -83,6 +87,8 @@ class Command(BaseCommand):
                 "rating": 4.7,
                 "review_count": 920,
                 "price_level": 2,
+                "latitude": 13.742510,
+                "longitude": 100.524450,
                 "address": "113 ซอยจุฬาลงกรณ์ 22 แขวงรองเมือง เขตปทุมวัน กรุงเทพฯ",
                 "image_url": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&auto=format&fit=crop&q=80",
                 "description": "ตำนานมาม่าต้มยำหม้อไฟรอบดึกระดับมิชลินไกด์ หมูกรอบยำแซ่บ ยำกุ้งเต้น และเป็ดพะโล้เนื้อนุ่ม รสชาติจัดจ้านถึงใจสไตล์สตรีทฟู้ดกรุงเทพฯ",
@@ -97,6 +103,8 @@ class Command(BaseCommand):
                 "rating": 4.6,
                 "review_count": 480,
                 "price_level": 3,
+                "latitude": 13.734810,
+                "longitude": 100.582840,
                 "address": "335 ซอยทองหล่อ 17 แขวงคลองตันเหนือ เขตวัฒนา กรุงเทพฯ",
                 "image_url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
                 "description": "คอมมูนิตี้มอลล์สุดชิคสไตล์ Open-air แหล่งรวมร้านอาหาร บาร์ คราฟต์เบียร์ และกิจกรรมไลฟ์สไตล์ใจกลางทองหล่อ เป็นมิตรกับสัตว์เลี้ยง",
@@ -111,6 +119,8 @@ class Command(BaseCommand):
                 "rating": 4.8,
                 "review_count": 180,
                 "price_level": 2,
+                "latitude": 18.787620,
+                "longitude": 99.004510,
                 "address": "ถนนเจริญเมือง ต.วัดเกต อ.เมือง เชียงใหม่",
                 "image_url": "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop&q=80",
                 "description": "คาเฟ่สไตล์วินเทจคลาสสิก ผสมผสานศิลปะและกาแฟ Specialty เมนู Nitro และ Mocktail รสสัมผัสแปลกใหม่ กลิ่นอายเมืองเหนือสุดอบอุ่น",
@@ -125,6 +135,8 @@ class Command(BaseCommand):
                 "rating": 4.9,
                 "review_count": 270,
                 "price_level": 4,
+                "latitude": 18.918930,
+                "longitude": 98.822810,
                 "address": "293 หมู่ 2 ต.โป่งแยง อ.แม่ริม เชียงใหม่",
                 "image_url": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=80",
                 "description": "ที่พักออนเซ็นสไตล์เรียวกังญี่ปุ่นท่ามกลางหุบเขาแม่ริม อากาศเย็นสบายตลอดปี มีบ่อน้ำแร่ธรรมชาติ วิวทะเลหมอกยามเช้า และอาหารไคเซกิ",
@@ -139,6 +151,8 @@ class Command(BaseCommand):
                 "rating": 4.7,
                 "review_count": 510,
                 "price_level": 2,
+                "latitude": 7.884720,
+                "longitude": 98.388910,
                 "address": "16 ซอยรมณีย์ ต.ตลาดเหนือ อ.เมือง ภูเก็ต",
                 "image_url": "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=800&auto=format&fit=crop&q=80",
                 "description": "ร้านไอศกรีมพรีเมียมในตึกเก่าชิโนโปรตุกีส เสิร์ฟไอศกรีมรสชาติขนมพื้นเมืองภูเก็ต เช่น บีโกหมอย และโอ้เอ๋ว รสชาติเป็นเอกลักษณ์",
@@ -153,6 +167,8 @@ class Command(BaseCommand):
                 "rating": 4.6,
                 "review_count": 390,
                 "price_level": 3,
+                "latitude": 13.313450,
+                "longitude": 100.903820,
                 "address": "ถนนรอบเขาสามมุข ต.แสนสุข อ.เมือง ชลบุรี",
                 "image_url": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800&auto=format&fit=crop&q=80",
                 "description": "ร้านอาหารริมทะเลเขาสามมุข วิวพระอาทิตย์ตกดินสุดโรแมนติก อาหารทะเลสดๆ ปลากะพงทอดน้ำปลา กุ้งแม่น้ำเผา นั่งรับลมทะเลสบายๆ",
@@ -167,6 +183,8 @@ class Command(BaseCommand):
                 "rating": 4.5,
                 "review_count": 320,
                 "price_level": 1,
+                "latitude": 13.740820,
+                "longitude": 100.510830,
                 "address": "8 ถนนผดุงด้าว แขวงสัมพันธวงศ์ เขตสัมพันธวงศ์ กรุงเทพฯ",
                 "image_url": "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=800&auto=format&fit=crop&q=80",
                 "description": "คาเฟ่พุดดิ้งสไตล์โมเดิร์นไชนิสชื่อดังแห่งเยาวราช พุดดิ้งงาดำ พุดดิ้งชานมไข่มุก และโทสต์ฉ่ำเนย ทานง่าย หวานกำลังดี",
@@ -181,6 +199,8 @@ class Command(BaseCommand):
                 "rating": 4.9,
                 "review_count": 420,
                 "price_level": 4,
+                "latitude": 8.085810,
+                "longitude": 98.300520,
                 "address": "116 หมู่ 1 หาดในยาง ต.สาคู อ.ถลาง ภูเก็ต",
                 "image_url": "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&auto=format&fit=crop&q=80",
                 "description": "รีสอร์ตหรูดีไซน์ Industrial Chic ที่ได้รับแรงบันดาลใจจากประวัติศาสตร์เหมืองแร่ดีบุกภูเก็ต สระว่ายน้ำ 3 สระ สปาระดับโลก ติดหาดในยาง",
@@ -191,10 +211,12 @@ class Command(BaseCommand):
                 "name": "เขาช่องลม นครนายก",
                 "slug": "khao-chong-lom-nakhorn-nayok",
                 "category": cat_objs["travel"],
-                "location": loc_objs["cnx-maerim"], # or general travel
+                "location": loc_objs["cnx-maerim"],
                 "rating": 4.6,
                 "review_count": 650,
                 "price_level": 1,
+                "latitude": 14.316040,
+                "longitude": 101.320420,
                 "address": "เขื่อนขุนด่านปราการชล ต.หินตั้ง อ.เมือง นครนายก",
                 "image_url": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=80",
                 "description": "กรีนแลนด์เมืองไทย นั่งเรือหางยาวเข้าไปชมทุ่งหญ้าเขียวขจีและลำธารใสเย็นกลางหุบเขา เหมาะแก่การเดินป่าเบาๆ ถ่ายภาพธรรมชาติ",
@@ -211,6 +233,6 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"[OK] Successfully seeded {Category.objects.count()} categories, {Location.objects.count()} locations, and {Place.objects.count()} places!"
+                f"[OK] Successfully seeded {Category.objects.count()} categories, {Location.objects.count()} locations, and {Place.objects.count()} places with coordinates!"
             )
         )

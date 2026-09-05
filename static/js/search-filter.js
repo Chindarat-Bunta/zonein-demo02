@@ -273,6 +273,31 @@ class PlaceFilterEngine {
             </div>
         ` : '';
 
+        const mapsUrl = place.maps_navigation_url || (window.MapsNavigator ? window.MapsNavigator.generateGoogleMapsUrl({
+            latitude: place.latitude,
+            longitude: place.longitude,
+            destinationName: place.name,
+            address: place.address
+        }) : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.name)}`);
+
+        const mapsBtn = `
+            <a 
+                href="${mapsUrl}" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                class="btn-google-maps btn-maps-outline btn-maps-sm"
+                data-lat="${place.latitude || ''}"
+                data-lng="${place.longitude || ''}"
+                data-destination="${this.escapeHTML(place.name)}"
+                data-address="${this.escapeHTML(place.address)}"
+                title="นำทางด้วย Google Maps"
+                aria-label="นำทางไปยัง ${this.escapeHTML(place.name)}"
+            >
+                <i class="fa-solid fa-diamond-turn-right maps-icon"></i>
+                <span class="maps-btn-label">นำทาง</span>
+            </a>
+        `;
+
         return `
             <article class="place-card" data-place-id="${place.id}">
                 <div class="place-card-image-wrap">
@@ -309,11 +334,14 @@ class PlaceFilterEngine {
 
                     <div class="place-card-footer">
                         <span class="place-address-snippet" title="${this.escapeHTML(place.address)}">
-                            <i class="fa-regular fa-map"></i> ${this.escapeHTML(this.truncateChars(place.address, 35))}
+                            <i class="fa-regular fa-map"></i> ${this.escapeHTML(this.truncateChars(place.address, 28))}
                         </span>
-                        <a href="/places/${place.slug}/" class="btn-card-view">
-                            ดูรีวิว <i class="fa-solid fa-arrow-right"></i>
-                        </a>
+                        <div class="card-footer-actions">
+                            ${mapsBtn}
+                            <a href="/places/${place.slug}/" class="btn-card-view">
+                                ดูรีวิว <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </article>
