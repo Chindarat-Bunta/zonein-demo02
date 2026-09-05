@@ -17,9 +17,15 @@ def get_user_or_session_key(request):
 def get_user_wishlist_place_ids(request):
     user, session_key = get_user_or_session_key(request)
     if user:
-        return set(Wishlist.objects.filter(user=user).values_list("place_id", flat=True))
+        return set(
+            Wishlist.objects.filter(user=user).values_list("place_id", flat=True)
+        )
     elif session_key:
-        return set(Wishlist.objects.filter(session_key=session_key).values_list("place_id", flat=True))
+        return set(
+            Wishlist.objects.filter(session_key=session_key).values_list(
+                "place_id", flat=True
+            )
+        )
     return set()
 
 
@@ -110,25 +116,30 @@ def api_places_view(request):
                 "slug": p.slug,
                 "description": p.description,
                 "address": p.address,
-                "image_url": p.image_url or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80",
-                "category": {
-                    "id": p.category.id if p.category else None,
-                    "name": p.category.name if p.category else "ทั่วไป",
-                    "slug": p.category.slug if p.category else "",
-                    "icon": p.category.icon if p.category else "fa-tag",
-                    "color": p.category.color if p.category else "#3b82f6",
-                }
-                if p.category
-                else None,
-                "location": {
-                    "id": p.location.id if p.location else None,
-                    "city": p.location.city if p.location else "",
-                    "zone": p.location.zone if p.location else "",
-                    "slug": p.location.slug if p.location else "",
-                    "display": str(p.location) if p.location else "",
-                }
-                if p.location
-                else None,
+                "image_url": p.image_url
+                or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80",
+                "category": (
+                    {
+                        "id": p.category.id if p.category else None,
+                        "name": p.category.name if p.category else "ทั่วไป",
+                        "slug": p.category.slug if p.category else "",
+                        "icon": p.category.icon if p.category else "fa-tag",
+                        "color": p.category.color if p.category else "#3b82f6",
+                    }
+                    if p.category
+                    else None
+                ),
+                "location": (
+                    {
+                        "id": p.location.id if p.location else None,
+                        "city": p.location.city if p.location else "",
+                        "zone": p.location.zone if p.location else "",
+                        "slug": p.location.slug if p.location else "",
+                        "display": str(p.location) if p.location else "",
+                    }
+                    if p.location
+                    else None
+                ),
                 "rating": float(p.rating),
                 "review_count": p.review_count,
                 "price_level": p.price_level,
@@ -151,10 +162,12 @@ def api_places_view(request):
 
 
 def place_detail_view(request, slug):
-    place = get_object_or_404(Place.objects.select_related("category", "location"), slug=slug)
-    related_places = Place.objects.filter(
-        category=place.category
-    ).exclude(id=place.id)[:3]
+    place = get_object_or_404(
+        Place.objects.select_related("category", "location"), slug=slug
+    )
+    related_places = Place.objects.filter(category=place.category).exclude(id=place.id)[
+        :3
+    ]
     wishlist_ids = get_user_wishlist_place_ids(request)
 
     return render(
@@ -171,7 +184,9 @@ def place_detail_view(request, slug):
 
 def wishlist_page_view(request):
     wishlist_ids = get_user_wishlist_place_ids(request)
-    places = Place.objects.filter(id__in=wishlist_ids).select_related("category", "location")
+    places = Place.objects.filter(id__in=wishlist_ids).select_related(
+        "category", "location"
+    )
     all_places = Place.objects.select_related("category", "location").all()
 
     return render(
@@ -189,7 +204,9 @@ def wishlist_page_view(request):
 @csrf_exempt
 def api_wishlist_toggle_view(request):
     if request.method not in ["POST", "GET"]:
-        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+        return JsonResponse(
+            {"status": "error", "message": "Method not allowed"}, status=405
+        )
 
     place_id = None
     if request.method == "POST":
@@ -202,12 +219,16 @@ def api_wishlist_toggle_view(request):
         place_id = request.GET.get("place_id")
 
     if not place_id:
-        return JsonResponse({"status": "error", "message": "Missing place_id"}, status=400)
+        return JsonResponse(
+            {"status": "error", "message": "Missing place_id"}, status=400
+        )
 
     try:
         place = Place.objects.get(id=int(place_id))
     except (Place.DoesNotExist, ValueError):
-        return JsonResponse({"status": "error", "message": "Place not found"}, status=404)
+        return JsonResponse(
+            {"status": "error", "message": "Place not found"}, status=404
+        )
 
     user, session_key = get_user_or_session_key(request)
 
@@ -222,7 +243,9 @@ def api_wishlist_toggle_view(request):
             action = "added"
         total_count = Wishlist.objects.filter(user=user).count()
     else:
-        wishlist_item = Wishlist.objects.filter(session_key=session_key, place=place).first()
+        wishlist_item = Wishlist.objects.filter(
+            session_key=session_key, place=place
+        ).first()
         if wishlist_item:
             wishlist_item.delete()
             action = "removed"
@@ -245,7 +268,9 @@ def api_wishlist_toggle_view(request):
 
 def api_wishlist_list_view(request):
     wishlist_ids = get_user_wishlist_place_ids(request)
-    places = Place.objects.filter(id__in=wishlist_ids).select_related("category", "location")
+    places = Place.objects.filter(id__in=wishlist_ids).select_related(
+        "category", "location"
+    )
     data = []
     for p in places:
         data.append(
@@ -255,22 +280,27 @@ def api_wishlist_list_view(request):
                 "slug": p.slug,
                 "description": p.description,
                 "address": p.address,
-                "image_url": p.image_url or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80",
-                "category": {
-                    "name": p.category.name if p.category else "ทั่วไป",
-                    "slug": p.category.slug if p.category else "",
-                    "icon": p.category.icon if p.category else "fa-tag",
-                    "color": p.category.color if p.category else "#3b82f6",
-                }
-                if p.category
-                else None,
-                "location": {
-                    "city": p.location.city if p.location else "",
-                    "zone": p.location.zone if p.location else "",
-                    "display": str(p.location) if p.location else "",
-                }
-                if p.location
-                else None,
+                "image_url": p.image_url
+                or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80",
+                "category": (
+                    {
+                        "name": p.category.name if p.category else "ทั่วไป",
+                        "slug": p.category.slug if p.category else "",
+                        "icon": p.category.icon if p.category else "fa-tag",
+                        "color": p.category.color if p.category else "#3b82f6",
+                    }
+                    if p.category
+                    else None
+                ),
+                "location": (
+                    {
+                        "city": p.location.city if p.location else "",
+                        "zone": p.location.zone if p.location else "",
+                        "display": str(p.location) if p.location else "",
+                    }
+                    if p.location
+                    else None
+                ),
                 "rating": float(p.rating),
                 "review_count": p.review_count,
                 "price_level": p.price_level,

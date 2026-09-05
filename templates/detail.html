@@ -1,104 +1,94 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}{{ place.name }} - ZoneIn รีวิว{% endblock %}
-
 {% block content %}
-<div class="container detail-container">
-    <div class="breadcrumb">
-        <a href="{% url 'web:index' %}"><i class="fa-solid fa-house"></i> หน้าแรก</a>
-        <span>/</span>
-        {% if place.category %}
-        <a href="{% url 'web:index' %}?category={{ place.category.slug }}">{{ place.category.name }}</a>
-        <span>/</span>
-        {% endif %}
-        <span>{{ place.name }}</span>
-    </div>
-
-    <div class="place-detail-card">
-        <div class="detail-header-grid">
-            <div class="detail-image-gallery">
-                <img src="{{ place.image_url }}" alt="{{ place.name }}" class="detail-main-img">
-            </div>
-            
-            <div class="detail-info-panel">
-                <div class="detail-badge-group">
-                    {% if place.category %}
-                    <span class="place-category-badge" style="background: {{ place.category.color }};">
-                        <i class="fa-solid {{ place.category.icon }}"></i> {{ place.category.name }}
-                    </span>
-                    {% endif %}
-                    {% if place.is_featured %}
-                    <span class="place-featured-badge"><i class="fa-solid fa-crown"></i> แนะนำ</span>
-                    {% endif %}
-                    <span class="detail-price-pill">{{ place.price_display }}</span>
+    <div class="container detail-container">
+        <div class="breadcrumb">
+            <a href="{% url 'web:index' %}"><i class="fa-solid fa-house"></i> หน้าแรก</a>
+            <span>/</span>
+            {% if place.category %}
+                <a href="{% url 'web:index' %}?category={{ place.category.slug }}">{{ place.category.name }}</a>
+                <span>/</span>
+            {% endif %}
+            <span>{{ place.name }}</span>
+        </div>
+        <div class="place-detail-card">
+            <div class="detail-header-grid">
+                <div class="detail-image-gallery">
+                    <img src="{{ place.image_url }}"
+                         alt="{{ place.name }}"
+                         class="detail-main-img">
                 </div>
-
-                <h1 class="detail-title">{{ place.name }}</h1>
-
-                <div class="detail-rating-row">
-                    <div class="star-rating">
-                        <i class="fa-solid fa-star"></i>
-                        <span class="score">{{ place.rating|floatformat:1 }}</span>
+                <div class="detail-info-panel">
+                    <div class="detail-badge-group">
+                        {% if place.category %}
+                            <span class="place-category-badge"
+                                  style="background: {{ place.category.color }}">
+                                <i class="fa-solid {{ place.category.icon }}"></i> {{ place.category.name }}
+                            </span>
+                        {% endif %}
+                        {% if place.is_featured %}
+                            <span class="place-featured-badge"><i class="fa-solid fa-crown"></i> แนะนำ</span>
+                        {% endif %}
+                        <span class="detail-price-pill">{{ place.price_display }}</span>
                     </div>
-                    <span class="review-counter">จาก {{ place.review_count }} รีวิวจากผู้ใช้งานจริง</span>
+                    <h1 class="detail-title">{{ place.name }}</h1>
+                    <div class="detail-rating-row">
+                        <div class="star-rating">
+                            <i class="fa-solid fa-star"></i>
+                            <span class="score">{{ place.rating|floatformat:1 }}</span>
+                        </div>
+                        <span class="review-counter">จาก {{ place.review_count }} รีวิวจากผู้ใช้งานจริง</span>
+                    </div>
+                    <div class="detail-location-row">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <span><strong>ย่าน:</strong> {{ place.location.zone }}, {{ place.location.city }}</span>
+                    </div>
+                    <div class="detail-address-box">
+                        <i class="fa-regular fa-map"></i>
+                        <span>{{ place.address }}</span>
+                    </div>
+                    {% if place.tag_list %}
+                        <div class="detail-tags-group">
+                            {% for tag in place.tag_list %}
+                                <a href="{% url 'web:index' %}?q={{ tag }}" class="tag-chip">#{{ tag }}</a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="detail-actions">
+                        <button type="button"
+                                class="btn-wishlist-detail btn-wishlist-toggle {% if is_wishlisted or place.id in wishlist_ids %}active{% endif %}"
+                                data-place-id="{{ place.id }}"
+                                data-place-name="{{ place.name }}">
+                            <i class="fa-solid fa-heart icon-heart"></i>
+                            <span class="wishlist-btn-text">{% if is_wishlisted or place.id in wishlist_ids %}บันทึกแล้วในรายการโปรด{% else %}บันทึกเป็นสถานที่โปรด{% endif %}</span>
+                        </button>
+                        <a href="https://maps.google.com/?q={{ place.name }}+{{ place.address }}"
+                           target="_blank"
+                           rel="noopener"
+                           class="btn-primary-map">
+                            <i class="fa-solid fa-map-location-dot"></i> ดูแผนที่
+                        </a>
+                        <a href="{% url 'web:index' %}" class="btn-secondary-back">
+                            <i class="fa-solid fa-arrow-left"></i> กลับไปค้นหา
+                        </a>
+                    </div>
                 </div>
-
-                <div class="detail-location-row">
-                    <i class="fa-solid fa-location-dot"></i>
-                    <span><strong>ย่าน:</strong> {{ place.location.zone }}, {{ place.location.city }}</span>
-                </div>
-
-                <div class="detail-address-box">
-                    <i class="fa-regular fa-map"></i>
-                    <span>{{ place.address }}</span>
-                </div>
-
-                {% if place.tag_list %}
-                <div class="detail-tags-group">
-                    {% for tag in place.tag_list %}
-                    <a href="{% url 'web:index' %}?q={{ tag }}" class="tag-chip">#{{ tag }}</a>
+            </div>
+            <div class="detail-body-section">
+                <h2 class="section-heading"><i class="fa-solid fa-circle-info"></i> ข้อมูลและรีวิวโดยสังเขป</h2>
+                <div class="detail-desc-content">{{ place.description|linebreaks }}</div>
+            </div>
+        </div>
+        {% if related_places %}
+            <section class="related-section">
+                <h2 class="section-heading"><i class="fa-solid fa-fire"></i> สถานที่ใกล้เคียง / หมวดหมู่เดียวกัน</h2>
+                <div class="places-grid">
+                    {% for r_place in related_places %}
+                        {% include 'components/place_card.html' with place=r_place %}
                     {% endfor %}
                 </div>
-                {% endif %}
-
-                <div class="detail-actions">
-                    <button 
-                        type="button" 
-                        class="btn-wishlist-detail btn-wishlist-toggle {% if is_wishlisted or place.id in wishlist_ids %}active{% endif %}"
-                        data-place-id="{{ place.id }}"
-                        data-place-name="{{ place.name }}"
-                    >
-                        <i class="fa-solid fa-heart icon-heart"></i> 
-                        <span class="wishlist-btn-text">{% if is_wishlisted or place.id in wishlist_ids %}บันทึกแล้วในรายการโปรด{% else %}บันทึกเป็นสถานที่โปรด{% endif %}</span>
-                    </button>
-                    <a href="https://maps.google.com/?q={{ place.name }}+{{ place.address }}" target="_blank" rel="noopener" class="btn-primary-map">
-                        <i class="fa-solid fa-map-location-dot"></i> ดูแผนที่
-                    </a>
-                    <a href="{% url 'web:index' %}" class="btn-secondary-back">
-                        <i class="fa-solid fa-arrow-left"></i> กลับไปค้นหา
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="detail-body-section">
-            <h2 class="section-heading"><i class="fa-solid fa-circle-info"></i> ข้อมูลและรีวิวโดยสังเขป</h2>
-            <div class="detail-desc-content">
-                {{ place.description|linebreaks }}
-            </div>
-        </div>
+            </section>
+        {% endif %}
     </div>
-
-    {% if related_places %}
-    <section class="related-section">
-        <h2 class="section-heading"><i class="fa-solid fa-fire"></i> สถานที่ใกล้เคียง / หมวดหมู่เดียวกัน</h2>
-        <div class="places-grid">
-            {% for r_place in related_places %}
-                {% include 'components/place_card.html' with place=r_place %}
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-</div>
 {% endblock %}

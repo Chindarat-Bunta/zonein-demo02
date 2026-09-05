@@ -6,11 +6,19 @@ from web.models import Category, Location, Place
 class SearchFilterTestCase(TestCase):
     def setUp(self):
         self.client = Client()
-        self.cat_cafe = Category.objects.create(name="คาเฟ่", slug="cafe", icon="fa-mug-hot", color="#f97316")
-        self.cat_hotel = Category.objects.create(name="ที่พัก", slug="hotel", icon="fa-bed", color="#3b82f6")
+        self.cat_cafe = Category.objects.create(
+            name="คาเฟ่", slug="cafe", icon="fa-mug-hot", color="#f97316"
+        )
+        self.cat_hotel = Category.objects.create(
+            name="ที่พัก", slug="hotel", icon="fa-bed", color="#3b82f6"
+        )
 
-        self.loc_ari = Location.objects.create(city="กรุงเทพมหานคร", zone="อารีย์", slug="bkk-ari")
-        self.loc_cnx = Location.objects.create(city="เชียงใหม่", zone="นิมมาน", slug="cnx-nimman")
+        self.loc_ari = Location.objects.create(
+            city="กรุงเทพมหานคร", zone="อารีย์", slug="bkk-ari"
+        )
+        self.loc_cnx = Location.objects.create(
+            city="เชียงใหม่", zone="นิมมาน", slug="cnx-nimman"
+        )
 
         self.place1 = Place.objects.create(
             name="Specialty Coffee Ari",
@@ -66,7 +74,9 @@ class SearchFilterTestCase(TestCase):
         self.assertNotContains(response, "Nimman Boutique Hotel")
 
     def test_combined_filter_empty_result(self):
-        response = self.client.get(reverse("web:index"), {"q": "คำค้นหาที่ไม่มีในฐานข้อมูลxyz123"})
+        response = self.client.get(
+            reverse("web:index"), {"q": "คำค้นหาที่ไม่มีในฐานข้อมูลxyz123"}
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["total_count"], 0)
         self.assertContains(response, "ไม่พบสถานที่ที่ตรงกับเงื่อนไข")
@@ -85,7 +95,9 @@ class WishlistTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.cat = Category.objects.create(name="คาเฟ่", slug="cafe", icon="fa-mug-hot")
-        self.loc = Location.objects.create(city="กรุงเทพมหานคร", zone="อารีย์", slug="bkk-ari")
+        self.loc = Location.objects.create(
+            city="กรุงเทพมหานคร", zone="อารีย์", slug="bkk-ari"
+        )
         self.place = Place.objects.create(
             name="Nana Coffee Roasters",
             slug="nana-coffee-roasters",
@@ -150,4 +162,3 @@ class WishlistTestCase(TestCase):
         self.assertIn(self.place.id, data["place_ids"])
         self.assertEqual(len(data["places"]), 1)
         self.assertEqual(data["places"][0]["name"], "Nana Coffee Roasters")
-
