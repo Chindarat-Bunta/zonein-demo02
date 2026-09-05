@@ -4,6 +4,13 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 
 
+def index(request):
+    """
+    Zone In Main Homepage / Feed view.
+    """
+    return render(request, "index.html")
+
+
 def signin_view(request):
     """
     Sign In / Login view supporting username, email, and social login (Google & Facebook).
@@ -130,3 +137,4 @@ def logout_view(request):
     logout(request)
     messages.info(request, "ออกจากระบบเรียบร้อยแล้ว")
     return redirect("signin")
+
