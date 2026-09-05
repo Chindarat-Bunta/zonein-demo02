@@ -131,6 +131,55 @@
         color: #f87171;
     }
 
+    /* Suggested Travelers Bar */
+    .suggested-travelers-bar {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .suggested-travelers-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.85rem;
+    }
+
+    .suggested-travelers-header h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+
+    .travelers-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 0.85rem;
+    }
+
+    .traveler-mini-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: var(--radius-md);
+        padding: 0.75rem 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        transition: var(--transition-smooth);
+    }
+
+    .traveler-mini-card:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+
     .post-time {
         font-size: 0.78rem;
         color: var(--text-dim);
@@ -671,6 +720,24 @@
                     class="btn btn-create-post"
                     onclick="openCreatePostModal()">คุณอยู่ที่ไหน</button>
         </div>
+        <!-- Suggested Travelers to Follow Bar -->
+        <div class="suggested-travelers-bar" id="suggestedTravelersBar" style="display: none;">
+            <div class="suggested-travelers-header">
+                <h3>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>นักเดินทางแนะนำ (กดติดตามเพื่อดูเรื่องราวใหม่ๆ)</span>
+                </h3>
+            </div>
+            <div class="travelers-grid" id="suggestedTravelersList">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
         <!-- Posts Feed Container -->
         <div id="postsFeedList">
             <!-- Injected via JS -->
@@ -1045,6 +1112,46 @@ async function loadTravelPosts() {
             return;
         }
 
+        // Extract suggested authors to follow
+        const suggestedMap = new Map();
+        posts.forEach(p => {
+            if (!p.is_self && p.author_id && !suggestedMap.has(p.author_id)) {
+                suggestedMap.set(p.author_id, {
+                    id: p.author_id,
+                    username: p.author_name,
+                    is_following: p.is_following,
+                    initial: (p.author_name || "T")[0].toUpperCase()
+                });
+            }
+        });
+
+        const suggestedBar = document.getElementById("suggestedTravelersBar");
+        const suggestedList = document.getElementById("suggestedTravelersList");
+        if (suggestedBar && suggestedList && suggestedMap.size > 0) {
+            suggestedBar.style.display = "block";
+            suggestedList.innerHTML = Array.from(suggestedMap.values()).map(u => `
+                <div class="traveler-mini-card">
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                        <div class="author-avatar" style="width: 32px; height: 32px; font-size: 0.85rem;">${u.initial}</div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 0.85rem; color: #fff;">${u.username}</div>
+                            <div style="font-size: 0.72rem; color: var(--text-dim);">นักเดินทาง</div>
+                        </div>
+                    </div>
+                    <button type="button" 
+                            class="btn-follow-user ${u.is_following ? 'following' : ''}" 
+                            data-user-id="${u.id}"
+                            data-following="${u.is_following ? 'true' : 'false'}"
+                            onclick="handleToggleFollowUser(event, ${u.id})"
+                            title="${u.is_following ? 'คลิกเพื่อเลิกติดตาม' : 'คลิกเพื่อติดตาม'}">
+                        ${u.is_following ? 'กำลังติดตาม' : '+ ติดตาม'}
+                    </button>
+                </div>
+            `).join("");
+        } else if (suggestedBar) {
+            suggestedBar.style.display = "none";
+        }
+
         container.innerHTML = posts.map(p => {
             const stars = "★".repeat(p.rating) + "☆".repeat(5 - p.rating);
             const dateStr = new Date(p.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -1091,17 +1198,24 @@ async function loadTravelPosts() {
             }
 
             const isOtherUser = !p.is_self && p.author_id;
-            const followBtnHtml = isOtherUser ? `
-                <button type="button" 
-                        class="btn-follow-user ${p.is_following ? 'following' : ''}" 
-                        id="follow_btn_user_${p.author_id}_post_${p.id}"
-                        data-user-id="${p.author_id}"
-                        data-following="${p.is_following ? 'true' : 'false'}"
-                        onclick="handleToggleFollowUser(event, ${p.author_id})"
-                        title="${p.is_following ? 'คลิกเพื่อเลิกติดตาม' : 'คลิกเพื่อติดตามผู้ใช้นี้'}">
-                    ${p.is_following ? 'กำลังติดตาม' : '+ ติดตาม'}
-                </button>
-            ` : '';
+            let followBadgeOrBtn = "";
+            if (isOtherUser) {
+                followBadgeOrBtn = `
+                    <button type="button" 
+                            class="btn-follow-user ${p.is_following ? 'following' : ''}" 
+                            id="follow_btn_user_${p.author_id}_post_${p.id}"
+                            data-user-id="${p.author_id}"
+                            data-following="${p.is_following ? 'true' : 'false'}"
+                            onclick="handleToggleFollowUser(event, ${p.author_id})"
+                            title="${p.is_following ? 'คลิกเพื่อเลิกติดตาม' : 'คลิกเพื่อติดตามผู้ใช้นี้'}">
+                        ${p.is_following ? 'กำลังติดตาม' : '+ ติดตาม'}
+                    </button>
+                `;
+            } else {
+                followBadgeOrBtn = `
+                    <span style="font-size: 0.72rem; color: #10b981; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 9999px; padding: 0.12rem 0.55rem; font-weight: 600;">คุณ (เราเอง)</span>
+                `;
+            }
 
             return `
                 <div class="post-card" id="post_${p.id}">
@@ -1111,7 +1225,7 @@ async function loadTravelPosts() {
                             <div>
                                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                                     <span class="author-name">${p.author_name || 'เรา (Traveler)'}</span>
-                                    ${followBtnHtml}
+                                    ${followBadgeOrBtn}
                                     <span class="rating-badge">${stars} ${p.rating}.0</span>
                                 </div>
                                 <div class="post-time">${dateStr} • ${timeAgo}</div>
