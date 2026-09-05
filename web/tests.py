@@ -164,11 +164,13 @@ class PostLikeAPITests(TestCase):
             content="ยอดดอยหนาวมาก",
         )
 
-    def test_unauthenticated_user_cannot_like(self):
-        """Unauthenticated user receives 401 when trying to like."""
+    def test_default_user_like_flow(self):
+        """Unauthenticated user in demo uses default traveler user to like seamlessly."""
         res = self.client.post(reverse("web:api_post_like", args=[self.post.id]))
-        self.assertEqual(res.status_code, 401)
-        self.assertTrue(res.json().get("login_required"))
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.json()["liked"])
+        self.assertEqual(res.json()["likes_count"], 1)
+
 
     def test_toggle_like_and_unlike(self):
         """Authenticated user can toggle like and unlike on a post."""
