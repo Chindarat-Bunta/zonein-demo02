@@ -722,9 +722,10 @@ function renderReviewCardHtml(r) {
 
     let imgHtml = "";
     if (r.image_url) {
-        const placeName = (r.place?.name || 'รูปรีวิว').replace(/'/g, "\\'");
+        const placeName = (r.place?.name || 'รูปรีวิว').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const safeImageUrl = r.image_url.replace(/'/g, "\\'");
         imgHtml = `
-            <div class="review-image-wrap" onclick="openImageLightbox('${r.image_url}', '${placeName}')" title="คลิกเพื่อดูรูปภาพขนาดใหญ่">
+            <div class="review-image-wrap" onclick="openImageLightbox('${safeImageUrl}', '${placeName}')" title="คลิกเพื่อดูรูปภาพขนาดใหญ่">
                 <img src="${r.image_url}" alt="${r.place?.name || 'รูปรีวิว'}" class="review-image" loading="lazy">
                 <div class="review-image-overlay-hint">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
