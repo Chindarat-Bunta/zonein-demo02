@@ -552,11 +552,15 @@
                 onclick="loadMoreReviews()"
                 style="display: none">โหลดรีวิวเพิ่มเติม</button>
     </section>
-
     <!-- Lightbox Image Modal -->
-    <div class="lightbox-overlay" id="imageLightbox" onclick="closeImageLightbox(event)">
+    <div class="lightbox-overlay"
+         id="imageLightbox"
+         onclick="closeImageLightbox(event)">
         <div class="lightbox-container" onclick="event.stopPropagation()">
-            <button type="button" class="lightbox-close-btn" onclick="closeImageLightbox()" title="ปิด">&times;</button>
+            <button type="button"
+                    class="lightbox-close-btn"
+                    onclick="closeImageLightbox()"
+                    title="ปิด">&times;</button>
             <img src="" alt="ขยายรูปภาพ" class="lightbox-img" id="lightboxImage">
             <div class="lightbox-caption" id="lightboxCaption"></div>
         </div>
@@ -765,10 +769,7 @@ function renderReviewCardHtml(r) {
                     <div>
                         <div class="author-name-row">
                             <span class="author-name">${authorUsername}</span>
-                            <button type="button" 
-                                    class="btn-follow ${isFollowing ? 'following' : ''}" 
-                                    data-author-id="${authorId}" 
-                                    onclick="toggleFollowAuthor(event, ${authorId}, '${authorUsername}')">
+                            <button type="button" class="btn-follow ${isFollowing ? 'following' : ''}" data-author-id="${authorId}" onclick="toggleFollowAuthor(event, ${authorId}, '${authorUsername}')">
                                 ${isFollowing ? 'กำลังติดตาม' : 'ติดตาม'}
                             </button>
                         </div>
