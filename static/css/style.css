@@ -45,7 +45,9 @@
 }
 
 /* Reset & Global */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -139,7 +141,8 @@ a {
     gap: 0.4rem;
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover,
+.nav-link.active {
     color: var(--primary);
     background: var(--primary-light);
 }
@@ -494,9 +497,20 @@ a {
 }
 
 @keyframes pulse {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
 }
 
 /* ============================================================
@@ -522,7 +536,9 @@ a {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ============================================================
@@ -756,8 +772,15 @@ a {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .empty-icon-bubble {
@@ -928,7 +951,8 @@ a {
     color: var(--accent-amber);
 }
 
-.detail-location-row, .detail-address-box {
+.detail-location-row,
+.detail-address-box {
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
@@ -1062,9 +1086,11 @@ a {
     .detail-header-grid {
         grid-template-columns: 1fr;
     }
+
     .hero-title {
         font-size: 2.1rem;
     }
+
     .nav-links {
         display: none;
     }
@@ -1074,13 +1100,16 @@ a {
     .search-input-group {
         flex-direction: column;
     }
+
     .btn-primary-search {
         padding: 0.85rem;
         justify-content: center;
     }
+
     .filter-secondary-row {
         grid-template-columns: 1fr;
     }
+
     .hero-title {
         font-size: 1.75rem;
     }
