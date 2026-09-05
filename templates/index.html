@@ -4,8 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Zone In — Discover Your Next Horizon{% endblock %}</title>
-    <meta name="description" content="{% block meta_desc %}ค้นพบสถานที่ท่องเที่ยวยอดฮิต คาเฟ่ แคมป์ปิ้ง และรีวิวจริงจากนักเดินทางทั่วไทย{% endblock %}">
+    <title>Zone In — Discover Your Next Horizon</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,57 +13,6 @@
     
     <!-- Custom Design System Stylesheet from statics/ -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-
-    <style>
-        /* Base page content layout integration */
-        .page-content-wrapper {
-            position: relative;
-            z-index: 1;
-            max-width: 1180px;
-            margin: 0 auto;
-            padding: 110px 24px 60px;
-            min-height: calc(100vh - 120px);
-        }
-
-        /* Toast notification */
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: #1e242b;
-            color: #fff;
-            border: 1px solid rgba(255, 157, 157, 0.4);
-            padding: 0.85rem 1.5rem;
-            border-radius: 14px;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
-            z-index: 3000;
-            display: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-            animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Footer */
-        .site-footer {
-            border-top: 1px solid rgba(255, 157, 157, 0.2);
-            padding: 2.5rem 1.5rem;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.88rem;
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            margin-top: auto;
-            position: relative;
-            z-index: 10;
-        }
-    </style>
-    {% block extra_head %}{% endblock %}
 </head>
 <body>
 
@@ -137,11 +85,11 @@
                 </a>
             </div>
 
-            <!-- 3. RIGHT: SIGN IN / SIGN UP OR USER PROFILE -->
+            <!-- 3. RIGHT: SIGN IN / SIGN UP -->
             <div class="nav-auth-group">
                 {% if user.is_authenticated %}
                 <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); display: inline-flex; align-items: center; gap: 6px;">
-                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #48bb78;"></span>
                     {{ user.first_name|default:user.username }}
                 </span>
                 <a href="/logout/" class="btn-signin" id="btnLogout" style="color: #dc2626;">
@@ -161,7 +109,7 @@
                 {% endif %}
             </div>
 
-            <!-- 4. MOBILE: 3 NAV ICONS -->
+            <!-- 4. MOBILE: 3 NAV ICONS (หน้าแรก, ค้นหา, การแจ้งเตือน) ON SAME BAR AS LOGO -->
             <div class="mobile-nav-icons" id="mobileNavIcons" aria-label="แถบนำทางมือถือ">
                 <button type="button" class="mobile-nav-icon-btn active" data-tab="home" id="mobTabHome" aria-label="หน้าแรก" title="หน้าแรก" onclick="switchTab('home')">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -183,7 +131,7 @@
                 </button>
             </div>
 
-            <!-- 5. MOBILE: PROFILE ICON WITH DROPDOWN -->
+            <!-- 5. MOBILE: PROFILE ICON WITH DROPDOWN (Sign In / Sign Up) -->
             <div class="mobile-profile-wrapper" id="mobileProfileWrapper">
                 <button type="button" class="mobile-profile-btn" id="mobileProfileBtn" aria-label="เมนูโปรไฟล์และบัญชี" aria-haspopup="true" aria-expanded="false">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -249,21 +197,139 @@
         </nav>
     </header>
 
-    <!-- Main Content Area -->
+    <!-- ==========================================================================
+         PAGE CONTENT & DYNAMIC TABS DEMO SHOWCASE
+         ========================================================================== -->
     <main class="page-content-wrapper">
-        {% block content %}{% endblock %}
+        <!-- Palette preview badge -->
+        <div class="palette-preview-badge">
+            <div class="palette-dots-row">
+                <span class="palette-dot" style="background-color: #FF9D9D;" title="#FF9D9D"></span>
+                <span class="palette-dot" style="background-color: #FFC5AA;" title="#FFC5AA"></span>
+                <span class="palette-dot" style="background-color: #EEF8CD;" title="#EEF8CD"></span>
+                <span class="palette-dot" style="background-color: #BBF1D2;" title="#BBF1D2"></span>
+            </div>
+            <span>Warm Pastel Palette &amp; Glassmorphic Navigation</span>
+        </div>
+
+        <h1 class="hero-title">ยินดีต้อนรับสู่ Zone In</h1>
+        <p class="hero-subtitle">
+            แถบนำทางดีไซน์ล้ำสมัยพร้อมลูกเล่น Sliding Glider Tab ในโทนสีพาสเทลอบอุ่น (Coral, Peach, Cream &amp; Mint) สวยงามและสบายตา
+        </p>
+
+        <!-- Palette Preview Bar -->
+        <div class="palette-strip-card">
+            <div class="palette-color-chip" style="background: rgba(255, 157, 157, 0.22); border: 1px solid #FF9D9D;">
+                <span class="chip-dot" style="background: #FF9D9D;"></span>
+                <span>#FF9D9D Coral</span>
+            </div>
+            <div class="palette-color-chip" style="background: rgba(255, 197, 170, 0.25); border: 1px solid #FFC5AA;">
+                <span class="chip-dot" style="background: #FFC5AA;"></span>
+                <span>#FFC5AA Peach</span>
+            </div>
+            <div class="palette-color-chip" style="background: rgba(238, 248, 205, 0.45); border: 1px solid #d4dfa6;">
+                <span class="chip-dot" style="background: #EEF8CD;"></span>
+                <span>#EEF8CD Cream</span>
+            </div>
+            <div class="palette-color-chip" style="background: rgba(187, 241, 210, 0.35); border: 1px solid #BBF1D2;">
+                <span class="chip-dot" style="background: #BBF1D2;"></span>
+                <span>#BBF1D2 Mint</span>
+            </div>
+        </div>
+
+        <!-- Interactive Panels that switch based on selected tab -->
+        <div class="tab-panel-container">
+            
+            <!-- Panel 1: หน้าแรก -->
+            <div class="tab-panel active" id="panel-home">
+                <h3 style="font-size: 1.4rem; margin-bottom: 12px; color: var(--text-primary);">🌟 หน้าแรก (Home)</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                    ทดลองคลิกสลับระหว่างแท็บ <strong>"หน้าแรก"</strong>, <strong>"ค้นหา"</strong> หรือ <strong>"การแจ้งเตือน"</strong> ด้านบน เพื่อชมลูกเล่นแอนิเมชัน Sliding Pill ที่เคลื่อนไหวตามตำแหน่งจริง
+                </p>
+                <div class="interactive-feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-card-icon">⚡</div>
+                        <h4>Sliding Glider Pill</h4>
+                        <p>แถบไฮไลต์เลื่อนสไลด์ตามการเปลี่ยนแท็บอย่างนุ่มนวลด้วยฟิสิกส์สปริง</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-icon">🎨</div>
+                        <h4>Warm Pastel Palette</h4>
+                        <p>ดีไซน์โทนสีอบอุ่น นุ่มนวล สบายตา ด้วยโทน Coral, Peach, Cream และ Mint</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-icon">📁</div>
+                        <h4>Clean Statics Structure</h4>
+                        <p>แยกไฟล์สไตล์ชีตและสคริปต์ไว้ใน <code>statics/css</code> และ <code>statics/js</code> อย่างเป็นระเบียบ</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 2: ค้นหา -->
+            <div class="tab-panel" id="panel-search">
+                <h3 style="font-size: 1.4rem; margin-bottom: 12px; color: var(--text-primary);">🔍 ค้นหา (Search)</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                    เมนูค้นหาจัดเตรียมไว้สำหรับเชื่อมต่อไปยังหน้าค้นหา (Search Page) ที่จะสร้างขึ้นในภายหลัง
+                </p>
+                <div style="background: rgba(255,255,255,0.7); border: 1px dashed rgba(255, 157, 157, 0.45); border-radius: 16px; padding: 28px; text-align: center;">
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                        💡 สามารถเปลี่ยนค่า <code>href="#search"</code> ใน Navbar เป็น URL ปลายทาง เช่น <code>href="/search/"</code> ได้ทันที
+                    </p>
+                </div>
+            </div>
+
+            <!-- Panel 3: การแจ้งเตือน -->
+            <div class="tab-panel" id="panel-notifications">
+                <h3 style="font-size: 1.4rem; margin-bottom: 12px; color: var(--text-primary);">🔔 การแจ้งเตือน (Notifications)</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                    ศูนย์รวมการแจ้งเตือนและข่าวสารอัปเดตล่าสุดของระบบ Zone In
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+                    <div style="background: rgba(255,255,255,0.85); border: 1px solid rgba(255, 197, 170, 0.4); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="width: 10px; height: 10px; border-radius: 50%; background: #FF9D9D;"></span>
+                            <div>
+                                <strong style="color: var(--text-primary); font-size: 0.95rem;">ยินดีต้อนรับสู่ Zone In</strong>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 2px;">แถบนำทางและธีมพาสเทลใหม่พร้อมใช้งานแล้ว</p>
+                            </div>
+                        </div>
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">เมื่อสักครู่</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.85); border: 1px solid rgba(187, 241, 210, 0.5); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="width: 10px; height: 10px; border-radius: 50%; background: #48bb78;"></span>
+                            <div>
+                                <strong style="color: var(--text-primary); font-size: 0.95rem;">ระบบพร้อมเชื่อมต่อ Vercel</strong>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 2px;">โปรเจคได้รับการตั้งค่า Zero-Configuration เรียบร้อย</p>
+                            </div>
+                        </div>
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">1 วันที่แล้ว</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </main>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast"></div>
+    <!-- Floating Action Button (ปุ่มโพสต์ลอยตัวฝั่งล่างขวา) -->
+    <aside class="fab-post-wrapper" aria-label="สร้างโพสต์">
+        <a href="#create-post" class="fab-post-btn" id="fabPostBtn" onclick="handlePostClick(event)" title="สร้างโพสต์">
+            <div class="fab-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 5v14M5 12h14"></path>
+                </svg>
+            </div>
+            <span class="fab-label">โพสต์</span>
+        </a>
+    </aside>
 
-    <!-- Footer -->
-    <footer class="site-footer">
-        <p>© 2026 Zone In — แพลตฟอร์มค้นหาและรีวิวสถานที่ท่องเที่ยวยอดฮิต</p>
-    </footer>
+    <!-- Notification Toast for Feature Connection Ready -->
+    <div id="zoneinToast" class="zonein-toast" role="status" aria-live="polite">
+        <span style="font-size: 1.1rem;">✨</span>
+        <span>ปุ่มโพสต์พร้อมเชื่อมต่อกับฟีเจอร์สร้างโพสต์</span>
+    </div>
 
-    <!-- JavaScript from Dev -->
+    <!-- External JavaScript from statics/ -->
     <script src="{% static 'js/navbar.js' %}"></script>
-    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

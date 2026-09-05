@@ -2,11 +2,31 @@
 {% block title %}ZoneIn - หน้าแรก รีวิวล่าสุด{% endblock %}
 {% block extra_head %}
     <style>
+    :root {
+        --bg-card: rgba(255, 255, 255, 0.85);
+        --bg-card-hover: rgba(255, 255, 255, 0.96);
+        --border-color: rgba(255, 157, 157, 0.28);
+        --border-color-hover: rgba(255, 157, 157, 0.6);
+        --primary: #FF9D9D;
+        --primary-gradient: linear-gradient(135deg, #FF9D9D, #FFC5AA);
+        --accent-mint: #BBF1D2;
+        --star-gold: #f59e0b;
+        --text-main: #1e242b;
+        --text-muted: #57616b;
+        --text-dim: #8c96a0;
+        --radius-sm: 10px;
+        --radius-md: 16px;
+        --radius-lg: 24px;
+        --radius-full: 9999px;
+        --shadow-card: 0 12px 32px -8px rgba(255, 157, 157, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+        --transition-smooth: all 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
     /* Hero Banner */
     .hero-banner {
-        margin-bottom: 1.15rem;
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.05) 100%);
-        border: 1px solid rgba(99, 102, 241, 0.2);
+        margin-bottom: 1.25rem;
+        background: linear-gradient(135deg, rgba(255, 157, 157, 0.22) 0%, rgba(255, 197, 170, 0.28) 50%, rgba(187, 241, 210, 0.3) 100%);
+        border: 1px solid rgba(255, 157, 157, 0.35);
         border-radius: var(--radius-lg);
         padding: 1.75rem 2rem;
         display: flex;
@@ -15,18 +35,21 @@
         gap: 1.5rem;
         flex-wrap: wrap;
         box-shadow: var(--shadow-card);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
     }
 
     .hero-content h1 {
         font-size: 1.85rem;
         font-weight: 800;
-        color: #fff;
+        color: var(--text-main);
         line-height: 1.3;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.4rem;
+        letter-spacing: -0.02em;
     }
 
     .hero-content p {
-        color: var(--text-muted);
+        color: var(--text-secondary, #57616b);
         font-size: 0.98rem;
         max-width: 620px;
     }
@@ -41,9 +64,12 @@
     }
 
     .section-title {
-        font-size: 1.15rem;
+        font-size: 1.2rem;
         font-weight: 700;
-        color: #fff;
+        color: var(--text-main);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     /* Recent Reviews Feed */
@@ -52,28 +78,32 @@
         margin: 0 auto;
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 1.35rem;
     }
 
     .review-card {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
         border-radius: var(--radius-lg);
-        padding: 1.5rem;
+        padding: 1.4rem 1.5rem;
         transition: var(--transition-smooth);
         box-shadow: var(--shadow-card);
         position: relative;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
     }
 
     .review-card:hover {
         border-color: var(--border-color-hover);
+        box-shadow: 0 16px 36px -8px rgba(255, 157, 157, 0.25);
+        transform: translateY(-2px);
     }
 
     .review-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1rem;
+        margin-bottom: 0.85rem;
     }
 
     .review-author {
@@ -83,17 +113,17 @@
     }
 
     .author-avatar {
-        width: 44px;
-        height: 44px;
+        width: 42px;
+        height: 42px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        background: var(--primary-gradient);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 800;
         font-size: 1.1rem;
         color: #fff;
-        box-shadow: 0 4px 12px var(--primary-glow);
+        box-shadow: 0 4px 12px rgba(255, 157, 157, 0.4);
         flex-shrink: 0;
     }
 
@@ -106,16 +136,16 @@
     .author-name {
         font-weight: 700;
         font-size: 0.98rem;
-        color: #fff;
+        color: var(--text-main);
     }
 
     .btn-follow {
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
-        background: rgba(99, 102, 241, 0.12);
-        border: 1px solid rgba(99, 102, 241, 0.35);
-        color: #818cf8;
+        background: rgba(255, 157, 157, 0.16);
+        border: 1px solid rgba(255, 157, 157, 0.45);
+        color: #e25c5c;
         padding: 0.15rem 0.65rem;
         border-radius: var(--radius-full);
         font-size: 0.76rem;
@@ -126,21 +156,22 @@
     }
 
     .btn-follow:hover {
-        background: var(--primary);
-        border-color: var(--primary);
+        background: #FF9D9D;
+        border-color: #FF9D9D;
         color: #fff;
+        box-shadow: 0 4px 10px rgba(255, 157, 157, 0.35);
     }
 
     .btn-follow.following {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: var(--border-color);
+        background: rgba(0, 0, 0, 0.05);
+        border-color: rgba(0, 0, 0, 0.12);
         color: var(--text-muted);
     }
 
     .btn-follow.following:hover {
         background: rgba(239, 68, 68, 0.12);
         border-color: rgba(239, 68, 68, 0.35);
-        color: #f87171;
+        color: #dc2626;
     }
 
     .review-time {
@@ -149,10 +180,10 @@
     }
 
     .rating-badge {
-        background: rgba(251, 191, 36, 0.12);
-        border: 1px solid rgba(251, 191, 36, 0.3);
-        color: var(--star-gold);
-        padding: 0.3rem 0.75rem;
+        background: rgba(254, 243, 199, 0.85);
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        color: #b45309;
+        padding: 0.25rem 0.7rem;
         border-radius: var(--radius-full);
         font-size: 0.85rem;
         font-weight: 700;
@@ -165,9 +196,9 @@
         display: inline-flex;
         align-items: center;
         gap: 0.45rem;
-        background: rgba(99, 102, 241, 0.1);
-        border: 1px solid rgba(99, 102, 241, 0.25);
-        color: #a5b4fc;
+        background: rgba(187, 241, 210, 0.35);
+        border: 1px solid rgba(187, 241, 210, 0.6);
+        color: #047857;
         padding: 0.3rem 0.85rem;
         border-radius: var(--radius-full);
         font-size: 0.85rem;
@@ -178,9 +209,9 @@
     }
 
     .review-place-tag:hover {
-        background: rgba(99, 102, 241, 0.2);
-        color: #fff;
-        border-color: rgba(99, 102, 241, 0.45);
+        background: rgba(187, 241, 210, 0.6);
+        color: #065f46;
+        border-color: #34d399;
     }
 
     .review-content {
@@ -196,7 +227,7 @@
         border-radius: var(--radius-md);
         overflow: hidden;
         max-height: 440px;
-        background: #182035;
+        background: rgba(0, 0, 0, 0.05);
         margin-bottom: 1.15rem;
         cursor: pointer;
         position: relative;
@@ -339,31 +370,33 @@
         display: inline-flex;
         align-items: center;
         gap: 0.45rem;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid var(--border-color);
-        color: var(--text-muted);
+        background: rgba(255, 157, 157, 0.12);
+        border: 1px solid rgba(255, 157, 157, 0.35);
+        color: var(--text-secondary, #57616b);
         padding: 0.4rem 0.95rem;
         border-radius: var(--radius-full);
         font-size: 0.85rem;
         font-weight: 600;
         cursor: pointer;
         transition: var(--transition-smooth);
+        font-family: inherit;
     }
 
     .action-btn:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
+        background: rgba(255, 157, 157, 0.25);
+        color: var(--text-main);
+        border-color: #FF9D9D;
     }
 
     .action-btn.liked {
-        background: rgba(236, 72, 153, 0.15);
-        border-color: rgba(236, 72, 153, 0.4);
-        color: #f472b6;
+        background: rgba(255, 157, 157, 0.3);
+        border-color: #FF9D9D;
+        color: #e25c5c;
     }
 
     .action-btn.liked svg {
-        fill: #ec4899;
-        stroke: #ec4899;
+        fill: #FF9D9D;
+        stroke: #FF9D9D;
     }
 
     /* Comments Section */
@@ -386,23 +419,24 @@
         display: flex;
         gap: 0.75rem;
         align-items: flex-start;
-        background: rgba(255, 255, 255, 0.02);
+        background: rgba(255, 255, 255, 0.65);
         padding: 0.75rem 0.85rem;
         border-radius: var(--radius-md);
-        border: 1px solid rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 197, 170, 0.4);
     }
 
     .comment-avatar {
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        background: var(--primary-gradient);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
         font-size: 0.85rem;
         color: #fff;
+        box-shadow: 0 2px 8px rgba(255, 157, 157, 0.35);
         flex-shrink: 0;
     }
 
@@ -422,7 +456,7 @@
     .comment-author {
         font-size: 0.88rem;
         font-weight: 700;
-        color: #fff;
+        color: var(--text-main);
     }
 
     .comment-time {
@@ -446,7 +480,7 @@
 
     .comment-input {
         flex: 1;
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.9);
         border: 1px solid var(--border-color);
         border-radius: var(--radius-full);
         padding: 0.55rem 1rem;

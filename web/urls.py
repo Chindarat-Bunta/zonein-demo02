@@ -1,13 +1,21 @@
-from django.urls import path
+from django.urls import include, path
 from . import views
 
 app_name = "web"
 
 urlpatterns = [
-    # Home Page Feed
+    # Pages
     path("", views.home_view, name="home"),
+    path("signin/", views.signin_view, name="signin"),
+    path("login/", views.signin_view, name="login"),
+    path("signup/", views.signup_view, name="signup"),
+    path("logout/", views.logout_view, name="logout"),
+    path("social-login/<str:provider>/", views.social_login_view, name="social_login"),
 
-    # Backend APIs for Home Page Feed
+    # REST APIs from dev
+    path("api/", include("web.api.urls")),
+
+    # Feed & Review APIs
     path("api/places/popular/", views.api_popular_places, name="api_popular_places"),
     path("api/places/<int:place_id>/", views.api_place_detail, name="api_place_detail"),
     path("api/reviews/recent/", views.api_recent_reviews, name="api_recent_reviews"),
