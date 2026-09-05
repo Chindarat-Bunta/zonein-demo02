@@ -28,7 +28,13 @@ class PlaceAdmin(admin.ModelAdmin):
         "price_level",
         "is_featured",
     )
-    list_filter = ("category", "location__city", "location", "price_level", "is_featured")
+    list_filter = (
+        "category",
+        "location__city",
+        "location",
+        "price_level",
+        "is_featured",
+    )
     search_fields = ("name", "description", "address", "tags")
     prepopulated_fields = {"slug": ("name",)}
 
@@ -38,4 +44,3 @@ class WishlistAdmin(admin.ModelAdmin):
     list_display = ("place", "user", "session_key", "created_at")
     list_filter = ("created_at",)
     search_fields = ("place__name", "user__username", "session_key")
-

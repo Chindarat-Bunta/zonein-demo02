@@ -10,5 +10,9 @@ urlpatterns = [
     path("wishlist/", views.wishlist_page_view, name="wishlist"),
     path("api/places/", views.api_places_view, name="api_places"),
     path("api/wishlist/", views.api_wishlist_list_view, name="api_wishlist_list"),
-    path("api/wishlist/toggle/", views.api_wishlist_toggle_view, name="api_wishlist_toggle"),
+    path(
+        "api/wishlist/toggle/",
+        views.api_wishlist_toggle_view,
+        name="api_wishlist_toggle",
+    ),
 ]

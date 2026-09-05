@@ -188,7 +188,7 @@ class WishlistManager {
 
         const toast = document.createElement('div');
         toast.className = `toast-item toast-${type}`;
-        
+
         const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-info';
         toast.innerHTML = `
             <i class="fa-solid ${icon} toast-icon"></i>
