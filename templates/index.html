@@ -1,0 +1,309 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zone In — Discover Your Next Horizon</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom Design System Stylesheet from statics/ -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <!-- SVG Definitions for Gradients -->
+    <svg width="0" height="0" style="position: absolute;">
+        <defs>
+            <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FF9D9D"/>
+                <stop offset="50%" stop-color="#FFC5AA"/>
+                <stop offset="100%" stop-color="#BBF1D2"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <!-- Subtle Ambient Grid Background -->
+    <div class="ambient-grid"></div>
+
+    <!-- ==========================================================================
+         TOP FLOATING MODERN NAVBAR
+         ========================================================================== -->
+    <header class="navbar-wrapper">
+        <nav class="navbar" id="mainNavbar">
+            
+            <!-- 1. LEFT: LOGO (ZONE IN) -->
+            <a href="/" class="brand-link" id="brandLogo">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="word-zone">Zone</span>
+                    <span class="word-in">In</span>
+                    <span class="brand-pulse-dot"></span>
+                </div>
+            </a>
+
+            <!-- 2. CENTER: NAVIGATION TABS WITH SLIDING GLIDER PILL -->
+            <div class="nav-center-tabs" id="navTabsContainer">
+                <!-- Smooth sliding background indicator -->
+                <div class="tab-glider-pill" id="tabGlider"></div>
+
+                <!-- Tab 1: หน้าแรก -->
+                <a href="/" class="nav-tab-btn active" data-tab="home" id="tabHome">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span>หน้าแรก</span>
+                </a>
+
+                <!-- Tab 2: ค้นหา -->
+                <a href="#search" class="nav-tab-btn" data-tab="search" id="tabSearch">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>ค้นหา</span>
+                </a>
+
+                <!-- Tab 3: การแจ้งเตือน -->
+                <a href="#notifications" class="nav-tab-btn" data-tab="notifications" id="tabNotifications">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span>การแจ้งเตือน</span>
+                </a>
+            </div>
+
+            <!-- 3. RIGHT: SIGN IN / SIGN UP -->
+            <div class="nav-auth-group">
+                <button class="btn-signin" id="btnSignIn" onclick="triggerAuth('Sign In')">
+                    Sign In
+                </button>
+                <button class="btn-signup" id="btnSignUp" onclick="triggerAuth('Sign Up')">
+                    <span>Sign Up</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 4. MOBILE: 3 NAV ICONS (หน้าแรก, ค้นหา, การแจ้งเตือน) ON SAME BAR AS LOGO -->
+            <div class="mobile-nav-icons" id="mobileNavIcons" aria-label="แถบนำทางมือถือ">
+                <button type="button" class="mobile-nav-icon-btn active" data-tab="home" id="mobTabHome" aria-label="หน้าแรก" title="หน้าแรก" onclick="switchTab('home')">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </button>
+                <button type="button" class="mobile-nav-icon-btn" data-tab="search" id="mobTabSearch" aria-label="ค้นหา" title="ค้นหา" onclick="switchTab('search')">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
+                <button type="button" class="mobile-nav-icon-btn" data-tab="notifications" id="mobTabNotifications" aria-label="การแจ้งเตือน" title="การแจ้งเตือน" onclick="switchTab('notifications')">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 5. MOBILE: PROFILE ICON WITH DROPDOWN (Sign In / Sign Up) -->
+            <div class="mobile-profile-wrapper" id="mobileProfileWrapper">
+                <button type="button" class="mobile-profile-btn" id="mobileProfileBtn" aria-label="เมนูโปรไฟล์และบัญชี" aria-haspopup="true" aria-expanded="false">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+
+                <!-- Dropdown Menu for Sign In / Sign Up -->
+                <div class="mobile-profile-dropdown" id="mobileProfileDropdown" role="menu">
+                    <div class="dropdown-header">
+                        <div class="dropdown-avatar-circle">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div class="dropdown-user-info">
+                            <span class="user-greeting">Zone In Account</span>
+                            <span class="user-status">เข้าสู่ระบบหรือสร้างบัญชีใหม่</span>
+                        </div>
+                    </div>
+
+                    <div class="dropdown-divider"></div>
+
+                    <div class="dropdown-actions">
+                        <button type="button" class="dropdown-auth-btn signin-btn" onclick="handleMobileAuth('Sign In')">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                <polyline points="10 17 15 12 10 7"></polyline>
+                                <line x1="15" y1="12" x2="3" y2="12"></line>
+                            </svg>
+                            <span>Sign In / เข้าสู่ระบบ</span>
+                        </button>
+                        <button type="button" class="dropdown-auth-btn signup-btn" onclick="handleMobileAuth('Sign Up')">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                            <span>Sign Up / สมัครสมาชิก</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- ==========================================================================
+         PAGE CONTENT & DYNAMIC TABS DEMO SHOWCASE
+         ========================================================================== -->
+    <main class="page-content-wrapper">
+        <!-- Palette preview badge -->
+        <div class="palette-preview-badge">
+            <div class="palette-dots-row">
+                <span class="palette-dot" style="background-color: #FF9D9D;" title="#FF9D9D"></span>
+                <span class="palette-dot" style="background-color: #FFC5AA;" title="#FFC5AA"></span>
+                <span class="palette-dot" style="background-color: #EEF8CD;" title="#EEF8CD"></span>
+                <span class="palette-dot" style="background-color: #BBF1D2;" title="#BBF1D2"></span>
+            </div>
+            <span>Warm Pastel Palette &amp; Glassmorphic Navigation</span>
+        </div>
+
+        <h1 class="hero-title">ยินดีต้อนรับสู่ Zone In</h1>
+        <p class="hero-subtitle">
+            แถบนำทางดีไซน์ล้ำสมัยพร้อมลูกเล่น Sliding Glider Tab ในโทนสีพาสเทลอบอุ่น (Coral, Peach, Cream &amp; Mint) สวยงามและสบายตา
+        </p>
+
+        <!-- Palette Preview Bar -->
+        <div class="palette-strip-card">
+            <div class="palette-color-chip" style="background: rgba(255, 157, 157, 0.22); border: 1px solid #FF9D9D;">
+                <span class="chip-dot" style="background: #FF9D9D;"></span>
+                <span>#FF9D9D Coral</span>
+            </div>
+            <div class="palette-color-chip" style="background: rgba(255, 197, 170, 0.25); border: 1px solid #FFC5AA;">
+                <span class="chip-dot" style="background: #FFC5AA;"></span>
+                <span>#FFC5AA Peach</span>
+            </div>
+            <div class="palette-color-chip" style="background: rgba(238, 248, 205, 0.45); border: 1px solid #d4dfa6;">
+                <span class="chip-dot" style="background: #EEF8CD;"></span>
+                <span>#EEF8CD Cream</span>
+            </div>
+            <div class="palette-color-chip" style="background: rgba(187, 241, 210, 0.35); border: 1px solid #BBF1D2;">
+                <span class="chip-dot" style="background: #BBF1D2;"></span>
+                <span>#BBF1D2 Mint</span>
+            </div>
+        </div>
+
+        <!-- Interactive Panels that switch based on selected tab -->
+        <div class="tab-panel-container">
+            
+            <!-- Panel 1: หน้าแรก -->
+            <div class="tab-panel active" id="panel-home">
+                <h3 style="font-size: 1.4rem; margin-bottom: 12px; color: var(--text-primary);">🌟 หน้าแรก (Home)</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                    ทดลองคลิกสลับระหว่างแท็บ <strong>"หน้าแรก"</strong>, <strong>"ค้นหา"</strong> หรือ <strong>"การแจ้งเตือน"</strong> ด้านบน เพื่อชมลูกเล่นแอนิเมชัน Sliding Pill ที่เคลื่อนไหวตามตำแหน่งจริง
+                </p>
+                <div class="interactive-feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-card-icon">⚡</div>
+                        <h4>Sliding Glider Pill</h4>
+                        <p>แถบไฮไลต์เลื่อนสไลด์ตามการเปลี่ยนแท็บอย่างนุ่มนวลด้วยฟิสิกส์สปริง</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-icon">🎨</div>
+                        <h4>Warm Pastel Palette</h4>
+                        <p>ดีไซน์โทนสีอบอุ่น นุ่มนวล สบายตา ด้วยโทน Coral, Peach, Cream และ Mint</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-card-icon">📁</div>
+                        <h4>Clean Statics Structure</h4>
+                        <p>แยกไฟล์สไตล์ชีตและสคริปต์ไว้ใน <code>statics/css</code> และ <code>statics/js</code> อย่างเป็นระเบียบ</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 2: ค้นหา -->
+            <div class="tab-panel" id="panel-search">
+                <h3 style="font-size: 1.4rem; margin-bottom: 12px; color: var(--text-primary);">🔍 ค้นหา (Search)</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                    เมนูค้นหาจัดเตรียมไว้สำหรับเชื่อมต่อไปยังหน้าค้นหา (Search Page) ที่จะสร้างขึ้นในภายหลัง
+                </p>
+                <div style="background: rgba(255,255,255,0.7); border: 1px dashed rgba(255, 157, 157, 0.45); border-radius: 16px; padding: 28px; text-align: center;">
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                        💡 สามารถเปลี่ยนค่า <code>href="#search"</code> ใน Navbar เป็น URL ปลายทาง เช่น <code>href="/search/"</code> ได้ทันที
+                    </p>
+                </div>
+            </div>
+
+            <!-- Panel 3: การแจ้งเตือน -->
+            <div class="tab-panel" id="panel-notifications">
+                <h3 style="font-size: 1.4rem; margin-bottom: 12px; color: var(--text-primary);">🔔 การแจ้งเตือน (Notifications)</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                    ศูนย์รวมการแจ้งเตือนและข่าวสารอัปเดตล่าสุดของระบบ Zone In
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 12px; text-align: left;">
+                    <div style="background: rgba(255,255,255,0.85); border: 1px solid rgba(255, 197, 170, 0.4); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="width: 10px; height: 10px; border-radius: 50%; background: #FF9D9D;"></span>
+                            <div>
+                                <strong style="color: var(--text-primary); font-size: 0.95rem;">ยินดีต้อนรับสู่ Zone In</strong>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 2px;">แถบนำทางและธีมพาสเทลใหม่พร้อมใช้งานแล้ว</p>
+                            </div>
+                        </div>
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">เมื่อสักครู่</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.85); border: 1px solid rgba(187, 241, 210, 0.5); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="width: 10px; height: 10px; border-radius: 50%; background: #48bb78;"></span>
+                            <div>
+                                <strong style="color: var(--text-primary); font-size: 0.95rem;">ระบบพร้อมเชื่อมต่อ Vercel</strong>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 2px;">โปรเจคได้รับการตั้งค่า Zero-Configuration เรียบร้อย</p>
+                            </div>
+                        </div>
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">1 วันที่แล้ว</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Floating Action Button (ปุ่มโพสต์ลอยตัวฝั่งล่างขวา) -->
+    <aside class="fab-post-wrapper" aria-label="สร้างโพสต์">
+        <a href="#create-post" class="fab-post-btn" id="fabPostBtn" onclick="handlePostClick(event)" title="สร้างโพสต์">
+            <div class="fab-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 5v14M5 12h14"></path>
+                </svg>
+            </div>
+            <span class="fab-label">โพสต์</span>
+        </a>
+    </aside>
+
+    <!-- Notification Toast for Feature Connection Ready -->
+    <div id="zoneinToast" class="zonein-toast" role="status" aria-live="polite">
+        <span style="font-size: 1.1rem;">✨</span>
+        <span>ปุ่มโพสต์พร้อมเชื่อมต่อกับฟีเจอร์สร้างโพสต์</span>
+    </div>
+
+    <!-- External JavaScript from statics/ -->
+    <script src="{% static 'js/navbar.js' %}"></script>
+</body>
+</html>
