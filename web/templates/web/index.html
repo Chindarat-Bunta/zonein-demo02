@@ -165,8 +165,61 @@
         font-size: 0.98rem;
         line-height: 1.65;
         white-space: pre-line;
-        margin-bottom: 1.25rem;
+        margin-bottom: 0.75rem;
     }
+
+    /* Like Button Style (Minimal addition without altering existing components) */
+    .post-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin-top: 0.85rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .btn-like {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-color);
+        border-radius: 9999px;
+        padding: 0.35rem 0.85rem;
+        color: var(--text-muted);
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        outline: none;
+    }
+
+    .btn-like:hover {
+        background: rgba(236, 72, 153, 0.12);
+        border-color: rgba(236, 72, 153, 0.35);
+        color: #f472b6;
+    }
+
+    .btn-like.liked {
+        background: rgba(236, 72, 153, 0.18);
+        border-color: rgba(236, 72, 153, 0.45);
+        color: #ec4899;
+    }
+
+    .btn-like svg {
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .btn-like:active svg {
+        transform: scale(1.25);
+    }
+
+    .btn-like.liked svg {
+        fill: #ec4899;
+        stroke: #ec4899;
+    }
+
 
     /* Modal */
     .modal-overlay {
@@ -696,6 +749,18 @@ async function loadTravelPosts() {
                     <div class="post-text">${p.content || ''}</div>
 
                     ${imageHtml}
+
+                    <div class="post-card-footer">
+                        <button type="button"
+                                class="btn-like ${p.is_liked ? 'liked' : ''}"
+                                id="like_btn_${p.id}"
+                                onclick="handleToggleLike(${p.id})">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="${p.is_liked ? '#ec4899' : 'none'}" stroke="${p.is_liked ? '#ec4899' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                            <span id="like_count_${p.id}">${p.likes_count || 0}</span>
+                        </button>
+                    </div>
                 </div>
             `;
         }).join("");
@@ -817,5 +882,93 @@ async function handleDeletePost(postId) {
         showToast("Network error", true);
     }
 }
+
+// Toggle Like on Post (Optimistic UI Update)
+async function handleToggleLike(postId) {
+    const btn = document.getElementById(`like_btn_${postId}`);
+    const countEl = document.getElementById(`like_count_${postId}`);
+    if (!btn || !countEl) return;
+
+    // Current state
+    const wasLiked = btn.classList.contains("liked");
+    const currentCount = parseInt(countEl.innerText, 10) || 0;
+
+    // 1. Optimistic Update (Immediate visual response)
+    const newLiked = !wasLiked;
+    const newCount = Math.max(0, currentCount + (newLiked ? 1 : -1));
+
+    if (newLiked) {
+        btn.classList.add("liked");
+        const svg = btn.querySelector("svg");
+        if (svg) {
+            svg.setAttribute("fill", "#ec4899");
+            svg.setAttribute("stroke", "#ec4899");
+        }
+    } else {
+        btn.classList.remove("liked");
+        const svg = btn.querySelector("svg");
+        if (svg) {
+            svg.setAttribute("fill", "none");
+            svg.setAttribute("stroke", "currentColor");
+        }
+    }
+    countEl.innerText = newCount;
+
+    // 2. Send API request
+    try {
+        const res = await fetch(`/api/posts/${postId}/like/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            }
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            // Rollback on failure
+            if (wasLiked) {
+                btn.classList.add("liked");
+                const svg = btn.querySelector("svg");
+                if (svg) { svg.setAttribute("fill", "#ec4899"); svg.setAttribute("stroke", "#ec4899"); }
+            } else {
+                btn.classList.remove("liked");
+                const svg = btn.querySelector("svg");
+                if (svg) { svg.setAttribute("fill", "none"); svg.setAttribute("stroke", "currentColor"); }
+            }
+            countEl.innerText = currentCount;
+            showToast(data.error || "เกิดข้อผิดพลาดในการกดไลค์", true);
+            return;
+        }
+
+        // Sync with exact server response
+        countEl.innerText = data.likes_count;
+        if (data.liked) {
+            btn.classList.add("liked");
+            const svg = btn.querySelector("svg");
+            if (svg) { svg.setAttribute("fill", "#ec4899"); svg.setAttribute("stroke", "#ec4899"); }
+        } else {
+            btn.classList.remove("liked");
+            const svg = btn.querySelector("svg");
+            if (svg) { svg.setAttribute("fill", "none"); svg.setAttribute("stroke", "currentColor"); }
+        }
+
+    } catch (e) {
+        console.error(e);
+        // Rollback
+        if (wasLiked) {
+            btn.classList.add("liked");
+            const svg = btn.querySelector("svg");
+            if (svg) { svg.setAttribute("fill", "#ec4899"); svg.setAttribute("stroke", "#ec4899"); }
+        } else {
+            btn.classList.remove("liked");
+            const svg = btn.querySelector("svg");
+            if (svg) { svg.setAttribute("fill", "none"); svg.setAttribute("stroke", "currentColor"); }
+        }
+        countEl.innerText = currentCount;
+        showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", true);
+    }
+}
+
 </script>
 {% endblock %}

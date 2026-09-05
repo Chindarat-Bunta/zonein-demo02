@@ -2,13 +2,13 @@ import json
 from django.contrib.auth.models import User
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import F, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.html import escape
 from django.views.decorators.http import require_http_methods
 
-from .models import TravelPost
+from .models import PostLike, TravelPost
 
 
 def _parse_json_body(request):
@@ -33,10 +33,12 @@ def _serialize_post(post, current_user=None):
     """Serialize a TravelPost instance to dictionary."""
     is_owner = True
     is_admin = False
+    is_liked = False
 
     if current_user and current_user.is_authenticated:
         is_owner = post.author_id == current_user.id or not current_user.is_authenticated
         is_admin = current_user.is_staff or current_user.is_superuser
+        is_liked = PostLike.objects.filter(post_id=post.id, user_id=current_user.id).exists()
 
     return {
         "id": post.id,
@@ -48,11 +50,14 @@ def _serialize_post(post, current_user=None):
         "rating": post.rating,
         "content": post.content,
         "image_url": post.image_url,
+        "likes_count": post.likes_count,
+        "is_liked": is_liked,
         "is_owner": is_owner,
         "can_delete": True,  # User can delete posts
         "created_at": post.created_at.isoformat(),
         "updated_at": post.updated_at.isoformat(),
     }
+
 
 
 @require_http_methods(["GET", "POST"])
@@ -214,3 +219,101 @@ def travel_post_detail_view(request, post_id):
     if request.method == "DELETE":
         post.delete()
         return JsonResponse({"message": "ลบโพสต์เรียบร้อยแล้ว"}, status=200)
+
+
+@require_http_methods(["POST", "DELETE"])
+def toggle_post_like_view(request, post_id):
+    """
+    POST /api/posts/<id>/like/ -> Toggle like / unlike on a post.
+    DELETE /api/posts/<id>/like/ -> Explicitly unlike a post.
+    Returns: {"liked": boolean, "likes_count": int, "message": str}
+    """
+    if not request.user.is_authenticated:
+        # Fallback to default user if guest in development / testing, or return 401
+        # The prompt specified: "ต้อง login ก่อนถึงจะกดไลค์ได้"
+        return JsonResponse(
+            {"error": "กรุณาเข้าสู่ระบบก่อนกดไลค์", "login_required": True},
+            status=401,
+        )
+
+    post = get_object_or_404(TravelPost, pk=post_id)
+    user = request.user
+
+    with transaction.atomic():
+        existing_like = PostLike.objects.filter(user=user, post=post).first()
+
+        if request.method == "DELETE" or existing_like:
+            if existing_like:
+                existing_like.delete()
+                # Atomic decrement
+                TravelPost.objects.filter(pk=post_id, likes_count__gt=0).update(likes_count=F("likes_count") - 1)
+                liked = False
+            else:
+                liked = False
+        else:
+            # Create like (idempotent with get_or_create)
+            _, created = PostLike.objects.get_or_create(user=user, post=post)
+            if created:
+                # Atomic increment
+                TravelPost.objects.filter(pk=post_id).update(likes_count=F("likes_count") + 1)
+            liked = True
+
+        post.refresh_from_db(fields=["likes_count"])
+
+    return JsonResponse(
+        {
+            "liked": liked,
+            "likes_count": post.likes_count,
+            "message": "ถูกใจโพสต์เรียบร้อยแล้ว" if liked else "ยกเลิกถูกใจเรียบร้อยแล้ว",
+        },
+        status=200,
+    )
+
+
+@require_http_methods(["GET"])
+def post_likes_list_view(request, post_id):
+    """
+    GET /api/posts/<id>/likes/ -> Get list of users who liked the post and total count.
+    """
+    post = get_object_or_404(TravelPost, pk=post_id)
+    likes_qs = PostLike.objects.filter(post=post).select_related("user").order_by("-created_at")
+
+    page_number = request.GET.get("page", 1)
+    page_size = request.GET.get("page_size", 20)
+    try:
+        page_size = min(max(int(page_size), 1), 50)
+    except (ValueError, TypeError):
+        page_size = 20
+
+    paginator = Paginator(likes_qs, page_size)
+    try:
+        likes_page = paginator.page(page_number)
+    except (PageNotAnInteger, EmptyPage):
+        likes_page = paginator.page(1) if int(page_number or 1) <= 1 else []
+
+    users_list = [
+        {
+            "id": l.user.id,
+            "username": l.user.username,
+            "liked_at": l.created_at.isoformat(),
+        }
+        for l in (likes_page.object_list if hasattr(likes_page, "object_list") else likes_page)
+    ]
+
+    is_liked = False
+    if request.user.is_authenticated:
+        is_liked = PostLike.objects.filter(post=post, user=request.user).exists()
+
+    return JsonResponse(
+        {
+            "post_id": post.id,
+            "likes_count": post.likes_count,
+            "is_liked": is_liked,
+            "users": users_list,
+            "count": paginator.count,
+            "num_pages": paginator.num_pages,
+            "current_page": likes_page.number if hasattr(likes_page, "number") else 1,
+        },
+        status=200,
+    )
+

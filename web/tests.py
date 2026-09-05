@@ -148,3 +148,113 @@ class TravelPostAPITests(TestCase):
         self.assertEqual(res_filtered.status_code, 200)
         self.assertEqual(len(res_filtered.json()["results"]), 1)
         self.assertEqual(res_filtered.json()["results"][0]["place_name"], "ดอยหลวงเชียงดาว")
+
+
+class PostLikeAPITests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.author = User.objects.create_user(username="author_traveler", password="password123")
+        self.user1 = User.objects.create_user(username="user1_liker", password="password123")
+        self.user2 = User.objects.create_user(username="user2_liker", password="password123")
+        self.post = TravelPost.objects.create(
+            author=self.author,
+            place_name="ดอยอินทนนท์",
+            location="เชียงใหม่",
+            rating=5,
+            content="ยอดดอยหนาวมาก",
+        )
+
+    def test_unauthenticated_user_cannot_like(self):
+        """Unauthenticated user receives 401 when trying to like."""
+        res = self.client.post(reverse("web:api_post_like", args=[self.post.id]))
+        self.assertEqual(res.status_code, 401)
+        self.assertTrue(res.json().get("login_required"))
+
+    def test_toggle_like_and_unlike(self):
+        """Authenticated user can toggle like and unlike on a post."""
+        self.client.force_login(self.user1)
+
+        # 1. First click: Like
+        res_like = self.client.post(reverse("web:api_post_like", args=[self.post.id]))
+        self.assertEqual(res_like.status_code, 200)
+        data_like = res_like.json()
+        self.assertTrue(data_like["liked"])
+        self.assertEqual(data_like["likes_count"], 1)
+
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.likes_count, 1)
+
+        # 2. Second click: Unlike (Toggle)
+        res_unlike = self.client.post(reverse("web:api_post_like", args=[self.post.id]))
+        self.assertEqual(res_unlike.status_code, 200)
+        data_unlike = res_unlike.json()
+        self.assertFalse(data_unlike["liked"])
+        self.assertEqual(data_unlike["likes_count"], 0)
+
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.likes_count, 0)
+
+    def test_explicit_delete_unlike(self):
+        """DELETE /api/posts/<id>/like/ explicitly unlikes a post."""
+        self.client.force_login(self.user1)
+        # Like first
+        self.client.post(reverse("web:api_post_like", args=[self.post.id]))
+
+        # Explicit DELETE
+        res_del = self.client.delete(reverse("web:api_post_like", args=[self.post.id]))
+        self.assertEqual(res_del.status_code, 200)
+        self.assertFalse(res_del.json()["liked"])
+        self.assertEqual(res_del.json()["likes_count"], 0)
+
+    def test_multiple_users_like_same_post(self):
+        """Multiple distinct users liking a post increases likes_count accurately."""
+        # User 1 likes
+        self.client.force_login(self.user1)
+        res1 = self.client.post(reverse("web:api_post_like", args=[self.post.id]))
+        self.assertEqual(res1.json()["likes_count"], 1)
+
+        # User 2 likes
+        self.client.force_login(self.user2)
+        res2 = self.client.post(reverse("web:api_post_like", args=[self.post.id]))
+        self.assertEqual(res2.json()["likes_count"], 2)
+
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.likes_count, 2)
+
+    def test_get_post_likes_list(self):
+        """GET /api/posts/<id>/likes/ returns the list of likers and count."""
+        self.client.force_login(self.user1)
+        self.client.post(reverse("web:api_post_like", args=[self.post.id]))
+
+        self.client.force_login(self.user2)
+        self.client.post(reverse("web:api_post_like", args=[self.post.id]))
+
+        res = self.client.get(reverse("web:api_post_likes", args=[self.post.id]))
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["likes_count"], 2)
+        self.assertEqual(len(data["users"]), 2)
+        usernames = [u["username"] for u in data["users"]]
+        self.assertIn("user1_liker", usernames)
+        self.assertIn("user2_liker", usernames)
+        self.assertTrue(data["is_liked"])  # user2 is logged in
+
+    def test_post_feed_serialization_includes_like_state(self):
+        """GET /api/posts/ includes likes_count and is_liked status."""
+        self.client.force_login(self.user1)
+        self.client.post(reverse("web:api_post_like", args=[self.post.id]))
+
+        # Check feed as user1 (liked = True)
+        res_user1 = self.client.get(reverse("web:api_posts"))
+        self.assertEqual(res_user1.status_code, 200)
+        post_item = res_user1.json()["results"][0]
+        self.assertEqual(post_item["likes_count"], 1)
+        self.assertTrue(post_item["is_liked"])
+
+        # Check feed as user2 (liked = False)
+        self.client.force_login(self.user2)
+        res_user2 = self.client.get(reverse("web:api_posts"))
+        post_item2 = res_user2.json()["results"][0]
+        self.assertEqual(post_item2["likes_count"], 1)
+        self.assertFalse(post_item2["is_liked"])
+

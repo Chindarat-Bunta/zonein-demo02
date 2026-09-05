@@ -18,6 +18,7 @@ class TravelPost(models.Model):
     )
     content = models.TextField(blank=True, default="", help_text="รีวิวบรรยากาศ ประสบการณ์ และสิ่งที่น่าสนใจ")
     image_url = models.TextField(blank=True, default="", help_text="รูปถ่ายสถานที่ (URL หรือ Base64 Data URL)")
+    likes_count = models.PositiveIntegerField(default=0, help_text="จำนวนไลค์")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -29,7 +30,26 @@ class TravelPost(models.Model):
         return f"[{self.rating}★] {self.place_name} ({self.location})"
 
 
+class PostLike(models.Model):
+    """
+    Like / Heart on a travel post by a user.
+    กดหัวใจ/ไลค์ให้กับโพสต์รีวิว
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="post_likes")
+    post = models.ForeignKey(TravelPost, on_delete=models.CASCADE, related_name="likes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "post_likes"
+        unique_together = [("user", "post")]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.username} liked post {self.post_id}"
+
+
 # Backward compatibility aliases
 Review = TravelPost
 Place = TravelPost
 Product = TravelPost
+Like = PostLike
