@@ -5,7 +5,9 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name="ชื่อหมวดหมู่")
     slug = models.SlugField(max_length=100, unique=True, verbose_name="Slug")
-    icon = models.CharField(max_length=50, default="fa-compass", verbose_name="FontAwesome Icon")
+    icon = models.CharField(
+        max_length=50, default="fa-compass", verbose_name="FontAwesome Icon"
+    )
     color = models.CharField(max_length=20, default="#3b82f6", verbose_name="สีธีม")
     created_at = models.DateTimeField(auto_now_add=True)
 

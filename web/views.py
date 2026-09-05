@@ -88,25 +88,30 @@ def api_places_view(request):
                 "slug": p.slug,
                 "description": p.description,
                 "address": p.address,
-                "image_url": p.image_url or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80",
-                "category": {
-                    "id": p.category.id if p.category else None,
-                    "name": p.category.name if p.category else "ทั่วไป",
-                    "slug": p.category.slug if p.category else "",
-                    "icon": p.category.icon if p.category else "fa-tag",
-                    "color": p.category.color if p.category else "#3b82f6",
-                }
-                if p.category
-                else None,
-                "location": {
-                    "id": p.location.id if p.location else None,
-                    "city": p.location.city if p.location else "",
-                    "zone": p.location.zone if p.location else "",
-                    "slug": p.location.slug if p.location else "",
-                    "display": str(p.location) if p.location else "",
-                }
-                if p.location
-                else None,
+                "image_url": p.image_url
+                or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80",
+                "category": (
+                    {
+                        "id": p.category.id if p.category else None,
+                        "name": p.category.name if p.category else "ทั่วไป",
+                        "slug": p.category.slug if p.category else "",
+                        "icon": p.category.icon if p.category else "fa-tag",
+                        "color": p.category.color if p.category else "#3b82f6",
+                    }
+                    if p.category
+                    else None
+                ),
+                "location": (
+                    {
+                        "id": p.location.id if p.location else None,
+                        "city": p.location.city if p.location else "",
+                        "zone": p.location.zone if p.location else "",
+                        "slug": p.location.slug if p.location else "",
+                        "display": str(p.location) if p.location else "",
+                    }
+                    if p.location
+                    else None
+                ),
                 "rating": float(p.rating),
                 "review_count": p.review_count,
                 "price_level": p.price_level,
@@ -128,10 +133,12 @@ def api_places_view(request):
 
 
 def place_detail_view(request, slug):
-    place = get_object_or_404(Place.objects.select_related("category", "location"), slug=slug)
-    related_places = Place.objects.filter(
-        category=place.category
-    ).exclude(id=place.id)[:3]
+    place = get_object_or_404(
+        Place.objects.select_related("category", "location"), slug=slug
+    )
+    related_places = Place.objects.filter(category=place.category).exclude(id=place.id)[
+        :3
+    ]
 
     return render(
         request,

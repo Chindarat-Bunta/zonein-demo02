@@ -28,6 +28,12 @@ class PlaceAdmin(admin.ModelAdmin):
         "price_level",
         "is_featured",
     )
-    list_filter = ("category", "location__city", "location", "price_level", "is_featured")
+    list_filter = (
+        "category",
+        "location__city",
+        "location",
+        "price_level",
+        "is_featured",
+    )
     search_fields = ("name", "description", "address", "tags")
     prepopulated_fields = {"slug": ("name",)}
