@@ -6,6 +6,7 @@ from django.db.models import Avg, Count
 
 class Product(models.Model):
     """Product/Service target that can be reviewed."""
+
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, default="")
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
@@ -36,14 +37,19 @@ class Product(models.Model):
 
 class Review(models.Model):
     """User review with 1-5 star rating and comment for a product/service."""
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviews")
-    target = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews")
+    target = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="reviews"
+    )
     rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
         help_text="Rating must be an integer between 1 and 5",
     )
     comment = models.TextField(blank=True, default="")
-    tagged_users = models.ManyToManyField(User, related_name="tagged_reviews", blank=True)
+    tagged_users = models.ManyToManyField(
+        User, related_name="tagged_reviews", blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

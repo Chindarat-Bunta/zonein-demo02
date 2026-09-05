@@ -4,11 +4,10 @@ from . import api_views, views
 app_name = "web"
 
 urlpatterns = [
-    # UI Views
-    path("", views.home_view, name="home"),
-    path("auth/demo-switch/", views.demo_switch_user_view, name="demo_switch_user"),
+    # API Root
+    path("", views.api_root_view, name="api_root"),
 
-    # Products API
+    # Products API (Reviewed targets)
     path("api/products/", views.products_api_view, name="api_products"),
 
     # Users API for friend tagging
