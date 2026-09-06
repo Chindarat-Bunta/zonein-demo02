@@ -1,11 +1,15 @@
 <!-- Place Card Component -->
 <article class="place-card" data-place-id="{{ place.id }}">
-    <div class="place-card-header">
+    <div class="place-card-image-wrap">
+        <img src="{{ place.image_url|default:'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80' }}"
+             alt="{{ place.name }}"
+             class="place-card-img"
+             loading="lazy">
         <div class="place-badge-row">
             {% if place.category %}
                 <span class="place-category-badge"
-                      style="background: {{ place.category.color }}">
-                    <i class="fa-solid {{ place.category.icon }}"></i> {{ place.category.name }}
+                      style="background: #10b981;">
+                    <i class="fa-solid fa-location-dot"></i> {{ place.get_category_display|default:place.category }}
                 </span>
             {% endif %}
             {% if place.is_featured %}
@@ -14,6 +18,14 @@
                 </span>
             {% endif %}
         </div>
+        <button type="button"
+                class="btn-wishlist-toggle {% if is_wishlisted or place.id in wishlist_ids %}active{% endif %}"
+                data-place-id="{{ place.id }}"
+                data-place-name="{{ place.name }}"
+                aria-label="บันทึกสถานที่โปรด"
+                title="บันทึกสถานที่โปรด">
+            <i class="fa-solid fa-heart icon-heart"></i>
+        </button>
         <div class="place-rating-badge">
             <i class="fa-solid fa-star star-icon"></i> {{ place.rating|floatformat:1 }}
             <span class="review-count">({{ place.review_count }})</span>
@@ -21,9 +33,9 @@
     </div>
     <div class="place-card-content">
         <div class="place-meta-header">
-            {% if place.location %}
+            {% if place.address %}
                 <span class="place-location-tag">
-                    <i class="fa-solid fa-location-dot"></i> {{ place.location.zone }}
+                    <i class="fa-solid fa-location-dot"></i> {{ place.address }}
                 </span>
             {% endif %}
             <span class="place-price-tag">{{ place.price_display }}</span>
@@ -31,6 +43,9 @@
         <h3 class="place-card-title">
             <a href="{% url 'web:place_detail' place.slug %}">{{ place.name }}</a>
         </h3>
+        {% if place.description %}
+            <p class="place-card-desc">{{ place.description|truncatewords:18 }}</p>
+        {% endif %}
         {% if place.tag_list %}
             <div class="place-card-tags">
                 {% for tag in place.tag_list %}

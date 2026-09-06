@@ -50,8 +50,8 @@
             {% block content %}{% endblock %}
         </main>
         <!-- Toast Notification Container -->
-        <div id="toast-container" class="toast-container"></div>
-        <!-- App Script -->
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
+        <!-- App Scripts -->
         <script src="{% static 'js/search-filter.js' %}"></script>
         <script src="{% static 'js/wishlist.js' %}"></script>
         {% block extra_js %}{% endblock %}

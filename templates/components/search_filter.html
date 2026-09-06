@@ -1,4 +1,4 @@
-<!-- Search & Filter Component -->
+<!-- Search & Filter Component for Sisaket Province -->
 <section class="search-filter-wrapper" id="search-filter-section">
     <div class="search-filter-card">
         <!-- Main Search Form -->
@@ -47,7 +47,7 @@
                     </button>
                     {% for cat in categories %}
                         <button type="button"
-                                class="filter-chip {% if filters.category == cat.slug or filters.category == cat.id|stringformat:'i' %}active{% endif %}"
+                                class="filter-chip {% if filters.category == cat.slug %}active{% endif %}"
                                 data-category="{{ cat.slug }}"
                                 style="--chip-accent: {{ cat.color }}">
                             <i class="fa-solid {{ cat.icon }}"></i> {{ cat.name }}
@@ -62,23 +62,18 @@
             </div>
             <!-- Secondary Filters: Location & Rating & Sort -->
             <div class="filter-secondary-row">
-                <!-- Location Dropdown -->
+                <!-- Location Dropdown (Sisaket Districts) -->
                 <div class="filter-select-group">
                     <label for="location-select"><i class="fa-solid fa-location-dot"></i> ทำเล/อำเภอ:</label>
                     <div class="custom-select-wrapper">
                         <select name="location" id="location-select" class="form-select">
                             <option value="all"
                                     {% if not filters.location or filters.location == 'all' %}selected{% endif %}>ทุกทำเล / ทั่วทั้งศรีสะเกษ</option>
-                            {% regroup locations by city as city_list %}
-                            {% for city in city_list %}
-                                <optgroup label="📍 จังหวัด{{ city.grouper }}">
-                                    {% for loc in city.list %}
-                                        <option value="{{ loc.slug }}"
-                                                {% if filters.location == loc.slug or filters.location == loc.id|stringformat:'i' %}selected{% endif %}>
-                                            {{ loc.zone }}
-                                        </option>
-                                    {% endfor %}
-                                </optgroup>
+                            {% for loc in locations %}
+                                <option value="{{ loc.slug }}"
+                                        {% if filters.location == loc.slug %}selected{% endif %}>
+                                    {{ loc.zone }}
+                                </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -127,7 +122,7 @@
                 <span class="text-muted">(จากทั้งหมด {{ all_places_count }} แห่ง)</span>
             </div>
             <div class="search-mode-tag">
-                <span class="live-dot"></span> กรองผลแบบ Real-time
+                <span class="live-dot"></span> ระบบค้นหาและตัวกรองพร้อมใช้งาน
             </div>
         </div>
     </div>

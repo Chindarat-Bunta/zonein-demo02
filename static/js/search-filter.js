@@ -228,13 +228,16 @@ class PlaceFilterEngine {
 
         if (this.placesGrid) {
             this.placesGrid.innerHTML = places.map(place => this.buildPlaceCardHTML(place)).join('');
+            if (window.wishlistManager) {
+                window.wishlistManager.refreshUI();
+            }
         }
     }
 
     buildPlaceCardHTML(place) {
         const categoryBadge = place.category ? `
-            <span class="place-category-badge" style="background: ${place.category.color};">
-                <i class="fa-solid ${place.category.icon}"></i> ${this.escapeHTML(place.category.name)}
+            <span class="place-category-badge" style="background: ${place.category.color || '#10b981'};">
+                <i class="fa-solid ${place.category.icon || 'fa-location-dot'}"></i> ${this.escapeHTML(place.category.name || place.category)}
             </span>
         ` : '';
 
@@ -244,9 +247,24 @@ class PlaceFilterEngine {
             </span>
         ` : '';
 
-        const locationTag = place.location ? `
+        const isWishlisted = (window.wishlistManager && window.wishlistManager.isWishlisted(place.id)) || place.is_wishlisted;
+        const wishlistBtn = `
+            <button 
+                type="button" 
+                class="btn-wishlist-toggle ${isWishlisted ? 'active' : ''}" 
+                data-place-id="${place.id}" 
+                data-place-name="${this.escapeHTML(place.name)}"
+                aria-label="บันทึกสถานที่โปรด"
+                title="${isWishlisted ? 'ลบออกจากรายการโปรด' : 'บันทึกสถานที่โปรด'}"
+            >
+                <i class="fa-solid fa-heart icon-heart"></i>
+            </button>
+        `;
+
+        const addressText = place.address || (place.location && place.location.zone) || '';
+        const locationTag = addressText ? `
             <span class="place-location-tag">
-                <i class="fa-solid fa-location-dot"></i> ${this.escapeHTML(place.location.zone)}
+                <i class="fa-solid fa-location-dot"></i> ${this.escapeHTML(addressText)}
             </span>
         ` : '';
 
@@ -258,34 +276,43 @@ class PlaceFilterEngine {
 
         return `
             <article class="place-card" data-place-id="${place.id}">
-                <div class="place-card-header">
+                <div class="place-card-image-wrap">
+                    <img 
+                        src="${this.escapeHTML(place.image_url)}" 
+                        alt="${this.escapeHTML(place.name)}" 
+                        class="place-card-img"
+                        loading="lazy"
+                    >
                     <div class="place-badge-row">
                         ${categoryBadge}
                         ${featuredBadge}
                     </div>
+                    ${wishlistBtn}
                     <div class="place-rating-badge">
-                        <i class="fa-solid fa-star star-icon"></i> ${place.rating.toFixed(1)}
-                        <span class="review-count">(${place.review_count})</span>
+                        <i class="fa-solid fa-star star-icon"></i> ${Number(place.rating).toFixed(1)}
+                        <span class="review-count">(${place.review_count || 0})</span>
                     </div>
                 </div>
 
                 <div class="place-card-content">
                     <div class="place-meta-header">
                         ${locationTag}
-                        <span class="place-price-tag">${this.escapeHTML(place.price_display)}</span>
+                        <span class="place-price-tag">${this.escapeHTML(place.price_display || '฿')}</span>
                     </div>
 
                     <h3 class="place-card-title">
-                        <a href="/places/${place.slug}/">${this.escapeHTML(place.name)}</a>
+                        <a href="/places/${place.slug || place.id}/">${this.escapeHTML(place.name)}</a>
                     </h3>
+
+                    ${place.description ? `<p class="place-card-desc">${this.escapeHTML(this.truncateWords(place.description, 18))}</p>` : ''}
 
                     ${tagsHTML}
 
                     <div class="place-card-footer">
-                        <span class="place-address-snippet" title="${this.escapeHTML(place.address)}">
-                            <i class="fa-regular fa-map"></i> ${this.escapeHTML(this.truncateChars(place.address, 35))}
+                        <span class="place-address-snippet" title="${this.escapeHTML(addressText)}">
+                            <i class="fa-regular fa-map"></i> ${this.escapeHTML(this.truncateChars(addressText, 35))}
                         </span>
-                        <a href="/places/${place.slug}/" class="btn-card-view">
+                        <a href="/places/${place.slug || place.id}/" class="btn-card-view">
                             ดูรีวิว <i class="fa-solid fa-arrow-right"></i>
                         </a>
                     </div>
