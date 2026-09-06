@@ -459,3 +459,4 @@ class ApiEndpointsTests(TestCase):
         updated = response.json()
         self.assertTrue(updated["success"])
         self.assertEqual(updated["profile"]["nickname"], "สายคาเฟ่ตัวจริง")
+

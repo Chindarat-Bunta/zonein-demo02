@@ -1,10 +1,12 @@
 from django.urls import include, path
 from . import views
 
+app_name = "web"
+
 urlpatterns = [
     # Pages
     path("", views.home_view, name="index"),
-    path("", views.home_view, name="home"),
+    path("home/", views.home_view, name="home"),
     path("feed/", views.home_view, name="feed"),
     path("search/", views.search_view, name="search"),
     path("explore/", views.search_view, name="explore"),
@@ -14,7 +16,7 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("social-login/<str:provider>/", views.social_login_view, name="social_login"),
 
-    # REST APIs from dev
+    # REST APIs
     path("api/", include("web.api.urls")),
 
     # Feed & Review APIs

@@ -62,6 +62,7 @@ class Place(models.Model):
         ("travel", "สถานที่ท่องเที่ยว (Travel/Attraction)"),
         ("hotel", "ที่พัก / โรงแรม (Hotel/Resort)"),
         ("nature", "ธรรมชาติ / แคมป์ปิ้ง (Nature/Camping)"),
+        ("culture", "โบราณสถาน & วัดวาอาราม (Culture/Temple)"),
         ("other", "อื่นๆ (Other)"),
     ]
 

@@ -97,7 +97,7 @@ ROOT_URLCONF = "zonein02.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "web" / "templates", BASE_DIR / "templates"],
+        "DIRS": [BASE_DIR / "templates", BASE_DIR / "web" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -173,6 +173,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 STATICFILES_DIRS = [
     BASE_DIR / "statics",
+    BASE_DIR / "static",
 ]
 
 # ==============================================================================
@@ -204,4 +205,3 @@ else:
         api_secret=CLOUDINARY_API_SECRET or "demo_secret",
         secure=True,
     )
-
