@@ -247,23 +247,9 @@ class PlaceFilterEngine {
             </span>
         ` : '';
 
-        const isWishlisted = (window.wishlistManager && window.wishlistManager.isWishlisted(place.id)) || place.is_wishlisted;
-        const wishlistBtn = `
-            <button 
-                type="button" 
-                class="btn-wishlist-toggle ${isWishlisted ? 'active' : ''}" 
-                data-place-id="${place.id}" 
-                data-place-name="${this.escapeHTML(place.name)}"
-                aria-label="บันทึกสถานที่โปรด"
-                title="${isWishlisted ? 'ลบออกจากรายการโปรด' : 'บันทึกสถานที่โปรด'}"
-            >
-                <i class="fa-solid fa-heart icon-heart"></i>
-            </button>
-        `;
-
         const locationTag = place.location ? `
             <span class="place-location-tag">
-                <i class="fa-solid fa-location-dot"></i> ${this.escapeHTML(place.location.zone)}, ${this.escapeHTML(place.location.city)}
+                <i class="fa-solid fa-location-dot"></i> ${this.escapeHTML(place.location.zone || '')}${place.location.city ? ', ' + this.escapeHTML(place.location.city) : ''}
             </span>
         ` : '';
 
@@ -272,31 +258,6 @@ class PlaceFilterEngine {
                 ${place.tags.map(tag => `<span class="tag-chip">#${this.escapeHTML(tag)}</span>`).join('')}
             </div>
         ` : '';
-
-        const mapsUrl = place.maps_navigation_url || (window.MapsNavigator ? window.MapsNavigator.generateGoogleMapsUrl({
-            latitude: place.latitude,
-            longitude: place.longitude,
-            destinationName: place.name,
-            address: place.address
-        }) : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.name)}`);
-
-        const mapsBtn = `
-            <a 
-                href="${mapsUrl}" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                class="btn-google-maps btn-maps-outline btn-maps-sm"
-                data-lat="${place.latitude || ''}"
-                data-lng="${place.longitude || ''}"
-                data-destination="${this.escapeHTML(place.name)}"
-                data-address="${this.escapeHTML(place.address)}"
-                title="นำทางด้วย Google Maps"
-                aria-label="นำทางไปยัง ${this.escapeHTML(place.name)}"
-            >
-                <i class="fa-solid fa-diamond-turn-right maps-icon"></i>
-                <span class="maps-btn-label">นำทาง</span>
-            </a>
-        `;
 
         return `
             <article class="place-card" data-place-id="${place.id}">
@@ -309,7 +270,6 @@ class PlaceFilterEngine {
                     >
                     ${categoryBadge}
                     ${featuredBadge}
-                    ${wishlistBtn}
                     <div class="place-rating-badge">
                         <i class="fa-solid fa-star star-icon"></i> ${place.rating.toFixed(1)}
                         <span class="review-count">(${place.review_count})</span>
@@ -336,12 +296,9 @@ class PlaceFilterEngine {
                         <span class="place-address-snippet" title="${this.escapeHTML(place.address)}">
                             <i class="fa-regular fa-map"></i> ${this.escapeHTML(this.truncateChars(place.address, 28))}
                         </span>
-                        <div class="card-footer-actions">
-                            ${mapsBtn}
-                            <a href="/places/${place.slug}/" class="btn-card-view">
-                                ดูรีวิว <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-                        </div>
+                        <a href="/places/${place.slug}/" class="btn-card-view">
+                            ดูรีวิว <i class="fa-solid fa-arrow-right"></i>
+                        </a>
                     </div>
                 </div>
             </article>
