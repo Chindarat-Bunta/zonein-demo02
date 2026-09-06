@@ -17,10 +17,22 @@ def _ensure_sample_data():
     """Seed initial popular places, recent reviews, and comments if empty."""
     if Place.objects.count() == 0:
         # Users
-        u1, _ = User.objects.get_or_create(username="somchai_explorer", defaults={"email": "somchai@example.com", "first_name": "สมชาย"})
-        u2, _ = User.objects.get_or_create(username="ploy_wanderer", defaults={"email": "ploy@example.com", "first_name": "พลอย"})
-        u3, _ = User.objects.get_or_create(username="ton_backpacker", defaults={"email": "ton@example.com", "first_name": "ต้น"})
-        u4, _ = User.objects.get_or_create(username="traveler", defaults={"email": "traveler@example.com", "first_name": "นักเดินทาง"})
+        u1, _ = User.objects.get_or_create(
+            username="somchai_explorer",
+            defaults={"email": "somchai@example.com", "first_name": "สมชาย"},
+        )
+        u2, _ = User.objects.get_or_create(
+            username="ploy_wanderer",
+            defaults={"email": "ploy@example.com", "first_name": "พลอย"},
+        )
+        u3, _ = User.objects.get_or_create(
+            username="ton_backpacker",
+            defaults={"email": "ton@example.com", "first_name": "ต้น"},
+        )
+        u4, _ = User.objects.get_or_create(
+            username="traveler",
+            defaults={"email": "traveler@example.com", "first_name": "นักเดินทาง"},
+        )
 
         # Places
         p1 = Place.objects.create(
@@ -109,16 +121,34 @@ def _ensure_sample_data():
         )
 
         # Seed comments
-        Comment.objects.create(review=r1, author=u2, content="เห็นรูปแล้วอยากไปตามรอยเลยครับ มุมสวยมาก!")
-        Comment.objects.create(review=r1, author=u3, content="ช่วงเย็นคนเยอะไหมครับ กำลังวางแผนไปเสาร์นี้")
-        Comment.objects.create(review=r6, author=u4, content="วัดสวยจริงครับ แดดสะท้อนกระจกวิบวับมาก")
+        Comment.objects.create(
+            review=r1, author=u2, content="เห็นรูปแล้วอยากไปตามรอยเลยครับ มุมสวยมาก!"
+        )
+        Comment.objects.create(
+            review=r1, author=u3, content="ช่วงเย็นคนเยอะไหมครับ กำลังวางแผนไปเสาร์นี้"
+        )
+        Comment.objects.create(
+            review=r6, author=u4, content="วัดสวยจริงครับ แดดสะท้อนกระจกวิบวับมาก"
+        )
     elif Comment.objects.count() == 0:
-        u_sample, _ = User.objects.get_or_create(username="ploy_wanderer", defaults={"email": "ploy@example.com"})
-        u_backpacker, _ = User.objects.get_or_create(username="ton_backpacker", defaults={"email": "ton@example.com"})
+        u_sample, _ = User.objects.get_or_create(
+            username="ploy_wanderer", defaults={"email": "ploy@example.com"}
+        )
+        u_backpacker, _ = User.objects.get_or_create(
+            username="ton_backpacker", defaults={"email": "ton@example.com"}
+        )
         first_review = Review.objects.first()
         if first_review:
-            Comment.objects.create(review=first_review, author=u_sample, content="เห็นรูปแล้วอยากไปตามรอยเลยครับ มุมสวยมาก!")
-            Comment.objects.create(review=first_review, author=u_backpacker, content="ช่วงเย็นคนเยอะไหมครับ กำลังวางแผนไปเสาร์นี้")
+            Comment.objects.create(
+                review=first_review,
+                author=u_sample,
+                content="เห็นรูปแล้วอยากไปตามรอยเลยครับ มุมสวยมาก!",
+            )
+            Comment.objects.create(
+                review=first_review,
+                author=u_backpacker,
+                content="ช่วงเย็นคนเยอะไหมครับ กำลังวางแผนไปเสาร์นี้",
+            )
 
 
 def home_view(request, active_tab="home"):
@@ -129,23 +159,31 @@ def home_view(request, active_tab="home"):
     explore_items = []
     for p in places:
         cat_name = category_map.get(p.category, p.category)
-        explore_items.append({
-            "id": p.id,
-            "title": p.name,
-            "category": p.category,
-            "category_name": cat_name,
-            "location": p.location or p.address or "ทั่วไทย",
-            "rating": p.average_rating if p.average_rating else 4.8,
-            "image_url": p.image_url or p.cover_image_url or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1000&auto=format&fit=crop&q=80",
-            "is_video": (p.id % 2 == 1),
-            "detail_url": f"/places/{p.id}/",
-        })
+        explore_items.append(
+            {
+                "id": p.id,
+                "title": p.name,
+                "category": p.category,
+                "category_name": cat_name,
+                "location": p.location or p.address or "ทั่วไทย",
+                "rating": p.average_rating if p.average_rating else 4.8,
+                "image_url": p.image_url
+                or p.cover_image_url
+                or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1000&auto=format&fit=crop&q=80",
+                "is_video": (p.id % 2 == 1),
+                "detail_url": f"/places/{p.id}/",
+            }
+        )
 
-    return render(request, "web/home.html", {
-        "places": places,
-        "explore_items": explore_items,
-        "active_tab": active_tab,
-    })
+    return render(
+        request,
+        "web/home.html",
+        {
+            "places": places,
+            "explore_items": explore_items,
+            "active_tab": active_tab,
+        },
+    )
 
 
 def search_view(request):
@@ -205,33 +243,51 @@ def signup_view(request):
         # Form validation
         if not username or not email or not password:
             messages.error(request, "กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง")
-            return render(request, "signup.html", {"full_name": full_name, "username": username, "email": email})
+            return render(
+                request,
+                "signup.html",
+                {"full_name": full_name, "username": username, "email": email},
+            )
 
         if len(password) < 6:
             messages.error(request, "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร")
-            return render(request, "signup.html", {"full_name": full_name, "username": username, "email": email})
+            return render(
+                request,
+                "signup.html",
+                {"full_name": full_name, "username": username, "email": email},
+            )
 
         if password != confirm_password:
             messages.error(request, "รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน")
-            return render(request, "signup.html", {"full_name": full_name, "username": username, "email": email})
+            return render(
+                request,
+                "signup.html",
+                {"full_name": full_name, "username": username, "email": email},
+            )
 
         if User.objects.filter(username__iexact=username).exists():
             messages.error(request, f"ชื่อผู้ใช้ '{username}' มีผู้ใช้งานแล้ว โปรดเลือกชื่ออื่น")
-            return render(request, "signup.html", {"full_name": full_name, "email": email})
+            return render(
+                request, "signup.html", {"full_name": full_name, "email": email}
+            )
 
         if User.objects.filter(email__iexact=email).exists():
             messages.error(request, f"อีเมล '{email}' เคยลงทะเบียนแล้ว โปรดเข้าสู่ระบบ")
-            return render(request, "signup.html", {"full_name": full_name, "username": username})
+            return render(
+                request, "signup.html", {"full_name": full_name, "username": username}
+            )
 
         # Create user account
         new_user = User.objects.create_user(
             username=username,
             email=email,
             password=password,
-            first_name=full_name if full_name else username
+            first_name=full_name if full_name else username,
         )
         login(request, new_user)
-        messages.success(request, f"สมัครสมาชิกสำเร็จ! ยินดีต้อนรับสู่ Zone In, {new_user.first_name}")
+        messages.success(
+            request, f"สมัครสมาชิกสำเร็จ! ยินดีต้อนรับสู่ Zone In, {new_user.first_name}"
+        )
         return redirect("home")
 
     return render(request, "signup.html")
@@ -263,7 +319,7 @@ def social_login_view(request, provider):
         defaults={
             "email": email,
             "first_name": display_name,
-        }
+        },
     )
 
     if created:
@@ -287,6 +343,7 @@ def logout_view(request):
 # Home Page Feed Backend APIs
 # ==============================================================================
 
+
 @require_http_methods(["GET"])
 def api_popular_places(request):
     """
@@ -297,13 +354,10 @@ def api_popular_places(request):
     page = request.GET.get("page", 1)
     limit = min(int(request.GET.get("limit", 6)), 50)
 
-    places_qs = (
-        Place.objects.annotate(
-            avg_rating=Coalesce(Avg("reviews__rating"), Value(0.0)),
-            review_count_val=Count("reviews"),
-        )
-        .order_by("-avg_rating", "-review_count_val", "-created_at")
-    )
+    places_qs = Place.objects.annotate(
+        avg_rating=Coalesce(Avg("reviews__rating"), Value(0.0)),
+        review_count_val=Count("reviews"),
+    ).order_by("-avg_rating", "-review_count_val", "-created_at")
 
     paginator = Paginator(places_qs, limit)
     try:
@@ -313,25 +367,31 @@ def api_popular_places(request):
 
     results = []
     for place in page_obj:
-        results.append({
-            "id": place.id,
-            "name": place.name,
-            "location": place.location,
-            "category": place.category,
-            "description": place.description,
-            "image_url": place.image_url,
-            "average_rating": round(place.avg_rating, 1) if place.avg_rating else 0.0,
-            "reviews_count": place.review_count_val,
-            "created_at": place.created_at.isoformat(),
-        })
+        results.append(
+            {
+                "id": place.id,
+                "name": place.name,
+                "location": place.location,
+                "category": place.category,
+                "description": place.description,
+                "image_url": place.image_url,
+                "average_rating": (
+                    round(place.avg_rating, 1) if place.avg_rating else 0.0
+                ),
+                "reviews_count": place.review_count_val,
+                "created_at": place.created_at.isoformat(),
+            }
+        )
 
-    return JsonResponse({
-        "places": results,
-        "total": paginator.count,
-        "page": page_obj.number,
-        "num_pages": paginator.num_pages,
-        "has_next": page_obj.has_next(),
-    })
+    return JsonResponse(
+        {
+            "places": results,
+            "total": paginator.count,
+            "page": page_obj.number,
+            "num_pages": paginator.num_pages,
+            "has_next": page_obj.has_next(),
+        }
+    )
 
 
 @require_http_methods(["GET"])
@@ -366,39 +426,50 @@ def api_recent_reviews(request):
                 "author": {
                     "id": c.author.id,
                     "username": c.author.username,
-                    "nickname": getattr(getattr(c.author, "profile", None), "nickname", "") or c.author.username,
+                    "nickname": getattr(
+                        getattr(c.author, "profile", None), "nickname", ""
+                    )
+                    or c.author.username,
                 },
             }
             for c in review.comments.all()
         ]
-        results.append({
-            "id": review.id,
-            "rating": review.rating,
-            "content": review.content,
-            "image_url": review.image_url or (review.place.cover_image_url if review.place else ""),
-            "created_at": review.created_at.isoformat(),
-            "author": {
-                "id": review.user.id,
-                "username": review.user.username,
-                "nickname": getattr(getattr(review.user, "profile", None), "nickname", "") or review.user.username,
-            },
-            "place": {
-                "id": review.place.id,
-                "name": review.place.name,
-                "location": review.place.location,
-                "category": review.place.category,
-            },
-            "comments": comments_data,
-            "comments_count": len(comments_data),
-        })
+        results.append(
+            {
+                "id": review.id,
+                "rating": review.rating,
+                "content": review.content,
+                "image_url": review.image_url
+                or (review.place.cover_image_url if review.place else ""),
+                "created_at": review.created_at.isoformat(),
+                "author": {
+                    "id": review.user.id,
+                    "username": review.user.username,
+                    "nickname": getattr(
+                        getattr(review.user, "profile", None), "nickname", ""
+                    )
+                    or review.user.username,
+                },
+                "place": {
+                    "id": review.place.id,
+                    "name": review.place.name,
+                    "location": review.place.location,
+                    "category": review.place.category,
+                },
+                "comments": comments_data,
+                "comments_count": len(comments_data),
+            }
+        )
 
-    return JsonResponse({
-        "reviews": results,
-        "total": paginator.count,
-        "page": page_obj.number,
-        "num_pages": paginator.num_pages,
-        "has_next": page_obj.has_next(),
-    })
+    return JsonResponse(
+        {
+            "reviews": results,
+            "total": paginator.count,
+            "page": page_obj.number,
+            "num_pages": paginator.num_pages,
+            "has_next": page_obj.has_next(),
+        }
+    )
 
 
 @csrf_exempt
@@ -423,21 +494,26 @@ def api_add_comment(request, review_id):
         author = request.user
     else:
         username = username or "traveler"
-        author, _ = User.objects.get_or_create(username=username, defaults={"email": f"{username}@example.com"})
+        author, _ = User.objects.get_or_create(
+            username=username, defaults={"email": f"{username}@example.com"}
+        )
 
     comment = Comment.objects.create(review=review, author=author, content=content)
-    return JsonResponse({
-        "success": True,
-        "comment": {
-            "id": comment.id,
-            "content": comment.content,
-            "created_at": comment.created_at.isoformat(),
-            "author": {
-                "id": comment.author.id,
-                "username": comment.author.username,
+    return JsonResponse(
+        {
+            "success": True,
+            "comment": {
+                "id": comment.id,
+                "content": comment.content,
+                "created_at": comment.created_at.isoformat(),
+                "author": {
+                    "id": comment.author.id,
+                    "username": comment.author.username,
+                },
             },
         },
-    }, status=201)
+        status=201,
+    )
 
 
 @csrf_exempt
@@ -467,15 +543,17 @@ def api_edit_review(request, review_id):
             pass
 
     review.save()
-    return JsonResponse({
-        "success": True,
-        "review": {
-            "id": review.id,
-            "rating": review.rating,
-            "content": review.content,
-            "created_at": review.created_at.isoformat(),
-        },
-    })
+    return JsonResponse(
+        {
+            "success": True,
+            "review": {
+                "id": review.id,
+                "rating": review.rating,
+                "content": review.content,
+                "created_at": review.created_at.isoformat(),
+            },
+        }
+    )
 
 
 @csrf_exempt
@@ -494,40 +572,46 @@ def api_delete_review(request, review_id):
 def api_place_detail(request, place_id):
     """GET /api/places/<place_id>/ -> Place detail."""
     place = get_object_or_404(Place, pk=place_id)
-    return JsonResponse({
-        "id": place.id,
-        "name": place.name,
-        "location": place.location,
-        "category": place.category,
-        "description": place.description,
-        "image_url": place.image_url,
-        "average_rating": place.average_rating,
-        "reviews_count": place.reviews_count,
-        "created_at": place.created_at.isoformat(),
-    })
+    return JsonResponse(
+        {
+            "id": place.id,
+            "name": place.name,
+            "location": place.location,
+            "category": place.category,
+            "description": place.description,
+            "image_url": place.image_url,
+            "average_rating": place.average_rating,
+            "reviews_count": place.reviews_count,
+            "created_at": place.created_at.isoformat(),
+        }
+    )
 
 
 @require_http_methods(["GET"])
 def api_review_detail(request, review_id):
     """GET /api/reviews/<review_id>/ -> Review detail."""
-    review = get_object_or_404(Review.objects.select_related("user", "place"), pk=review_id)
-    return JsonResponse({
-        "id": review.id,
-        "rating": review.rating,
-        "content": review.content,
-        "image_url": review.image_url,
-        "created_at": review.created_at.isoformat(),
-        "author": {
-            "id": review.user.id,
-            "username": review.user.username,
-        },
-        "place": {
-            "id": review.place.id,
-            "name": review.place.name,
-            "location": review.place.location,
-            "category": review.place.category,
-        },
-    })
+    review = get_object_or_404(
+        Review.objects.select_related("user", "place"), pk=review_id
+    )
+    return JsonResponse(
+        {
+            "id": review.id,
+            "rating": review.rating,
+            "content": review.content,
+            "image_url": review.image_url,
+            "created_at": review.created_at.isoformat(),
+            "author": {
+                "id": review.user.id,
+                "username": review.user.username,
+            },
+            "place": {
+                "id": review.place.id,
+                "name": review.place.name,
+                "location": review.place.location,
+                "category": review.place.category,
+            },
+        }
+    )
 
 
 def place_detail(request, place_id=None, slug=None):
@@ -623,10 +707,22 @@ def place_detail(request, place_id=None, slug=None):
             },
         ]
         gallery_images = [
-            {"image_url": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800&auto=format&fit=crop", "caption": "บรรยากาศหน้าร้านและสวนสไตล์ญี่ปุ่น"},
-            {"image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=800&auto=format&fit=crop", "caption": "กาแฟดริปพิเศษและขนมอบสด"},
-            {"image_url": "https://images.unsplash.com/photo-1497636577773-f1231844b336?q=80&w=800&auto=format&fit=crop", "caption": "ทิวทัศน์ภูเขาและแปลงผักเกษตรอินทรีย์"},
-            {"image_url": "https://images.unsplash.com/photo-1442512595331-e89e73853f31?q=80&w=800&auto=format&fit=crop", "caption": "โซนที่นั่งระเบียงไม้ริมเขา"},
+            {
+                "image_url": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800&auto=format&fit=crop",
+                "caption": "บรรยากาศหน้าร้านและสวนสไตล์ญี่ปุ่น",
+            },
+            {
+                "image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=800&auto=format&fit=crop",
+                "caption": "กาแฟดริปพิเศษและขนมอบสด",
+            },
+            {
+                "image_url": "https://images.unsplash.com/photo-1497636577773-f1231844b336?q=80&w=800&auto=format&fit=crop",
+                "caption": "ทิวทัศน์ภูเขาและแปลงผักเกษตรอินทรีย์",
+            },
+            {
+                "image_url": "https://images.unsplash.com/photo-1442512595331-e89e73853f31?q=80&w=800&auto=format&fit=crop",
+                "caption": "โซนที่นั่งระเบียงไม้ริมเขา",
+            },
         ]
     else:
         # Pull real reviews from database
@@ -636,13 +732,19 @@ def place_detail(request, place_id=None, slug=None):
             avatar = ""
             if hasattr(r.user, "profile") and r.user.profile.avatar_url:
                 avatar = r.user.profile.avatar_url
-            reviews.append({
-                "user_name": r.user.profile.get_display_name() if hasattr(r.user, "profile") else r.user.username,
-                "user_avatar": avatar,
-                "rating": r.rating,
-                "created_at": r.created_at.strftime("%d %b %Y"),
-                "comment": r.comment,
-            })
+            reviews.append(
+                {
+                    "user_name": (
+                        r.user.profile.get_display_name()
+                        if hasattr(r.user, "profile")
+                        else r.user.username
+                    ),
+                    "user_avatar": avatar,
+                    "rating": r.rating,
+                    "created_at": r.created_at.strftime("%d %b %Y"),
+                    "comment": r.comment,
+                }
+            )
 
         # If place has fewer than 2 reviews, provide realistic sample reviews to complement
         if len(reviews) == 0:
@@ -667,26 +769,45 @@ def place_detail(request, place_id=None, slug=None):
         db_images = place.images.all()
         gallery_images = []
         for img in db_images:
-            gallery_images.append({
-                "image_url": img.image_url,
-                "caption": img.caption,
-            })
+            gallery_images.append(
+                {
+                    "image_url": img.image_url,
+                    "caption": img.caption,
+                }
+            )
 
         if not gallery_images:
             gallery_images = [
-                {"image_url": place.cover_image_url or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800&auto=format&fit=crop", "caption": "รูปภาพสถานที่"},
-                {"image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=800&auto=format&fit=crop", "caption": "เครื่องดื่มและของว่าง"},
-                {"image_url": "https://images.unsplash.com/photo-1497636577773-f1231844b336?q=80&w=800&auto=format&fit=crop", "caption": "บรรยากาศโดยรอบ"},
+                {
+                    "image_url": place.cover_image_url
+                    or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800&auto=format&fit=crop",
+                    "caption": "รูปภาพสถานที่",
+                },
+                {
+                    "image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=800&auto=format&fit=crop",
+                    "caption": "เครื่องดื่มและของว่าง",
+                },
+                {
+                    "image_url": "https://images.unsplash.com/photo-1497636577773-f1231844b336?q=80&w=800&auto=format&fit=crop",
+                    "caption": "บรรยากาศโดยรอบ",
+                },
             ]
 
     context = {
         "place": place,
         "reviews": reviews,
         "gallery_images": gallery_images,
-        "rating_breakdown": place.rating_breakdown if hasattr(place, "rating_breakdown") else [],
-        "maps_navigation_url": place.maps_navigation_url if hasattr(place, "maps_navigation_url") else "",
-        "maps_search_url": place.maps_search_url if hasattr(place, "maps_search_url") else "",
-        "maps_embed_url": place.maps_embed_url if hasattr(place, "maps_embed_url") else "",
+        "rating_breakdown": (
+            place.rating_breakdown if hasattr(place, "rating_breakdown") else []
+        ),
+        "maps_navigation_url": (
+            place.maps_navigation_url if hasattr(place, "maps_navigation_url") else ""
+        ),
+        "maps_search_url": (
+            place.maps_search_url if hasattr(place, "maps_search_url") else ""
+        ),
+        "maps_embed_url": (
+            place.maps_embed_url if hasattr(place, "maps_embed_url") else ""
+        ),
     }
     return render(request, "place_detail.html", context)
-

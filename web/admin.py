@@ -58,7 +58,15 @@ class PlaceLikeAdmin(admin.ModelAdmin):
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ("id", "actor", "action_type", "post", "recipient", "is_read", "created_at")
+    list_display = (
+        "id",
+        "actor",
+        "action_type",
+        "post",
+        "recipient",
+        "is_read",
+        "created_at",
+    )
     list_filter = ("action_type", "is_read", "created_at")
     search_fields = ("actor__username", "recipient__username", "post__name", "message")
     list_editable = ("is_read",)

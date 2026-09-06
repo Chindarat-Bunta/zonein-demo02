@@ -28,16 +28,24 @@ from web.services.cloudinary_service import (
 
 class PlaceModelTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="password123")
-        self.place = Place.objects.create(author=self.user, name="สวนเบญจกิติ", address="กรุงเทพฯ")
+        self.user = User.objects.create_user(
+            username="testuser", password="password123"
+        )
+        self.place = Place.objects.create(
+            author=self.user, name="สวนเบญจกิติ", address="กรุงเทพฯ"
+        )
 
     def test_average_rating_and_reviews_count(self):
         """Average rating should compute correctly and reviews count match."""
         self.assertEqual(self.place.average_rating, 0.0)
         self.assertEqual(self.place.reviews_count, 0)
 
-        Review.objects.create(place=self.place, user=self.user, rating=5, comment="ยอดเยี่ยม")
-        Review.objects.create(place=self.place, user=self.user, rating=3, comment="พอใช้")
+        Review.objects.create(
+            place=self.place, user=self.user, rating=5, comment="ยอดเยี่ยม"
+        )
+        Review.objects.create(
+            place=self.place, user=self.user, rating=3, comment="พอใช้"
+        )
 
         self.assertEqual(self.place.reviews_count, 2)
         self.assertEqual(self.place.average_rating, 4.0)
@@ -46,17 +54,29 @@ class PlaceModelTests(TestCase):
 class HomePageAPITests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user1 = User.objects.create_user(username="somchai", password="password123")
+        self.user1 = User.objects.create_user(
+            username="somchai", password="password123"
+        )
         self.user2 = User.objects.create_user(username="ploy", password="password123")
 
         # Create 2 places
-        self.place1 = Place.objects.create(author=self.user1, name="ดอยอินทนนท์", address="เชียงใหม่")
-        self.place2 = Place.objects.create(author=self.user2, name="หาดป่าตอง", address="ภูเก็ต")
+        self.place1 = Place.objects.create(
+            author=self.user1, name="ดอยอินทนนท์", address="เชียงใหม่"
+        )
+        self.place2 = Place.objects.create(
+            author=self.user2, name="หาดป่าตอง", address="ภูเก็ต"
+        )
 
         # Create reviews with distinct ratings
-        Review.objects.create(place=self.place1, user=self.user1, rating=5, comment="หนาวจับใจ")
-        Review.objects.create(place=self.place1, user=self.user2, rating=5, comment="วิวอลังการ")
-        Review.objects.create(place=self.place2, user=self.user1, rating=4, comment="หาดทรายสวย")
+        Review.objects.create(
+            place=self.place1, user=self.user1, rating=5, comment="หนาวจับใจ"
+        )
+        Review.objects.create(
+            place=self.place1, user=self.user2, rating=5, comment="วิวอลังการ"
+        )
+        Review.objects.create(
+            place=self.place2, user=self.user1, rating=4, comment="หาดทรายสวย"
+        )
 
     def test_home_page_renders_successfully(self):
         """Home page should return status code 200."""
@@ -94,7 +114,9 @@ class HomePageAPITests(TestCase):
 
     def test_api_place_detail(self):
         """Place detail API should return full info for a specific place."""
-        response = self.client.get(reverse("web:api_place_detail", args=[self.place1.id]))
+        response = self.client.get(
+            reverse("web:api_place_detail", args=[self.place1.id])
+        )
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["name"], "ดอยอินทนนท์")
@@ -158,7 +180,10 @@ class CloudinaryServiceTests(TestCase):
         result = upload_image(fake_file, folder="zonein/reviews")
 
         self.assertTrue(result["success"])
-        self.assertEqual(result["url"], "https://res.cloudinary.com/zonein/image/upload/v12345/sample.jpg")
+        self.assertEqual(
+            result["url"],
+            "https://res.cloudinary.com/zonein/image/upload/v12345/sample.jpg",
+        )
         self.assertEqual(result["public_id"], "zonein/sample")
         self.assertEqual(result["format"], "jpg")
         mock_upload.assert_called_once()
@@ -181,7 +206,9 @@ class CloudinaryServiceTests(TestCase):
 
         self.assertTrue(result["success"])
         self.assertEqual(result["result"], "ok")
-        mock_destroy.assert_called_once_with("zonein/sample_image", resource_type="image")
+        mock_destroy.assert_called_once_with(
+            "zonein/sample_image", resource_type="image"
+        )
 
     def test_delete_image_empty_id(self):
         result = delete_image("")
@@ -221,13 +248,13 @@ class ModelsSchemaTests(TestCase):
             username="testuser1",
             email="testuser1@zonein.app",
             password="password123",
-            first_name="สมชาย"
+            first_name="สมชาย",
         )
         self.user2 = User.objects.create_user(
             username="testuser2",
             email="testuser2@zonein.app",
             password="password123",
-            first_name="วิภาดา"
+            first_name="วิภาดา",
         )
 
     def test_user_profile_created_via_signal(self):
@@ -236,7 +263,9 @@ class ModelsSchemaTests(TestCase):
         profile = self.user1.profile
         profile.nickname = "พี่สมชาย"
         profile.bio = "ชอบเดินทางและดื่มกาแฟคั่วเข้ม"
-        profile.avatar_url = "https://res.cloudinary.com/aomzjdia/image/upload/v1/avatars/somchai.jpg"
+        profile.avatar_url = (
+            "https://res.cloudinary.com/aomzjdia/image/upload/v1/avatars/somchai.jpg"
+        )
         profile.save()
 
         self.assertEqual(profile.get_display_name(), "พี่สมชาย")
@@ -253,7 +282,7 @@ class ModelsSchemaTests(TestCase):
             address="123 ถนนสุขุมวิท กรุงเทพฯ",
             latitude=Decimal("13.7563310"),
             longitude=Decimal("100.5017650"),
-            cover_image_url="https://res.cloudinary.com/aomzjdia/image/upload/v1/places/glasshouse.jpg"
+            cover_image_url="https://res.cloudinary.com/aomzjdia/image/upload/v1/places/glasshouse.jpg",
         )
 
         self.assertEqual(place.slug, "the-glasshouse-cafe-co")
@@ -266,19 +295,17 @@ class ModelsSchemaTests(TestCase):
     def test_place_images_gallery(self):
         """Test adding multiple gallery images to a Place."""
         place = Place.objects.create(
-            author=self.user1,
-            name="Camping Hilltop",
-            category="nature"
+            author=self.user1, name="Camping Hilltop", category="nature"
         )
         img1 = PlaceImage.objects.create(
             place=place,
             image_url="https://res.cloudinary.com/aomzjdia/image/upload/v1/places/camp1.jpg",
-            caption="วิวหมอกยามเช้า"
+            caption="วิวหมอกยามเช้า",
         )
         img2 = PlaceImage.objects.create(
             place=place,
             image_url="https://res.cloudinary.com/aomzjdia/image/upload/v1/places/camp2.jpg",
-            caption="ลานกางเต็นท์ริมน้ำ"
+            caption="ลานกางเต็นท์ริมน้ำ",
         )
 
         self.assertEqual(place.images.count(), 2)
@@ -286,20 +313,16 @@ class ModelsSchemaTests(TestCase):
 
     def test_review_and_average_rating(self):
         """Test rating and review calculations on a Place."""
-        place = Place.objects.create(author=self.user1, name="Artisan Bakery", category="cafe")
-
-        Review.objects.create(
-            place=place,
-            user=self.user1,
-            rating=5,
-            comment="ขนมอบสดใหม่ อร่อยมาก!"
+        place = Place.objects.create(
+            author=self.user1, name="Artisan Bakery", category="cafe"
         )
 
         Review.objects.create(
-            place=place,
-            user=self.user2,
-            rating=4,
-            comment="กาแฟรสชาติดี บรรยากาศเงียบสงบ"
+            place=place, user=self.user1, rating=5, comment="ขนมอบสดใหม่ อร่อยมาก!"
+        )
+
+        Review.objects.create(
+            place=place, user=self.user2, rating=4, comment="กาแฟรสชาติดี บรรยากาศเงียบสงบ"
         )
 
         self.assertEqual(place.review_count, 2)
@@ -307,19 +330,20 @@ class ModelsSchemaTests(TestCase):
 
     def test_review_rating_validation(self):
         """Test that review rating must be between 1 and 5 stars."""
-        place = Place.objects.create(author=self.user1, name="Test Place", category="cafe")
+        place = Place.objects.create(
+            author=self.user1, name="Test Place", category="cafe"
+        )
         invalid_review = Review(
-            place=place,
-            user=self.user1,
-            rating=6,
-            comment="Invalid rating test"
+            place=place, user=self.user1, rating=6, comment="Invalid rating test"
         )
         with self.assertRaises(ValidationError):
             invalid_review.full_clean()
 
     def test_wishlist_unique_constraint(self):
         """Test that a user cannot add the same place to wishlist twice."""
-        place = Place.objects.create(author=self.user1, name="Secret Beach Villa", category="hotel")
+        place = Place.objects.create(
+            author=self.user1, name="Secret Beach Villa", category="hotel"
+        )
 
         Wishlist.objects.create(user=self.user1, place=place)
         self.assertEqual(place.wishlist_count, 1)
@@ -329,7 +353,9 @@ class ModelsSchemaTests(TestCase):
 
     def test_placelike_unique_constraint(self):
         """Test that a user cannot like the same place twice."""
-        place = Place.objects.create(author=self.user1, name="Sunset Viewpoint", category="travel")
+        place = Place.objects.create(
+            author=self.user1, name="Sunset Viewpoint", category="travel"
+        )
 
         PlaceLike.objects.create(user=self.user2, place=place)
         self.assertEqual(place.likes_count, 1)
@@ -341,9 +367,7 @@ class ModelsSchemaTests(TestCase):
 class ApiEndpointsTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="api_tester",
-            email="tester@zonein.app",
-            password="testpassword"
+            username="api_tester", email="tester@zonein.app", password="testpassword"
         )
         self.place = Place.objects.create(
             author=self.user,
@@ -353,7 +377,7 @@ class ApiEndpointsTests(TestCase):
             address="เชียงใหม่",
             latitude=Decimal("18.7883"),
             longitude=Decimal("98.9853"),
-            cover_image_url="https://res.cloudinary.com/aomzjdia/image/upload/v1/places/botanica.jpg"
+            cover_image_url="https://res.cloudinary.com/aomzjdia/image/upload/v1/places/botanica.jpg",
         )
 
     def test_api_root(self):
@@ -386,9 +410,9 @@ class ApiEndpointsTests(TestCase):
                 "address": "เพชรบูรณ์",
                 "latitude": 16.7423,
                 "longitude": 101.1234,
-                "cover_image_url": "https://res.cloudinary.com/aomzjdia/image/upload/v1/places/camp.jpg"
+                "cover_image_url": "https://res.cloudinary.com/aomzjdia/image/upload/v1/places/camp.jpg",
             },
-            content_type="application/json"
+            content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
         created_data = response.json()
@@ -406,7 +430,7 @@ class ApiEndpointsTests(TestCase):
         response = self.client.post(
             f"/api/places/{self.place.id}/reviews/",
             data={"rating": 5, "comment": "เครื่องดื่มดี วิวสวยมาก"},
-            content_type="application/json"
+            content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
         data = response.json()
@@ -433,7 +457,7 @@ class ApiEndpointsTests(TestCase):
         response = self.client.post(
             "/api/wishlist/toggle/",
             data={"place_id": self.place.id},
-            content_type="application/json"
+            content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -453,10 +477,9 @@ class ApiEndpointsTests(TestCase):
         response = self.client.post(
             "/api/profile/",
             data={"nickname": "สายคาเฟ่ตัวจริง", "bio": "ตระเวนชิมกาแฟทั่วไทย"},
-            content_type="application/json"
+            content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
         updated = response.json()
         self.assertTrue(updated["success"])
         self.assertEqual(updated["profile"]["nickname"], "สายคาเฟ่ตัวจริง")
-
