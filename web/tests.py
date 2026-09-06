@@ -106,6 +106,35 @@ class ProfileSettingsTests(TestCase):
         self.assertEqual(data["avatar_url"], "https://res.cloudinary.com/zonein/image/upload/v123/api_avatar.jpg")
 
 
+class AuthRedirectTests(TestCase):
+    """Test suite for authentication redirects (logout, signin, signup)."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username="testauthuser", password="password123"
+        )
+
+    def test_logout_redirects_to_home(self):
+        self.client.force_login(self.user)
+        response = self.client.get("/logout/")
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
+
+    def test_authenticated_user_visiting_signin_redirects_to_home(self):
+        self.client.force_login(self.user)
+        response = self.client.get("/signin/")
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
+
+    def test_authenticated_user_visiting_signup_redirects_to_home(self):
+        self.client.force_login(self.user)
+        response = self.client.get("/signup/")
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
+
+    def test_anonymous_user_can_view_signin(self):
+        response = self.client.get("/signin/")
+        self.assertEqual(response.status_code, 200)
+
+
 class PlaceModelTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(

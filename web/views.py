@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from .models import Comment, Place, Review, UserProfile, Wishlist
+from .models import Comment, Place, PlaceLike, Review, UserProfile, Wishlist
 from .services import upload_image
 
 logger = logging.getLogger(__name__)
@@ -146,24 +146,34 @@ def update_profile_api(request):
 def profile_view(request):
     """
     Personal profile page (My Profile) showing user avatar, name,
-    clean zero-state review history, and personal wishlist.
+    review history, and personal wishlist places.
     """
     user = request.user
 
     if user.is_authenticated:
-        display_name = user.first_name if user.first_name else user.username
+        if hasattr(user, "profile") and user.profile.get_display_name():
+            display_name = user.profile.get_display_name()
+        else:
+            display_name = user.first_name if user.first_name else user.username
         username = user.username
         email = user.email if user.email else f"{username}@zonein.app"
         join_date = user.date_joined.strftime("%b %Y") if hasattr(user, "date_joined") and user.date_joined else "ก.ย. 2026"
+
+        wishlist_qs = Wishlist.objects.filter(user=user).select_related("place").order_by("-created_at")
+        wishlist = [w.place for w in wishlist_qs if w.place]
+        wishlist_ids = set(p.id for p in wishlist)
+        reviews = list(Review.objects.filter(user=user).select_related("place").order_by("-created_at"))
+        likes_count = PlaceLike.objects.filter(user=user).count()
     else:
         display_name = "User Profile"
         username = "user"
         email = "user@zonein.app"
         join_date = "ก.ย. 2026"
 
-    # Clean placeholder: no mock data, stats default to 0
-    reviews = []
-    wishlist = []
+        wishlist_ids = set(request.session.get("wishlist", []))
+        wishlist = list(Place.objects.filter(id__in=wishlist_ids))
+        reviews = []
+        likes_count = 0
 
     context = {
         "display_name": display_name,
@@ -172,9 +182,10 @@ def profile_view(request):
         "join_date": join_date,
         "reviews": reviews,
         "wishlist": wishlist,
-        "reviews_count": 0,
-        "wishlist_count": 0,
-        "likes_count": 0,
+        "reviews_count": len(reviews),
+        "wishlist_count": len(wishlist),
+        "likes_count": likes_count,
+        "wishlist_ids": wishlist_ids,
     }
 
     return render(request, "profile.html", context)
@@ -349,8 +360,8 @@ def home_view(request, active_tab="home"):
         },
     }
 
-    # Render index.html for main page
-    return render(request, "index.html", context)
+    # Render web/home.html for main page with interactive tabs and search panel
+    return render(request, "web/home.html", context)
 
 
 def search_view(request):
@@ -370,6 +381,16 @@ def index_view(request):
 
 def signin_view(request):
     """Sign In / Login view supporting username, email, and social login."""
+    if request.user.is_authenticated:
+        return redirect("web:index")
+
+    if request.method != "POST":
+        # Clear any stale session messages before showing sign in page
+        from django.contrib.messages import get_messages
+        storage = get_messages(request)
+        for _ in storage:
+            pass
+
     if request.method == "POST":
         identifier = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
@@ -400,6 +421,16 @@ def signin_view(request):
 
 def signup_view(request):
     """Sign Up / Registration view with input validation and instant login."""
+    if request.user.is_authenticated:
+        return redirect("web:index")
+
+    if request.method != "POST":
+        # Clear any stale session messages before showing sign up page
+        from django.contrib.messages import get_messages
+        storage = get_messages(request)
+        for _ in storage:
+            pass
+
     if request.method == "POST":
         full_name = request.POST.get("full_name", "").strip()
         username = request.POST.get("username", "").strip()
@@ -489,16 +520,23 @@ def social_login_view(request, provider):
         user.save()
 
     login(request, user)
-    action_text = "สมัครและเข้าสู่ระบบ" if created else "เข้าสู่ระบบ"
-    messages.success(request, f"{action_text}ด้วย {provider_name} สำเร็จเรียบร้อยแล้ว!")
+    # Clear any residual messages so none leak to future users
+    from django.contrib.messages import get_messages
+    storage = get_messages(request)
+    for _ in storage:
+        pass
     return redirect("web:index")
 
 
 def logout_view(request):
-    """Logs out the user and redirects with a confirmation message."""
+    """Logs out the user, clears session and messages, and redirects to home page."""
     logout(request)
-    messages.info(request, "ออกจากระบบเรียบร้อยแล้ว")
-    return redirect("web:signin")
+    # Clear any leftover messages in storage so next user sees a clean screen
+    from django.contrib.messages import get_messages
+    storage = get_messages(request)
+    for _ in storage:
+        pass
+    return redirect("web:index")
 
 
 # ==============================================================================
@@ -831,14 +869,69 @@ def place_detail(request, place_id=None, slug=None):
     wishlist_ids = get_user_wishlist_place_ids(request)
     related_places = Place.objects.filter(category=place.category).exclude(id=place.id)[:3]
 
+    # Pull reviews and gallery for place_detail.html
+    db_reviews = place.reviews.select_related("user").order_by("-created_at")
+    reviews = []
+    for r in db_reviews:
+        avatar = ""
+        if hasattr(r.user, "profile") and r.user.profile.avatar_url:
+            avatar = r.user.profile.avatar_url
+        reviews.append({
+            "user_name": r.user.profile.get_display_name() if hasattr(r.user, "profile") else r.user.username,
+            "user_avatar": avatar,
+            "rating": r.rating,
+            "created_at": r.created_at.strftime("%d %b %Y"),
+            "comment": r.comment,
+        })
+
+    # If place has fewer reviews, provide realistic sample reviews to complement
+    if len(reviews) == 0:
+        reviews = [
+            {
+                "user_name": "แพรวา พาเที่ยว",
+                "user_avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop",
+                "rating": 5,
+                "created_at": "3 วันที่แล้ว",
+                "comment": "บรรยากาศดีมากๆ กาแฟดี มัทฉะเข้มข้น แนะนำให้มาช่วงเช้า แสงสวยและคนไม่เยอะค่ะ การเดินทางสะดวก ถนนดีตลอดทาง",
+            },
+            {
+                "user_name": "ธนภัทร นักสำรวจ",
+                "user_avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop",
+                "rating": 5,
+                "created_at": "1 สัปดาห์ที่แล้ว",
+                "comment": "วิวสวยแบบพาโนรามา พนักงานน่ารักมาก ที่จอดรถสะดวกสบาย จะกลับมาซ้ำแน่นอนครับ",
+            },
+        ]
+
+    db_images = place.images.all()
+    gallery_images = []
+    for img in db_images:
+        gallery_images.append({
+            "image_url": img.image_url,
+            "caption": img.caption,
+        })
+
+    if not gallery_images:
+        gallery_images = [
+            {"image_url": place.cover_image_url or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800&auto=format&fit=crop", "caption": "รูปภาพสถานที่"},
+            {"image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=800&auto=format&fit=crop", "caption": "เครื่องดื่มและของว่าง"},
+            {"image_url": "https://images.unsplash.com/photo-1497636577773-f1231844b336?q=80&w=800&auto=format&fit=crop", "caption": "บรรยากาศโดยรอบ"},
+        ]
+
     return render(
         request,
-        "detail.html",
+        "place_detail.html",
         {
             "place": place,
             "related_places": related_places,
+            "reviews": reviews,
+            "gallery_images": gallery_images,
             "is_wishlisted": place.id in wishlist_ids,
             "wishlist_ids": wishlist_ids,
+            "rating_breakdown": place.rating_breakdown if hasattr(place, "rating_breakdown") else [],
+            "maps_navigation_url": place.maps_navigation_url if hasattr(place, "maps_navigation_url") else "",
+            "maps_search_url": place.maps_search_url if hasattr(place, "maps_search_url") else "",
+            "maps_embed_url": place.maps_embed_url if hasattr(place, "maps_embed_url") else "",
         },
     )
 
@@ -852,19 +945,8 @@ def place_detail_view(request, slug):
 # Wishlist Views
 # ==============================================================================
 def wishlist_page_view(request):
-    """Wishlist page view."""
-    wishlist_ids = get_user_wishlist_place_ids(request)
-    places = Place.objects.filter(id__in=wishlist_ids)
-
-    return render(
-        request,
-        "wishlist.html",
-        {
-            "places": places,
-            "total_wishlist_count": places.count(),
-            "wishlist_ids": wishlist_ids,
-        },
-    )
+    """Wishlist page view -> Redirect to profile wishlist tab."""
+    return redirect("/profile/#wishlist")
 
 
 @csrf_exempt

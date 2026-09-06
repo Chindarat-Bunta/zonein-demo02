@@ -539,7 +539,7 @@
     <!-- App Header -->
     <header class="app-bar">
         <div class="app-bar-inner">
-            <a href="{% url 'web:profile_settings' %}" class="brand-link">
+            <a href="{% url 'web:index' %}" class="brand-link" title="กลับสู่หน้าแรก">
                 <div class="brand-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -549,8 +549,19 @@
                 <div class="brand-text">Zone<span>In</span></div>
             </a>
             
-            <div class="header-chip">
-                <span>⚙️ ตั้งค่าโปรไฟล์</span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <a href="{% url 'web:index' %}" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; padding: 6px 12px; border-radius: var(--radius-pill); transition: all 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='var(--text-muted)'">
+                    <span>🏠 หน้าแรก</span>
+                </a>
+                <a href="/#search" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; padding: 6px 12px; border-radius: var(--radius-pill); transition: all 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='var(--text-muted)'">
+                    <span>🔍 ค้นหา</span>
+                </a>
+                <a href="{% url 'web:profile' %}" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; padding: 6px 12px; border-radius: var(--radius-pill); transition: all 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='var(--text-muted)'">
+                    <span>👤 โปรไฟล์</span>
+                </a>
+                <div class="header-chip">
+                    <span>⚙️ ตั้งค่า</span>
+                </div>
             </div>
         </div>
     </header>
