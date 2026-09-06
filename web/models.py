@@ -335,6 +335,11 @@ class Review(models.Model):
         return f"★ {self.rating} by {self.user.username} for {self.place.name}"
 
     @property
+    def stars_display(self):
+        """Display star rating representation (e.g. ★★★★★)"""
+        return "★" * self.rating
+
+    @property
     def author(self):
         return self.user
 
@@ -554,4 +559,3 @@ class Notification(models.Model):
 TravelPost = Place
 PostLike = PlaceLike
 PostComment = Comment
-
