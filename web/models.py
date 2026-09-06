@@ -559,4 +559,3 @@ class Notification(models.Model):
 TravelPost = Place
 PostLike = PlaceLike
 PostComment = Comment
-
