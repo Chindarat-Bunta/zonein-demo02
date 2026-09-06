@@ -11,6 +11,7 @@ urlpatterns = [
     path("search/", views.search_view, name="search"),
     path("explore/", views.search_view, name="explore"),
     path("wishlist/", views.wishlist_page_view, name="wishlist"),
+    path("places/", views.home_view, name="places_list"),
     path("signin/", views.signin_view, name="signin"),
     path("login/", views.signin_view, name="login"),
     path("signup/", views.signup_view, name="signup"),

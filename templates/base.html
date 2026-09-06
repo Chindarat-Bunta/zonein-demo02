@@ -37,40 +37,20 @@
                     <a href="{% url 'web:index' %}?category=travel" class="nav-link"><i class="fa-solid fa-mountain-sun"></i> ที่เที่ยว</a>
                 </nav>
                 <div class="header-actions">
-                    <a href="{% url 'web:wishlist' %}"
-                       class="btn-wishlist-header"
-                       id="header-wishlist-link"
-                       title="ดูสถานที่โปรดที่บันทึกไว้">
+                    <a href="{% url 'web:wishlist' %}" class="btn-wishlist-header" id="header-wishlist-btn" title="รายการโปรด">
                         <i class="fa-solid fa-heart"></i>
-                        <span class="header-wishlist-text">สถานที่โปรด</span>
-                        <span class="wishlist-badge" id="wishlist-header-count">0</span>
+                        <span class="wishlist-label">รายการโปรด</span>
+                        <span class="wishlist-badge" id="header-wishlist-count">0</span>
                     </a>
                 </div>
             </div>
         </header>
-        <!-- Toast Notification Container -->
-        <div id="toast-container" class="toast-container" aria-live="polite"></div>
         <!-- Main Content -->
         <main class="main-content">
             {% block content %}{% endblock %}
         </main>
-        <!-- Footer -->
-        <footer class="site-footer">
-            <div class="container footer-inner">
-                <div class="footer-brand">
-                    <div class="brand-logo">
-                        <div class="logo-icon">
-                            <i class="fa-solid fa-location-dot"></i>
-                        </div>
-                        <div class="logo-text">Zone<span>In</span></div>
-                    </div>
-                    <p>แพลตฟอร์มค้นหาและรีวิวสถานที่ท่องเที่ยวยอดนิยม โบราณสถาน คาเฟ่ ร้านอาหาร และที่พักในจังหวัดศรีสะเกษ</p>
-                </div>
-                <div class="footer-bottom">
-                    <p>© 2026 ZoneIn Review Platform. All rights reserved.</p>
-                </div>
-            </div>
-        </footer>
+        <!-- Toast Notification Container -->
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
         <!-- App Scripts -->
         <script src="{% static 'js/search-filter.js' %}"></script>
         <script src="{% static 'js/wishlist.js' %}"></script>
