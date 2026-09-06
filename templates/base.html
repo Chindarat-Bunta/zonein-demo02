@@ -37,15 +37,19 @@
                     <a href="{% url 'web:index' %}?category=travel" class="nav-link"><i class="fa-solid fa-mountain-sun"></i> ที่เที่ยว</a>
                 </nav>
                 <div class="header-actions">
-                    <a href="{% url 'admin:index' %}"
-                       class="btn-admin-pill"
-                       target="_blank"
-                       rel="noopener">
-                        <i class="fa-solid fa-gear"></i> ระบบจัดการ
+                    <a href="{% url 'web:wishlist' %}"
+                       class="btn-wishlist-header"
+                       id="header-wishlist-link"
+                       title="ดูสถานที่โปรดที่บันทึกไว้">
+                        <i class="fa-solid fa-heart"></i>
+                        <span class="header-wishlist-text">สถานที่โปรด</span>
+                        <span class="wishlist-badge" id="wishlist-header-count">0</span>
                     </a>
                 </div>
             </div>
         </header>
+        <!-- Toast Notification Container -->
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
         <!-- Main Content -->
         <main class="main-content">
             {% block content %}{% endblock %}
@@ -63,12 +67,13 @@
                     <p>แพลตฟอร์มค้นหาและรีวิวสถานที่ท่องเที่ยวยอดนิยม โบราณสถาน คาเฟ่ ร้านอาหาร และที่พักในจังหวัดศรีสะเกษ</p>
                 </div>
                 <div class="footer-bottom">
-                    <p>© 2026 ZoneIn Review Platform. All rights reserved. • Branch: <code>feature/search-filter</code></p>
+                    <p>© 2026 ZoneIn Review Platform. All rights reserved.</p>
                 </div>
             </div>
         </footer>
-        <!-- App Script -->
+        <!-- App Scripts -->
         <script src="{% static 'js/search-filter.js' %}"></script>
+        <script src="{% static 'js/wishlist.js' %}"></script>
         {% block extra_js %}{% endblock %}
     </body>
 </html>

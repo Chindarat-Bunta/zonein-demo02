@@ -82,9 +82,13 @@ def wishlist_toggle(request):
         message = "เพิ่มลงในรายการโปรดเรียบร้อยแล้ว"
 
     return JsonResponse({
+        "status": "success",
         "success": True,
+        "action": "added" if is_saved else "removed",
         "is_saved": is_saved,
+        "is_wishlisted": is_saved,
         "message": message,
         "place_id": place.id,
+        "total_count": Wishlist.objects.filter(user=user).count(),
         "total_wishlisted": place.wishlist_count,
     })

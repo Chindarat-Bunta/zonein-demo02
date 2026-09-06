@@ -158,11 +158,39 @@ class Place(models.Model):
         self.cover_image_url = val
 
     @property
+    def tag_list(self):
+        cat_display = dict(self.CATEGORY_CHOICES).get(self.category, "")
+        tags = [cat_display] if cat_display else []
+        if self.address:
+            tags.append(self.address.split()[-1])
+        return [t for t in tags if t]
+
+    @property
+    def tags(self):
+        return self.tag_list
+
+    @property
+    def is_featured(self):
+        return self.id is not None and self.id % 2 == 1
+
+    @property
+    def price_display(self):
+        return "฿฿"
+
+    @property
+    def price_level(self):
+        return 2
+
+    @property
     def average_rating(self):
         """Calculate average rating from reviews (returns 0.0 if no reviews)."""
         aggregate = self.reviews.aggregate(models.Avg("rating"))
         avg = aggregate.get("rating__avg")
         return round(float(avg), 1) if avg is not None else 0.0
+
+    @property
+    def rating(self):
+        return self.average_rating
 
     @property
     def review_count(self):
@@ -365,7 +393,12 @@ class Wishlist(models.Model):
     """User wishlist / bookmarks for places."""
 
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="wishlists", verbose_name="ผู้ใช้"
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="wishlists",
+        verbose_name="ผู้ใช้",
     )
     place = models.ForeignKey(
         Place,
@@ -378,11 +411,12 @@ class Wishlist(models.Model):
     class Meta:
         verbose_name = "รายการโปรด (Wishlist)"
         verbose_name_plural = "รายการโปรดทั้งหมด (Wishlists)"
-        unique_together = ("user", "place")
         ordering = ["-created_at"]
+        unique_together = ("user", "place")
 
     def __str__(self):
-        return f"{self.user.username} saved {self.place.name}"
+        username = self.user.username if self.user else "Guest"
+        return f"{username} saved {self.place.name}"
 
 
 # ==============================================================================
@@ -417,7 +451,7 @@ class Notification(models.Model):
     ตาราง Notification เก็บข้อมูลการแจ้งเตือน:
     - ใครเป็นคนกระทำ (actor / sender): ผู้ใช้ที่ทำแอคชัน (เช่น กดไลก์, เขียนรีวิว)
     - ผู้รับการแจ้งเตือน (recipient / user): เจ้าของโพสต์ที่ได้รับการแจ้งเตือน
-    - ทำแอคชันอะไร (action_type): ประเภทแอคชัน เช่น like (กดไลก์), review (รีวิว), comment (คอมเมนต์), follow (ติดตาม)
+    - ทำแอคชันอะไร (action_type): ประเภทแอคชัน เช่น like, review, comment, follow
     - กระทำกับโพสต์ไหน (post / place): โพสต์หรือสถานที่ที่เกี่ยวข้อง
     - ผู้ใช้กดอ่านหรือยัง (is_read): สถานะว่าเปิดอ่านหรือยัง (True/False)
     """
@@ -516,8 +550,6 @@ class Notification(models.Model):
         return f"{actor_display} มีการเคลื่อนไหวใหม่บน {post_name}"
 
 
-# ==============================================================================
 # Backward compatibility aliases
-# ==============================================================================
 TravelPost = Place
 PostLike = PlaceLike

@@ -22,6 +22,7 @@ class PlaceAdmin(admin.ModelAdmin):
     list_display = ("name", "category", "author", "address", "created_at")
     list_filter = ("category", "created_at")
     search_fields = ("name", "description", "address", "author__username")
+    prepopulated_fields = {"slug": ("name",)}
 
 
 @admin.register(PlaceImage)
@@ -47,6 +48,7 @@ class CommentAdmin(admin.ModelAdmin):
 @admin.register(Wishlist)
 class WishlistAdmin(admin.ModelAdmin):
     list_display = ("user", "place", "created_at")
+    list_filter = ("created_at",)
     search_fields = ("user__username", "place__name")
 
 

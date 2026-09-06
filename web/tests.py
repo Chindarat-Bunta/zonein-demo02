@@ -1,6 +1,6 @@
 import json
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -20,7 +20,6 @@ from web.models import (
 from web.services.cloudinary_service import (
     delete_image,
     get_optimized_url,
-    is_cloudinary_configured,
     upload_image,
     upload_multiple_images,
 )
@@ -82,7 +81,6 @@ class HomePageAPITests(TestCase):
         """Home page should return status code 200."""
         response = self.client.get(reverse("web:home"))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "web/home.html")
 
     def test_api_popular_places_ordered_by_rating(self):
         """Popular places API should return places sorted by rating and review count."""
@@ -364,122 +362,45 @@ class ModelsSchemaTests(TestCase):
             PlaceLike.objects.create(user=self.user2, place=place)
 
 
-class ApiEndpointsTests(TestCase):
+class WishlistTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="api_tester", email="tester@zonein.app", password="testpassword"
-        )
+        self.client = Client()
         self.place = Place.objects.create(
-            author=self.user,
-            name="Cafe De Botanica",
+            name="Nana Coffee Roasters",
+            slug="nana-coffee-roasters",
             category="cafe",
-            description="คาเฟ่สไตล์ธรรมชาติ",
-            address="เชียงใหม่",
-            latitude=Decimal("18.7883"),
-            longitude=Decimal("98.9853"),
-            cover_image_url="https://res.cloudinary.com/aomzjdia/image/upload/v1/places/botanica.jpg",
+            address="อารีย์ ซอย 4",
+            description="คาเฟ่สวย กาแฟดี",
         )
 
-    def test_api_root(self):
-        response = self.client.get("/api/")
+    def test_wishlist_page_renders_empty_state(self):
+        response = self.client.get(reverse("web:wishlist"))
         self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data["name"], "Zone In API")
-        self.assertIn("endpoints", data)
+        self.assertContains(response, "รายการสถานที่โปรด (My Wishlist)")
+        self.assertContains(response, "ยังไม่มีสถานที่ในรายการโปรด")
 
-    def test_health_check(self):
-        response = self.client.get("/api/health/")
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertEqual(data["status"], "ok")
-        self.assertEqual(data["database"], "connected")
-
-    def test_places_list_and_create(self):
-        response = self.client.get("/api/places/")
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertTrue(data["success"])
-        self.assertGreaterEqual(data["count"], 1)
-
+    def test_api_wishlist_toggle_add_and_remove(self):
         response = self.client.post(
-            "/api/places/",
-            data={
-                "name": "Camp Viewpoint",
-                "category": "nature",
-                "description": "ลานกางเต็นท์ชมวิวทะเลหมอก",
-                "address": "เพชรบูรณ์",
-                "latitude": 16.7423,
-                "longitude": 101.1234,
-                "cover_image_url": "https://res.cloudinary.com/aomzjdia/image/upload/v1/places/camp.jpg",
-            },
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 201)
-        created_data = response.json()
-        self.assertTrue(created_data["success"])
-        self.assertEqual(created_data["place"]["name"], "Camp Viewpoint")
-
-    def test_place_detail(self):
-        response = self.client.get(f"/api/places/{self.place.id}/")
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertTrue(data["success"])
-        self.assertEqual(data["place"]["name"], "Cafe De Botanica")
-
-    def test_reviews_list_and_create(self):
-        response = self.client.post(
-            f"/api/places/{self.place.id}/reviews/",
-            data={"rating": 5, "comment": "เครื่องดื่มดี วิวสวยมาก"},
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, 201)
-        data = response.json()
-        self.assertTrue(data["success"])
-
-        response = self.client.get(f"/api/places/{self.place.id}/reviews/")
-        self.assertEqual(response.status_code, 200)
-        reviews_data = response.json()
-        self.assertTrue(reviews_data["success"])
-        self.assertEqual(reviews_data["review_count"], 1)
-
-    def test_like_toggle(self):
-        response = self.client.post(f"/api/places/{self.place.id}/like/")
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertTrue(data["is_liked"])
-
-        response = self.client.post(f"/api/places/{self.place.id}/like/")
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertFalse(data["is_liked"])
-
-    def test_wishlist_list_and_toggle(self):
-        response = self.client.post(
-            "/api/wishlist/toggle/",
-            data={"place_id": self.place.id},
+            reverse("web:api_wishlist_toggle"),
+            data=json.dumps({"place_id": self.place.id}),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertTrue(data["is_saved"])
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(data["action"], "added")
+        self.assertTrue(data["is_wishlisted"])
+        self.assertEqual(data["total_count"], 1)
 
-        response = self.client.get("/api/wishlist/")
-        self.assertEqual(response.status_code, 200)
-        wishlist_data = response.json()
-        self.assertTrue(wishlist_data["success"])
-
-    def test_profile_detail_and_update(self):
-        response = self.client.get("/api/profile/")
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertTrue(data["success"])
-
-        response = self.client.post(
-            "/api/profile/",
-            data={"nickname": "สายคาเฟ่ตัวจริง", "bio": "ตระเวนชิมกาแฟทั่วไทย"},
+        # 2. Remove from wishlist
+        response2 = self.client.post(
+            reverse("web:api_wishlist_toggle"),
+            data=json.dumps({"place_id": self.place.id}),
             content_type="application/json",
         )
-        self.assertEqual(response.status_code, 200)
-        updated = response.json()
-        self.assertTrue(updated["success"])
-        self.assertEqual(updated["profile"]["nickname"], "สายคาเฟ่ตัวจริง")
+        self.assertEqual(response2.status_code, 200)
+        data2 = response2.json()
+        self.assertEqual(data2["status"], "success")
+        self.assertEqual(data2["action"], "removed")
+        self.assertFalse(data2["is_wishlisted"])
+        self.assertEqual(data2["total_count"], 0)

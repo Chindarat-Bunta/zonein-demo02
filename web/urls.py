@@ -10,14 +10,14 @@ urlpatterns = [
     path("feed/", views.home_view, name="feed"),
     path("search/", views.search_view, name="search"),
     path("explore/", views.search_view, name="explore"),
+    path("wishlist/", views.wishlist_page_view, name="wishlist"),
     path("signin/", views.signin_view, name="signin"),
     path("login/", views.signin_view, name="login"),
     path("signup/", views.signup_view, name="signup"),
     path("logout/", views.logout_view, name="logout"),
     path("social-login/<str:provider>/", views.social_login_view, name="social_login"),
     # REST APIs
-    path("api/", include("web.api.urls")),
-    # Feed & Review APIs
+    path("api/places/", views.api_places_view, name="api_places"),
     path("api/places/popular/", views.api_popular_places, name="api_popular_places"),
     path("api/places/<int:place_id>/", views.api_place_detail, name="api_place_detail"),
     path("api/reviews/recent/", views.api_recent_reviews, name="api_recent_reviews"),
@@ -41,7 +41,13 @@ urlpatterns = [
         views.api_delete_review,
         name="api_delete_review",
     ),
+    path("api/wishlist/", views.api_wishlist_list_view, name="api_wishlist_list"),
+    path(
+        "api/wishlist/toggle/",
+        views.api_wishlist_toggle_view,
+        name="api_wishlist_toggle",
+    ),
     # Place Details
-    path("places/<int:place_id>/", views.place_detail, name="place_detail"),
-    path("places/<slug:slug>/", views.place_detail, name="place_detail_slug"),
+    path("places/<int:place_id>/", views.place_detail, name="place_detail_id"),
+    path("places/<slug:slug>/", views.place_detail, name="place_detail"),
 ]
