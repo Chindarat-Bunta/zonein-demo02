@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}สถานที่โปรดของฉัน (Wishlist) - ZoneIn{% endblock %}
+{% block content %}
+    <div class="container wishlist-container">
+        <!-- Header Section -->
+        <div class="wishlist-header">
+            <div class="wishlist-title-wrap">
+                <div class="wishlist-icon-badge">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+                <div>
+                    <h1 class="wishlist-page-title">รายการสถานที่โปรด (My Wishlist)</h1>
+                    <p class="wishlist-page-desc">สถานที่ คาเฟ่ ร้านอาหาร และที่พักที่คุณบันทึกไว้สำหรับทริปต่อไป</p>
+                </div>
+            </div>
+            <div class="wishlist-stats-pill">
+                บันทึกไว้ <strong id="wishlist-total-display">{{ total_wishlist_count|default:0 }}</strong> แห่ง
+            </div>
+        </div>
+        <!-- Wishlist Items Grid Container -->
+        <section class="wishlist-content-section">
+            <!-- Wishlist Grid -->
+            <div class="places-grid wishlist-grid" id="wishlist-grid">
+                {% for place in places %}
+                    {% include 'components/place_card.html' with place=place is_wishlisted=True %}
+                {% endfor %}
+            </div>
+            <!-- Wishlist Empty State -->
+            <div class="empty-state-card wishlist-empty-state {% if places %}hidden{% endif %}"
+                 id="wishlist-empty-state">
+                <div class="empty-icon-bubble heart-empty">
+                    <i class="fa-regular fa-heart"></i>
+                </div>
+                <h3 class="empty-title">ยังไม่มีสถานที่ในรายการโปรด</h3>
+                <p class="empty-description">
+                    คุณยังไม่ได้บันทึกสถานที่ใดๆ กดไอคอนรูปหัวใจ <i class="fa-solid fa-heart text-pink"></i> บนการ์ดสถานที่ที่คุณชื่นชอบเพื่อบันทึกไว้ดูภายหลัง
+                </p>
+                <div class="empty-action">
+                    <a href="{% url 'web:index' %}" class="btn-empty-reset">
+                        <i class="fa-solid fa-compass"></i> สำรวจสถานที่ยอดนิยม
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}

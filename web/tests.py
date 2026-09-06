@@ -1,414 +1,487 @@
+import json
+from decimal import Decimal
+from unittest.mock import patch
+
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import IntegrityError
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from .models import TravelPost
+from web.models import (
+    Comment,
+    Place,
+    PlaceImage,
+    PlaceLike,
+    Review,
+    UserProfile,
+    Wishlist,
+)
+from web.services.cloudinary_service import (
+    delete_image,
+    get_optimized_url,
+    upload_image,
+    upload_multiple_images,
+)
 
 
-class TravelPostModelTests(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(username="traveler", password="password123")
+class ProfileSettingsTests(TestCase):
+    """
+    Tests for Profile Settings screen, Popup modal, and Cloudinary upload.
+    """
 
-    def test_rating_validators_on_model(self):
-        """TravelPost model validation should reject rating < 1 or > 5."""
-        invalid_low = TravelPost(author=self.user, place_name="ดอยอินทนนท์", rating=0)
-        with self.assertRaises(ValidationError):
-            invalid_low.full_clean()
-
-        invalid_high = TravelPost(author=self.user, place_name="ดอยอินทนนท์", rating=6)
-        with self.assertRaises(ValidationError):
-            invalid_high.full_clean()
-
-        valid_post = TravelPost(author=self.user, place_name="ดอยอินทนนท์", rating=5)
-        valid_post.full_clean()  # should not raise
-
-
-class TravelPostAPITests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="traveler", password="password123")
+        self.user = User.objects.create_user(
+            username="testuser",
+            email="testuser@zonein.app",
+            password="password123",
+            first_name="สมชาย"
+        )
+        self.profile = UserProfile.objects.get(user=self.user)
 
-    def test_create_travel_post_with_place_tag_and_rating(self):
-        """Create a travel post with place tag, location, 1-5 star rating, and review text."""
+    def test_profile_settings_view_get(self):
+        response = self.client.get("/profile/settings/")
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "profile_settings.html")
+        self.assertContains(response, "แก้ไขข้อมูลส่วนตัว")
+        self.assertContains(response, "ชื่อเล่น / ชื่อที่แสดง")
+        self.assertContains(response, "ข้อความ Bio แนะนำตัว")
+
+    @patch("web.services.cloudinary_service.cloudinary.uploader.upload")
+    def test_profile_settings_post_with_avatar(self, mock_upload):
+        mock_upload.return_value = {
+            "secure_url": "https://res.cloudinary.com/zonein/image/upload/v123/avatar.jpg",
+            "public_id": "zonein/avatars/avatar_123",
+            "format": "jpg",
+            "width": 400,
+            "height": 400,
+        }
+
+        self.client.force_login(self.user)
+        test_avatar = SimpleUploadedFile("avatar.jpg", b"mock image bytes", content_type="image/jpeg")
+
+        response = self.client.post("/profile/settings/", {
+            "nickname": "พี่สมชาย สายคาเฟ่",
+            "username": "somchai_zonein",
+            "bio": "ชอบเดินทางค้นหาคาเฟ่ลับ ถ่ายรูปวิวธรรมชาติ",
+            "avatar": test_avatar,
+        })
+
+        self.assertEqual(response.status_code, 302)
+        
+        # Verify in database
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.nickname, "พี่สมชาย สายคาเฟ่")
+        self.assertEqual(self.profile.bio, "ชอบเดินทางค้นหาคาเฟ่ลับ ถ่ายรูปวิวธรรมชาติ")
+        self.assertEqual(self.profile.avatar_url, "https://res.cloudinary.com/zonein/image/upload/v123/avatar.jpg")
+        self.assertEqual(self.profile.avatar_public_id, "zonein/avatars/avatar_123")
+        
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, "somchai_zonein")
+
+    @patch("web.services.cloudinary_service.cloudinary.uploader.upload")
+    def test_update_profile_api(self, mock_upload):
+        mock_upload.return_value = {
+            "secure_url": "https://res.cloudinary.com/zonein/image/upload/v123/api_avatar.jpg",
+            "public_id": "zonein/avatars/api_avatar",
+            "format": "png",
+        }
+
+        self.client.force_login(self.user)
+        test_avatar = SimpleUploadedFile("avatar.png", b"mock bytes", content_type="image/png")
+
+        response = self.client.post("/api/profile/update/", {
+            "nickname": "นกน้อยพาเที่ยว",
+            "username": "noknoi_trip",
+            "bio": "แชร์พิกัดแคมป์ปิ้งวิวสวย",
+            "avatar": test_avatar,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data["success"])
+        self.assertEqual(data["nickname"], "นกน้อยพาเที่ยว")
+        self.assertEqual(data["avatar_url"], "https://res.cloudinary.com/zonein/image/upload/v123/api_avatar.jpg")
+
+
+class PlaceModelTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", password="password123"
+        )
+        self.place = Place.objects.create(
+            author=self.user, name="สวนเบญจกิติ", address="กรุงเทพฯ"
+        )
+
+    def test_average_rating_and_reviews_count(self):
+        """Average rating should compute correctly and reviews count match."""
+        self.assertEqual(self.place.average_rating, 0.0)
+        self.assertEqual(self.place.reviews_count, 0)
+
+        Review.objects.create(
+            place=self.place, user=self.user, rating=5, comment="ยอดเยี่ยม"
+        )
+        Review.objects.create(
+            place=self.place, user=self.user, rating=3, comment="พอใช้"
+        )
+
+        self.assertEqual(self.place.reviews_count, 2)
+        self.assertEqual(self.place.average_rating, 4.0)
+
+
+class HomePageAPITests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user1 = User.objects.create_user(
+            username="somchai", password="password123"
+        )
+        self.user2 = User.objects.create_user(username="ploy", password="password123")
+
+        # Create 2 places
+        self.place1 = Place.objects.create(
+            author=self.user1, name="ดอยอินทนนท์", address="เชียงใหม่"
+        )
+        self.place2 = Place.objects.create(
+            author=self.user2, name="หาดป่าตอง", address="ภูเก็ต"
+        )
+
+        # Create reviews with distinct ratings
+        Review.objects.create(
+            place=self.place1, user=self.user1, rating=5, comment="หนาวจับใจ"
+        )
+        Review.objects.create(
+            place=self.place1, user=self.user2, rating=5, comment="วิวอลังการ"
+        )
+        Review.objects.create(
+            place=self.place2, user=self.user1, rating=4, comment="หาดทรายสวย"
+        )
+
+    def test_home_page_renders_successfully(self):
+        """Home page should return status code 200."""
+        response = self.client.get(reverse("web:home"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_api_popular_places_ordered_by_rating(self):
+        """Popular places API should return places sorted by rating and review count."""
+        response = self.client.get(reverse("web:api_popular_places") + "?limit=10")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("places", data)
+        self.assertTrue(len(data["places"]) >= 2)
+
+        # Place 1 (rating 5.0) should come before Place 2 (rating 4.0)
+        first_place = data["places"][0]
+        self.assertEqual(first_place["name"], "ดอยอินทนนท์")
+        self.assertEqual(first_place["average_rating"], 5.0)
+        self.assertEqual(first_place["reviews_count"], 2)
+
+    def test_api_recent_reviews_ordered_by_date(self):
+        """Recent reviews API should return reviews in reverse chronological order."""
+        response = self.client.get(reverse("web:api_recent_reviews") + "?limit=10")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("reviews", data)
+        self.assertTrue(len(data["reviews"]) >= 3)
+
+        first_review = data["reviews"][0]
+        self.assertIn("author", first_review)
+        self.assertIn("place", first_review)
+        self.assertIn("rating", first_review)
+        self.assertIn("content", first_review)
+
+    def test_api_place_detail(self):
+        """Place detail API should return full info for a specific place."""
+        response = self.client.get(
+            reverse("web:api_place_detail", args=[self.place1.id])
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["name"], "ดอยอินทนนท์")
+        self.assertEqual(data["average_rating"], 5.0)
+
+    def test_api_add_comment(self):
+        """Adding a comment to a review should succeed."""
+        review = Review.objects.first()
         response = self.client.post(
-            reverse("web:api_posts"),
-            data={
-                "place_name": "สวนป่าเบญจกิติ",
-                "category": "ธรรมชาติ & สวนสาธารณะ",
-                "location": "กรุงเทพฯ",
-                "rating": 5,
-                "content": "วิวพระอาทิตย์ตกสวยมาก Skywalk เดินเพลิน",
-                "image_url": "https://images.unsplash.com/photo-1596422846543-75c6fc197f07",
-            },
+            reverse("web:api_add_comment", args=[review.id]),
+            data=json.dumps({"content": "สวยมากครับ!", "username": "somchai"}),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
         data = response.json()
-        self.assertEqual(data["post"]["place_name"], "สวนป่าเบญจกิติ")
-        self.assertEqual(data["post"]["location"], "กรุงเทพฯ")
-        self.assertEqual(data["post"]["rating"], 5)
+        self.assertTrue(data["success"])
+        self.assertEqual(data["comment"]["content"], "สวยมากครับ!")
 
-        # Verify post is saved in DB
-        post = TravelPost.objects.get(pk=data["post"]["id"])
-        self.assertEqual(post.place_name, "สวนป่าเบญจกิติ")
-        self.assertEqual(post.rating, 5)
-
-    def test_rating_out_of_range_rejected(self):
-        """Rating outside 1-5 should return 400."""
-        for invalid_rating in [0, 6, -1, 10, "invalid"]:
-            res = self.client.post(
-                reverse("web:api_posts"),
-                data={"place_name": "ผาเดียวดาย", "rating": invalid_rating, "content": "Test"},
-                content_type="application/json",
-            )
-            self.assertEqual(res.status_code, 400)
-
-    def test_edit_travel_post(self):
-        """Can edit travel post place name, location, rating, and review text."""
-        post = TravelPost.objects.create(
-            author=self.user,
-            place_name="หาดไร่เลย์",
-            category="ทะเล",
-            location="กระบี่",
-            rating=4,
-            content="หาดสวย",
-        )
-
-        res_ok = self.client.put(
-            reverse("web:api_post_detail", args=[post.id]),
-            data={
-                "place_name": "หาดไร่เลย์วิวพระอาทิตย์ตก",
-                "location": "อ.เมือง จ.กระบี่",
-                "rating": 5,
-                "content": "อัปเดตดาวเป็น 5 ดาว วิวสุดยอดมาก",
-            },
+    def test_api_edit_review(self):
+        """Editing review content and rating should succeed."""
+        review = Review.objects.first()
+        response = self.client.post(
+            reverse("web:api_edit_review", args=[review.id]),
+            data=json.dumps({"content": "แก้ไขข้อความรีวิวใหม่", "rating": 4}),
             content_type="application/json",
         )
-        self.assertEqual(res_ok.status_code, 200)
-        post.refresh_from_db()
-        self.assertEqual(post.place_name, "หาดไร่เลย์วิวพระอาทิตย์ตก")
-        self.assertEqual(post.location, "อ.เมือง จ.กระบี่")
-        self.assertEqual(post.rating, 5)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data["success"])
+        review.refresh_from_db()
+        self.assertEqual(review.content, "แก้ไขข้อความรีวิวใหม่")
+        self.assertEqual(review.rating, 4)
 
-    def test_delete_travel_post(self):
-        """Can delete travel post."""
-        post = TravelPost.objects.create(
-            author=self.user,
-            place_name="คาเฟ่ริมน้ำ",
-            rating=5,
-            content="ชิลล์มาก",
+    def test_api_delete_review(self):
+        """Deleting a review should remove it from the database."""
+        review = Review.objects.first()
+        review_id = review.id
+        response = self.client.post(reverse("web:api_delete_review", args=[review_id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Review.objects.filter(id=review_id).exists())
+
+
+class CloudinaryServiceTests(TestCase):
+    """
+    Test suite for central Cloudinary upload service.
+    """
+
+    @patch("cloudinary.uploader.upload")
+    def test_upload_image_success(self, mock_upload):
+        mock_upload.return_value = {
+            "secure_url": "https://res.cloudinary.com/zonein/image/upload/v12345/sample.jpg",
+            "public_id": "zonein/sample",
+            "format": "jpg",
+            "width": 800,
+            "height": 600,
+            "bytes": 102400,
+            "created_at": "2026-09-05T12:00:00Z",
+        }
+
+        fake_file = b"mock image content"
+        result = upload_image(fake_file, folder="zonein/reviews")
+
+        self.assertTrue(result["success"])
+        self.assertEqual(
+            result["url"],
+            "https://res.cloudinary.com/zonein/image/upload/v12345/sample.jpg",
+        )
+        self.assertEqual(result["public_id"], "zonein/sample")
+        self.assertEqual(result["format"], "jpg")
+        mock_upload.assert_called_once()
+
+    @patch("cloudinary.uploader.upload")
+    def test_upload_image_failure_handled(self, mock_upload):
+        mock_upload.side_effect = Exception("Cloudinary connection failed")
+
+        result = upload_image("invalid_path.jpg")
+
+        self.assertFalse(result["success"])
+        self.assertIn("Cloudinary connection failed", result["error"])
+        self.assertIsNone(result["url"])
+
+    @patch("cloudinary.uploader.destroy")
+    def test_delete_image_success(self, mock_destroy):
+        mock_destroy.return_value = {"result": "ok"}
+
+        result = delete_image("zonein/sample_image")
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["result"], "ok")
+        mock_destroy.assert_called_once_with(
+            "zonein/sample_image", resource_type="image"
         )
 
-        res_del = self.client.delete(reverse("web:api_post_detail", args=[post.id]))
-        self.assertEqual(res_del.status_code, 200)
-        self.assertFalse(TravelPost.objects.filter(pk=post.id).exists())
+    def test_delete_image_empty_id(self):
+        result = delete_image("")
+        self.assertFalse(result["success"])
+        self.assertIn("public_id is required", result["error"])
 
-    def test_xss_sanitization_in_post_content(self):
-        """Script tags in place name and content must be escaped."""
-        res = self.client.post(
-            reverse("web:api_posts"),
-            data={
-                "place_name": "<script>alert('place')</script>สวนสาธารณะ",
-                "rating": 5,
-                "content": "<script>alert('XSS')</script><b>Bold</b>",
-            },
-            content_type="application/json",
+    def test_get_optimized_url(self):
+        url = get_optimized_url("zonein/cafe_1", width=600, height=400, crop="fill")
+        self.assertIn("zonein/cafe_1", url)
+        self.assertIn("w_600", url)
+        self.assertIn("h_400", url)
+        self.assertIn("c_fill", url)
+
+    def test_get_optimized_url_empty_id(self):
+        url = get_optimized_url("")
+        self.assertEqual(url, "")
+
+    @patch("web.services.cloudinary_service.upload_image")
+    def test_upload_multiple_images(self, mock_upload):
+        mock_upload.side_effect = [
+            {"success": True, "url": "https://res.cloudinary.com/zonein/img1.jpg"},
+            {"success": True, "url": "https://res.cloudinary.com/zonein/img2.jpg"},
+        ]
+
+        files = [b"file1", b"file2"]
+        results = upload_multiple_images(files, folder="zonein/gallery")
+
+        self.assertEqual(len(results), 2)
+        self.assertTrue(results[0]["success"])
+        self.assertTrue(results[1]["success"])
+        self.assertEqual(mock_upload.call_count, 2)
+
+
+class ModelsSchemaTests(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(
+            username="testuser1",
+            email="testuser1@zonein.app",
+            password="password123",
+            first_name="สมชาย",
         )
-        self.assertEqual(res.status_code, 201)
-        post_data = res.json()["post"]
-        self.assertNotIn("<script>", post_data["place_name"])
-        self.assertIn("&lt;script&gt;", post_data["place_name"])
-        self.assertNotIn("<script>", post_data["content"])
-
-    def test_get_posts_list_and_category_filter(self):
-        """GET /api/posts/ should list posts and support category filtering."""
-        TravelPost.objects.create(
-            author=self.user,
-            place_name="ดอยหลวงเชียงดาว",
-            category="แคมป์ปิ้ง & ภูเขา",
-            location="เชียงใหม่",
-            rating=5,
-        )
-        TravelPost.objects.create(
-            author=self.user,
-            place_name="เกาะพีพี",
-            category="ทะเล & ชายหาด",
-            location="กระบี่",
-            rating=5,
+        self.user2 = User.objects.create_user(
+            username="testuser2",
+            email="testuser2@zonein.app",
+            password="password123",
+            first_name="วิภาดา",
         )
 
-        # All posts
-        res_all = self.client.get(reverse("web:api_posts"))
-        self.assertEqual(res_all.status_code, 200)
-        self.assertEqual(len(res_all.json()["results"]), 2)
+    def test_user_profile_created_via_signal(self):
+        """Test that UserProfile is automatically created when User is saved."""
+        self.assertTrue(hasattr(self.user1, "profile"))
+        profile = self.user1.profile
+        profile.nickname = "พี่สมชาย"
+        profile.bio = "ชอบเดินทางและดื่มกาแฟคั่วเข้ม"
+        profile.avatar_url = (
+            "https://res.cloudinary.com/aomzjdia/image/upload/v1/avatars/somchai.jpg"
+        )
+        profile.save()
 
-        # Filter by category
-        res_filtered = self.client.get(reverse("web:api_posts"), {"category": "แคมป์ปิ้ง & ภูเขา"})
-        self.assertEqual(res_filtered.status_code, 200)
-        self.assertEqual(len(res_filtered.json()["results"]), 1)
-        self.assertEqual(res_filtered.json()["results"][0]["place_name"], "ดอยหลวงเชียงดาว")
+        self.assertEqual(profile.get_display_name(), "พี่สมชาย")
+        self.assertIn("avatars/somchai.jpg", profile.avatar_url)
+        self.assertEqual(profile.bio, "ชอบเดินทางและดื่มกาแฟคั่วเข้ม")
+
+    def test_place_creation_with_maps_coordinates(self):
+        """Test Place creation with Google Maps coordinates, category and cover image."""
+        place = Place.objects.create(
+            author=self.user1,
+            name="The Glasshouse Cafe & Co",
+            category="cafe",
+            description="คาเฟ่บรรยากาศอบอุ่นกลางสวน มีกาแฟ Specialty",
+            address="123 ถนนสุขุมวิท กรุงเทพฯ",
+            latitude=Decimal("13.7563310"),
+            longitude=Decimal("100.5017650"),
+            cover_image_url="https://res.cloudinary.com/aomzjdia/image/upload/v1/places/glasshouse.jpg",
+        )
+
+        self.assertEqual(place.slug, "the-glasshouse-cafe-co")
+        self.assertEqual(place.average_rating, 0.0)
+        self.assertEqual(place.review_count, 0)
+        self.assertEqual(place.likes_count, 0)
+        self.assertEqual(place.wishlist_count, 0)
+        self.assertEqual(str(place), "The Glasshouse Cafe & Co (คาเฟ่ (Cafe))")
+
+    def test_place_images_gallery(self):
+        """Test adding multiple gallery images to a Place."""
+        place = Place.objects.create(
+            author=self.user1, name="Camping Hilltop", category="nature"
+        )
+        img1 = PlaceImage.objects.create(
+            place=place,
+            image_url="https://res.cloudinary.com/aomzjdia/image/upload/v1/places/camp1.jpg",
+            caption="วิวหมอกยามเช้า",
+        )
+        img2 = PlaceImage.objects.create(
+            place=place,
+            image_url="https://res.cloudinary.com/aomzjdia/image/upload/v1/places/camp2.jpg",
+            caption="ลานกางเต็นท์ริมน้ำ",
+        )
+
+        self.assertEqual(place.images.count(), 2)
+        self.assertEqual(img1.caption, "วิวหมอกยามเช้า")
+
+    def test_review_and_average_rating(self):
+        """Test rating and review calculations on a Place."""
+        place = Place.objects.create(
+            author=self.user1, name="Artisan Bakery", category="cafe"
+        )
+
+        Review.objects.create(
+            place=place, user=self.user1, rating=5, comment="ขนมอบสดใหม่ อร่อยมาก!"
+        )
+
+        Review.objects.create(
+            place=place, user=self.user2, rating=4, comment="กาแฟรสชาติดี บรรยากาศเงียบสงบ"
+        )
+
+        self.assertEqual(place.review_count, 2)
+        self.assertEqual(place.average_rating, 4.5)
+
+    def test_review_rating_validation(self):
+        """Test that review rating must be between 1 and 5 stars."""
+        place = Place.objects.create(
+            author=self.user1, name="Test Place", category="cafe"
+        )
+        invalid_review = Review(
+            place=place, user=self.user1, rating=6, comment="Invalid rating test"
+        )
+        with self.assertRaises(ValidationError):
+            invalid_review.full_clean()
+
+    def test_wishlist_unique_constraint(self):
+        """Test that a user cannot add the same place to wishlist twice."""
+        place = Place.objects.create(
+            author=self.user1, name="Secret Beach Villa", category="hotel"
+        )
+
+        Wishlist.objects.create(user=self.user1, place=place)
+        self.assertEqual(place.wishlist_count, 1)
+
+        with self.assertRaises(IntegrityError):
+            Wishlist.objects.create(user=self.user1, place=place)
+
+    def test_placelike_unique_constraint(self):
+        """Test that a user cannot like the same place twice."""
+        place = Place.objects.create(
+            author=self.user1, name="Sunset Viewpoint", category="travel"
+        )
+
+        PlaceLike.objects.create(user=self.user2, place=place)
+        self.assertEqual(place.likes_count, 1)
+
+        with self.assertRaises(IntegrityError):
+            PlaceLike.objects.create(user=self.user2, place=place)
 
 
-class PostLikeAPITests(TestCase):
+class WishlistTestCase(TestCase):
     def setUp(self):
         self.client = Client()
-        self.author = User.objects.create_user(username="author_traveler", password="password123")
-        self.user1 = User.objects.create_user(username="user1_liker", password="password123")
-        self.user2 = User.objects.create_user(username="user2_liker", password="password123")
-        self.post = TravelPost.objects.create(
-            author=self.author,
-            place_name="ดอยอินทนนท์",
-            location="เชียงใหม่",
-            rating=5,
-            content="ยอดดอยหนาวมาก",
+        self.place = Place.objects.create(
+            name="Nana Coffee Roasters",
+            slug="nana-coffee-roasters",
+            category="cafe",
+            address="อารีย์ ซอย 4",
+            description="คาเฟ่สวย กาแฟดี",
         )
 
-    def test_default_user_like_flow(self):
-        """Unauthenticated user in demo uses default traveler user to like seamlessly."""
-        res = self.client.post(reverse("web:api_post_like", args=[self.post.id]))
-        self.assertEqual(res.status_code, 200)
-        self.assertTrue(res.json()["liked"])
-        self.assertEqual(res.json()["likes_count"], 1)
+    def test_wishlist_page_renders_empty_state(self):
+        response = self.client.get(reverse("web:wishlist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "รายการสถานที่โปรด (My Wishlist)")
+        self.assertContains(response, "ยังไม่มีสถานที่ในรายการโปรด")
 
-
-    def test_toggle_like_and_unlike(self):
-        """Authenticated user can toggle like and unlike on a post."""
-        self.client.force_login(self.user1)
-
-        # 1. First click: Like
-        res_like = self.client.post(reverse("web:api_post_like", args=[self.post.id]))
-        self.assertEqual(res_like.status_code, 200)
-        data_like = res_like.json()
-        self.assertTrue(data_like["liked"])
-        self.assertEqual(data_like["likes_count"], 1)
-
-        self.post.refresh_from_db()
-        self.assertEqual(self.post.likes_count, 1)
-
-        # 2. Second click: Unlike (Toggle)
-        res_unlike = self.client.post(reverse("web:api_post_like", args=[self.post.id]))
-        self.assertEqual(res_unlike.status_code, 200)
-        data_unlike = res_unlike.json()
-        self.assertFalse(data_unlike["liked"])
-        self.assertEqual(data_unlike["likes_count"], 0)
-
-        self.post.refresh_from_db()
-        self.assertEqual(self.post.likes_count, 0)
-
-    def test_explicit_delete_unlike(self):
-        """DELETE /api/posts/<id>/like/ explicitly unlikes a post."""
-        self.client.force_login(self.user1)
-        # Like first
-        self.client.post(reverse("web:api_post_like", args=[self.post.id]))
-
-        # Explicit DELETE
-        res_del = self.client.delete(reverse("web:api_post_like", args=[self.post.id]))
-        self.assertEqual(res_del.status_code, 200)
-        self.assertFalse(res_del.json()["liked"])
-        self.assertEqual(res_del.json()["likes_count"], 0)
-
-    def test_multiple_users_like_same_post(self):
-        """Multiple distinct users liking a post increases likes_count accurately."""
-        # User 1 likes
-        self.client.force_login(self.user1)
-        res1 = self.client.post(reverse("web:api_post_like", args=[self.post.id]))
-        self.assertEqual(res1.json()["likes_count"], 1)
-
-        # User 2 likes
-        self.client.force_login(self.user2)
-        res2 = self.client.post(reverse("web:api_post_like", args=[self.post.id]))
-        self.assertEqual(res2.json()["likes_count"], 2)
-
-        self.post.refresh_from_db()
-        self.assertEqual(self.post.likes_count, 2)
-
-    def test_get_post_likes_list(self):
-        """GET /api/posts/<id>/likes/ returns the list of likers and count."""
-        self.client.force_login(self.user1)
-        self.client.post(reverse("web:api_post_like", args=[self.post.id]))
-
-        self.client.force_login(self.user2)
-        self.client.post(reverse("web:api_post_like", args=[self.post.id]))
-
-        res = self.client.get(reverse("web:api_post_likes", args=[self.post.id]))
-        self.assertEqual(res.status_code, 200)
-        data = res.json()
-        self.assertEqual(data["likes_count"], 2)
-        self.assertEqual(len(data["users"]), 2)
-        usernames = [u["username"] for u in data["users"]]
-        self.assertIn("user1_liker", usernames)
-        self.assertIn("user2_liker", usernames)
-        self.assertTrue(data["is_liked"])  # user2 is logged in
-
-    def test_post_feed_serialization_includes_like_state(self):
-        """GET /api/posts/ includes likes_count and is_liked status."""
-        self.client.force_login(self.user1)
-        self.client.post(reverse("web:api_post_like", args=[self.post.id]))
-
-        # Check feed as user1 (liked = True)
-        res_user1 = self.client.get(reverse("web:api_posts"))
-        self.assertEqual(res_user1.status_code, 200)
-        post_item = res_user1.json()["results"][0]
-        self.assertEqual(post_item["likes_count"], 1)
-        self.assertTrue(post_item["is_liked"])
-
-        # Check feed as user2 (liked = False)
-        self.client.force_login(self.user2)
-        res_user2 = self.client.get(reverse("web:api_posts"))
-        post_item2 = res_user2.json()["results"][0]
-        self.assertEqual(post_item2["likes_count"], 1)
-        self.assertFalse(post_item2["is_liked"])
-
-
-class PostCommentAPITests(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.author = User.objects.create_user(username="author_user", password="password123")
-        self.commenter1 = User.objects.create_user(username="commenter_one", password="password123")
-        self.commenter2 = User.objects.create_user(username="commenter_two", password="password123")
-        self.post = TravelPost.objects.create(
-            author=self.author,
-            place_name="ดอยม่อนแจ่ม",
-            rating=5,
-            content="บรรยากาศดีมาก อากาศเย็นสบาย",
-        )
-
-    def test_add_comment_to_post(self):
-        """POST /api/posts/<id>/comments/ creates a comment and increments comments_count."""
-        self.client.force_login(self.commenter1)
-        res = self.client.post(
-            reverse("web:api_post_comments", args=[self.post.id]),
-            data={"content": "น่าไปมากเลยครับ ขอบคุณที่รีวิวครับ"},
+    def test_api_wishlist_toggle_add_and_remove(self):
+        response = self.client.post(
+            reverse("web:api_wishlist_toggle"),
+            data=json.dumps({"place_id": self.place.id}),
             content_type="application/json",
         )
-        self.assertEqual(res.status_code, 201)
-        data = res.json()
-        self.assertEqual(data["comment"]["author_name"], "commenter_one")
-        self.assertEqual(data["comment"]["content"], "น่าไปมากเลยครับ ขอบคุณที่รีวิวครับ")
-        self.assertEqual(data["comments_count"], 1)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(data["action"], "added")
+        self.assertTrue(data["is_wishlisted"])
+        self.assertEqual(data["total_count"], 1)
 
-        self.post.refresh_from_db()
-        self.assertEqual(self.post.comments_count, 1)
-
-    def test_get_post_comments_list(self):
-        """GET /api/posts/<id>/comments/ returns all comments in chronological order."""
-        self.client.force_login(self.commenter1)
-        self.client.post(
-            reverse("web:api_post_comments", args=[self.post.id]),
-            data={"content": "คอมเมนต์ที่ 1"},
+        # 2. Remove from wishlist
+        response2 = self.client.post(
+            reverse("web:api_wishlist_toggle"),
+            data=json.dumps({"place_id": self.place.id}),
             content_type="application/json",
         )
-
-        self.client.force_login(self.commenter2)
-        self.client.post(
-            reverse("web:api_post_comments", args=[self.post.id]),
-            data={"content": "คอมเมนต์ที่ 2"},
-            content_type="application/json",
-        )
-
-        res = self.client.get(reverse("web:api_post_comments", args=[self.post.id]))
-        self.assertEqual(res.status_code, 200)
-        data = res.json()
-        self.assertEqual(data["comments_count"], 2)
-        self.assertEqual(len(data["comments"]), 2)
-        self.assertEqual(data["comments"][0]["content"], "คอมเมนต์ที่ 1")
-        self.assertEqual(data["comments"][1]["content"], "คอมเมนต์ที่ 2")
-
-    def test_delete_comment(self):
-        """DELETE /api/posts/<id>/comments/<comment_id>/ deletes comment and decrements count."""
-        self.client.force_login(self.commenter1)
-        res_create = self.client.post(
-            reverse("web:api_post_comments", args=[self.post.id]),
-            data={"content": "ความคิดเห็นชั่วคราว"},
-            content_type="application/json",
-        )
-        comment_id = res_create.json()["comment"]["id"]
-        self.post.refresh_from_db()
-        self.assertEqual(self.post.comments_count, 1)
-
-        # Delete comment
-        res_del = self.client.delete(reverse("web:api_post_comment_delete", args=[self.post.id, comment_id]))
-        self.assertEqual(res_del.status_code, 200)
-        self.assertEqual(res_del.json()["comments_count"], 0)
-
-        self.post.refresh_from_db()
-        self.assertEqual(self.post.comments_count, 0)
-
-    def test_unauthorized_user_cannot_delete_others_comment(self):
-        """User cannot delete another user's comment."""
-        self.client.force_login(self.commenter1)
-        res_create = self.client.post(
-            reverse("web:api_post_comments", args=[self.post.id]),
-            data={"content": "ความคิดเห็นของคนแรก"},
-            content_type="application/json",
-        )
-        comment_id = res_create.json()["comment"]["id"]
-
-        # Attempt delete as commenter2
-        self.client.force_login(self.commenter2)
-        res_del = self.client.delete(reverse("web:api_post_comment_delete", args=[self.post.id, comment_id]))
-        self.assertEqual(res_del.status_code, 403)
-
-    def test_empty_comment_rejected(self):
-        """Empty or whitespace comment should return 400 error."""
-        self.client.force_login(self.commenter1)
-        res = self.client.post(
-            reverse("web:api_post_comments", args=[self.post.id]),
-            data={"content": "   "},
-            content_type="application/json",
-        )
-        self.assertEqual(res.status_code, 400)
-
-    def test_comment_xss_sanitized(self):
-        """Script tags in comment content should be escaped."""
-        self.client.force_login(self.commenter1)
-        res = self.client.post(
-            reverse("web:api_post_comments", args=[self.post.id]),
-            data={"content": "<script>alert('xss')</script> สวยมาก"},
-            content_type="application/json",
-        )
-        self.assertEqual(res.status_code, 201)
-        self.assertNotIn("<script>", res.json()["comment"]["content"])
-        self.assertIn("&lt;script&gt;", res.json()["comment"]["content"])
-
-
-class FollowModelAndAPITests(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.user1 = User.objects.create_user(username="alice", password="password123")
-        self.user2 = User.objects.create_user(username="bob", password="password123")
-
-    def test_follow_toggle_flow(self):
-        """User can follow and unfollow another user via API."""
-        self.client.force_login(self.user1)
-
-        # 1. Follow bob
-        res_follow = self.client.post(
-            reverse("web:api_user_follow", args=[self.user2.id]),
-            data={"action": "follow"},
-            content_type="application/json",
-        )
-        self.assertEqual(res_follow.status_code, 200)
-        self.assertTrue(res_follow.json()["is_following"])
-        self.assertEqual(res_follow.json()["followers_count"], 1)
-
-        # 2. Check follow status
-        res_status = self.client.get(reverse("web:api_user_follow_status", args=[self.user2.id]))
-        self.assertEqual(res_status.status_code, 200)
-        self.assertTrue(res_status.json()["is_following"])
-        self.assertEqual(res_status.json()["followers_count"], 1)
-
-        # 3. Unfollow bob via DELETE
-        res_unfollow = self.client.delete(reverse("web:api_user_follow", args=[self.user2.id]))
-        self.assertEqual(res_unfollow.status_code, 200)
-        self.assertFalse(res_unfollow.json()["is_following"])
-        self.assertEqual(res_unfollow.json()["followers_count"], 0)
-
-    def test_cannot_self_follow(self):
-        """User cannot follow themselves."""
-        self.client.force_login(self.user1)
-        res = self.client.post(reverse("web:api_user_follow", args=[self.user1.id]))
-        self.assertEqual(res.status_code, 400)
-
-
+        self.assertEqual(response2.status_code, 200)
+        data2 = response2.json()
+        self.assertEqual(data2["status"], "success")
+        self.assertEqual(data2["action"], "removed")
+        self.assertFalse(data2["is_wishlisted"])
+        self.assertEqual(data2["total_count"], 0)
