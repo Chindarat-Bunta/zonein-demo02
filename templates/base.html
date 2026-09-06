@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}ZoneIn - ค้นหาและรีวิวสถานที่ท่องเที่ยว คาเฟ่ ร้านอาหาร ที่พัก จ.ศรีสะเกษ{% endblock %}</title>
+        <meta name="description"
+              content="{% block meta_desc %}ค้นหาสถานที่ท่องเที่ยวยอดนิยม โบราณสถาน คาเฟ่ ร้านอาหาร และที่พักในจังหวัดศรีสะเกษ พร้อมระบบค้นหาและฟิลเตอร์แยกตามอำเภอ{% endblock %}">
+        <!-- Google Fonts: Plus Jakarta Sans & Prompt -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap"
+              rel="stylesheet">
+        <!-- Font Awesome Icons -->
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <!-- App Stylesheet -->
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        {% block extra_css %}{% endblock %}
+    </head>
+    <body>
+        <!-- Navigation Bar -->
+        <header class="site-header">
+            <div class="container header-inner">
+                <a href="{% url 'web:index' %}" class="brand-logo" id="brand-logo-link">
+                    <div class="logo-icon">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <div class="logo-text">Zone<span>In</span></div>
+                </a>
+                <nav class="nav-links">
+                    <a href="{% url 'web:index' %}" class="nav-link active"><i class="fa-solid fa-compass"></i> สำรวจสถานที่</a>
+                    <a href="{% url 'web:index' %}?category=cafe" class="nav-link"><i class="fa-solid fa-mug-hot"></i> คาเฟ่</a>
+                    <a href="{% url 'web:index' %}?category=restaurant" class="nav-link"><i class="fa-solid fa-utensils"></i> ร้านอาหาร</a>
+                    <a href="{% url 'web:index' %}?category=hotel" class="nav-link"><i class="fa-solid fa-bed"></i> ที่พัก</a>
+                    <a href="{% url 'web:index' %}?category=travel" class="nav-link"><i class="fa-solid fa-mountain-sun"></i> ที่เที่ยว</a>
+                </nav>
+                <div class="header-actions">
+                    <a href="{% url 'web:wishlist' %}" class="btn-wishlist-header" id="header-wishlist-btn" title="รายการโปรด">
+                        <i class="fa-solid fa-heart"></i>
+                        <span class="wishlist-label">รายการโปรด</span>
+                        <span class="wishlist-badge" id="header-wishlist-count">0</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+        <!-- Main Content -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+        <!-- Toast Notification Container -->
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
+        <!-- App Scripts -->
+        <script src="{% static 'js/search-filter.js' %}"></script>
+        <script src="{% static 'js/wishlist.js' %}"></script>
+        {% block extra_js %}{% endblock %}
+    </body>
+</html>

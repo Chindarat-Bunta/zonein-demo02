@@ -1,0 +1,126 @@
+<!-- Search & Filter Component -->
+<section class="search-filter-wrapper" id="search-filter-section">
+    <div class="search-filter-card">
+        <!-- Main Search Form -->
+        <form id="filter-form"
+              action="{% url 'web:index' %}"
+              method="GET"
+              class="filter-form">
+            <!-- Top Search Input Bar -->
+            <div class="search-input-group">
+                <div class="search-input-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text"
+                           id="search-input"
+                           name="q"
+                           value="{{ filters.q }}"
+                           placeholder="ค้นหาชื่อสถานที่, บรรยากาศ, เมนู หรือคำบรรยาย (เช่น กาแฟ specialty, ดาดฟ้า, อารีย์)..."
+                           autocomplete="off"
+                           class="search-input">
+                    <button type="button"
+                            id="btn-clear-search"
+                            class="btn-clear-input {% if not filters.q %}hidden{% endif %}"
+                            title="ล้างคำค้น">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <button type="submit" class="btn-primary-search" id="btn-submit-search">
+                    <i class="fa-solid fa-sliders"></i> ค้นหา
+                </button>
+            </div>
+            <!-- Category Filter Chips -->
+            <div class="filter-row category-chips-row">
+                <span class="filter-label"><i class="fa-solid fa-shapes"></i> หมวดหมู่:</span>
+                <div class="category-chips-list" id="category-chips">
+                    <button type="button"
+                            class="filter-chip {% if not filters.category or filters.category == 'all' %}active{% endif %}"
+                            data-category="all">
+                        <i class="fa-solid fa-border-all"></i> ทั้งหมด
+                    </button>
+                    {% for cat in categories %}
+                        <button type="button"
+                                class="filter-chip {% if filters.category == cat.slug or filters.category == cat.id|stringformat:'i' %}active{% endif %}"
+                                data-category="{{ cat.slug }}"
+                                style="--chip-accent: {{ cat.color }}">
+                            <i class="fa-solid {{ cat.icon }}"></i> {{ cat.name }}
+                        </button>
+                    {% endfor %}
+                </div>
+                <!-- Hidden input for form sync -->
+                <input type="hidden"
+                       name="category"
+                       id="selected-category"
+                       value="{{ filters.category|default:'all' }}">
+            </div>
+            <!-- Secondary Filters: Location & Rating & Sort -->
+            <div class="filter-secondary-row">
+                <!-- Location Dropdown -->
+                <div class="filter-select-group">
+                    <label for="location-select"><i class="fa-solid fa-location-dot"></i> ทำเล/ย่าน:</label>
+                    <div class="custom-select-wrapper">
+                        <select name="location" id="location-select" class="form-select">
+                            <option value="all"
+                                    {% if not filters.location or filters.location == 'all' %}selected{% endif %}>ทุกทำเล / ทั่วไทย</option>
+                            {% regroup locations by city as city_list %}
+                            {% for city in city_list %}
+                                <optgroup label="📍 {{ city.grouper }}">
+                                    {% for loc in city.list %}
+                                        <option value="{{ loc.slug }}"
+                                                {% if filters.location == loc.slug or filters.location == loc.id|stringformat:'i' %}selected{% endif %}>
+                                            {{ loc.zone }} ({{ loc.city }})
+                                        </option>
+                                    {% endfor %}
+                                </optgroup>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <!-- Rating Filter -->
+                <div class="filter-select-group">
+                    <label for="rating-select"><i class="fa-solid fa-star"></i> คะแนนรีวิว:</label>
+                    <div class="custom-select-wrapper">
+                        <select name="min_rating" id="rating-select" class="form-select">
+                            <option value="" {% if not filters.min_rating %}selected{% endif %}>ทุกคะแนน</option>
+                            <option value="4.5" {% if filters.min_rating == '4.5' %}selected{% endif %}>★ 4.5 ขึ้นไป (ยอดเยี่ยม)</option>
+                            <option value="4.0" {% if filters.min_rating == '4.0' %}selected{% endif %}>★ 4.0 ขึ้นไป (ดีมาก)</option>
+                            <option value="3.5" {% if filters.min_rating == '3.5' %}selected{% endif %}>★ 3.5 ขึ้นไป (ปานกลาง)</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Sort Filter -->
+                <div class="filter-select-group">
+                    <label for="sort-select"><i class="fa-solid fa-arrow-down-short-wide"></i> เรียงตาม:</label>
+                    <div class="custom-select-wrapper">
+                        <select name="sort" id="sort-select" class="form-select">
+                            <option value="rating"
+                                    {% if filters.sort == 'rating' or not filters.sort %}selected{% endif %}>คะแนนสูงสุด</option>
+                            <option value="reviews" {% if filters.sort == 'reviews' %}selected{% endif %}>รีวิวมากที่สุด</option>
+                            <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>มาใหม่ล่าสุด</option>
+                            <option value="name" {% if filters.sort == 'name' %}selected{% endif %}>ชื่อ A-Z</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Reset Filter Button -->
+                <div class="filter-actions-group">
+                    <button type="button"
+                            id="btn-reset-filter"
+                            class="btn-reset-filter"
+                            title="ล้างค่าการค้นหาและตัวกรองทั้งหมด">
+                        <i class="fa-solid fa-rotate-left"></i> ล้างตัวกรอง
+                        <span id="active-filters-badge" class="badge-filter-count hidden">0</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+        <!-- Active Search Feedback / Counter Bar -->
+        <div class="search-feedback-bar">
+            <div class="results-counter" id="results-counter">
+                พบ <strong id="count-number">{{ total_count }}</strong> สถานที่
+                <span class="text-muted">(จากทั้งหมด {{ all_places_count }} แห่ง)</span>
+            </div>
+            <div class="search-mode-tag">
+                <span class="live-dot"></span> กรองผลแบบ Real-time
+            </div>
+        </div>
+    </div>
+</section>
