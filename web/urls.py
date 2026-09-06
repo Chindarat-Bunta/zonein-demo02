@@ -5,6 +5,7 @@ app_name = "web"
 
 urlpatterns = [
     path("", views.index_view, name="index"),
+    path("wishlist/", views.wishlist_page_view, name="wishlist"),
     path("places/", views.index_view, name="places_list"),
     path("places/<slug:slug>/", views.place_detail_view, name="place_detail"),
     path("api/places/", views.api_places_view, name="api_places"),

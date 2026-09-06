@@ -43,19 +43,5 @@
                 </div>
             </div>
         </section>
-        <!-- Recommended Places if Wishlist is Empty -->
-        {% if all_places %}
-            <section class="explore-more-section" id="wishlist-explore-section">
-                <div class="section-title-row">
-                    <h2 class="section-heading"><i class="fa-solid fa-sparkles"></i> สถานที่แนะนำที่คุณอาจถูกใจ</h2>
-                    <a href="{% url 'web:index' %}" class="btn-view-all-link">ดูทั้งหมด <i class="fa-solid fa-arrow-right"></i></a>
-                </div>
-                <div class="places-grid">
-                    {% for r_place in all_places|slice:":3" %}
-                        {% include 'components/place_card.html' with place=r_place %}
-                    {% endfor %}
-                </div>
-            </section>
-        {% endif %}
     </div>
 {% endblock %}

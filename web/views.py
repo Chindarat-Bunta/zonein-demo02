@@ -145,3 +145,17 @@ def place_detail_view(request, slug):
         "detail.html",
         {"place": place, "related_places": related_places},
     )
+
+
+def wishlist_page_view(request):
+    wishlist_ids = request.session.get("wishlist", [])
+    places = Place.objects.filter(id__in=wishlist_ids)
+    return render(
+        request,
+        "wishlist.html",
+        {
+            "places": places,
+            "total_wishlist_count": places.count(),
+        },
+    )
+
