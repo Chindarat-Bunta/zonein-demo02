@@ -1,0 +1,1392 @@
+{% extends "web/base.html" %}
+{% load static %}
+{% block title %}Zone In — หน้าแรก & ค้นหาสถานที่ท่องเที่ยวยอดนิยม{% endblock %}
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/search_explore.css' %}">
+    <style>
+    :root {
+        --bg-card: rgba(255, 255, 255, 0.85);
+        --bg-card-hover: rgba(255, 255, 255, 0.96);
+        --border-color: rgba(255, 157, 157, 0.28);
+        --border-color-hover: rgba(255, 157, 157, 0.6);
+        --primary: #FF9D9D;
+        --primary-gradient: linear-gradient(135deg, #FF9D9D, #FFC5AA);
+        --accent-mint: #BBF1D2;
+        --star-gold: #f59e0b;
+        --text-main: #1e242b;
+        --text-muted: #57616b;
+        --text-dim: #8c96a0;
+        --radius-sm: 10px;
+        --radius-md: 16px;
+        --radius-lg: 24px;
+        --radius-full: 9999px;
+        --shadow-card: 0 12px 32px -8px rgba(255, 157, 157, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+        --transition-smooth: all 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+        margin-bottom: 1.25rem;
+        background: linear-gradient(135deg, rgba(255, 157, 157, 0.22) 0%, rgba(255, 197, 170, 0.28) 50%, rgba(187, 241, 210, 0.3) 100%);
+        border: 1px solid rgba(255, 157, 157, 0.35);
+        border-radius: var(--radius-lg);
+        padding: 1.75rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        box-shadow: var(--shadow-card);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+
+    .hero-content h1 {
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: var(--text-main);
+        line-height: 1.3;
+        margin-bottom: 0.4rem;
+        letter-spacing: -0.02em;
+    }
+
+    .hero-content p {
+        color: var(--text-secondary, #57616b);
+        font-size: 0.98rem;
+        max-width: 620px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-main);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Recent Reviews Feed */
+    .feed-container {
+        max-width: 820px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1.35rem;
+    }
+
+    .review-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 1.4rem 1.5rem;
+        transition: var(--transition-smooth);
+        box-shadow: var(--shadow-card);
+        position: relative;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+
+    .review-card:hover {
+        border-color: var(--border-color-hover);
+        box-shadow: 0 16px 36px -8px rgba(255, 157, 157, 0.25);
+        transform: translateY(-2px);
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.85rem;
+    }
+
+    .review-author {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .author-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(255, 157, 157, 0.4);
+        flex-shrink: 0;
+    }
+
+    .author-name-row {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+    }
+
+    .author-name {
+        font-weight: 700;
+        font-size: 0.98rem;
+        color: var(--text-main);
+    }
+
+    .btn-follow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: rgba(255, 157, 157, 0.16);
+        border: 1px solid rgba(255, 157, 157, 0.45);
+        color: #e25c5c;
+        padding: 0.15rem 0.65rem;
+        border-radius: var(--radius-full);
+        font-size: 0.76rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        font-family: inherit;
+    }
+
+    .btn-follow:hover {
+        background: #FF9D9D;
+        border-color: #FF9D9D;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(255, 157, 157, 0.35);
+    }
+
+    .btn-follow.following {
+        background: rgba(0, 0, 0, 0.05);
+        border-color: rgba(0, 0, 0, 0.12);
+        color: var(--text-muted);
+    }
+
+    .btn-follow.following:hover {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(239, 68, 68, 0.35);
+        color: #dc2626;
+    }
+
+    .review-time {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+    }
+
+    .rating-badge {
+        background: rgba(254, 243, 199, 0.85);
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        color: #b45309;
+        padding: 0.25rem 0.7rem;
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .review-place-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: rgba(187, 241, 210, 0.35);
+        border: 1px solid rgba(187, 241, 210, 0.6);
+        color: #047857;
+        padding: 0.3rem 0.85rem;
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.85rem;
+        text-decoration: none;
+        transition: var(--transition-smooth);
+    }
+
+    .review-place-tag:hover {
+        background: rgba(187, 241, 210, 0.6);
+        color: #065f46;
+        border-color: #34d399;
+    }
+
+    .review-content {
+        font-size: 0.96rem;
+        color: var(--text-main);
+        line-height: 1.65;
+        margin-bottom: 1.15rem;
+        word-break: break-word;
+        white-space: pre-line;
+    }
+
+    .review-image-wrap {
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        max-height: 440px;
+        background: rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.15rem;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .review-image {
+        width: 100%;
+        height: auto;
+        max-height: 440px;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.35s ease, filter 0.35s ease;
+    }
+
+    .review-image-wrap:hover .review-image {
+        transform: scale(1.02);
+        filter: brightness(1.05);
+    }
+
+    .review-image-overlay-hint {
+        position: absolute;
+        bottom: 0.85rem;
+        right: 0.85rem;
+        background: rgba(10, 14, 26, 0.75);
+        backdrop-filter: blur(8px);
+        color: #fff;
+        padding: 0.3rem 0.65rem;
+        border-radius: var(--radius-full);
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        pointer-events: none;
+    }
+
+    .review-image-wrap:hover .review-image-overlay-hint {
+        opacity: 1;
+    }
+
+    /* Lightbox Modal */
+    .lightbox-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 8, 18, 0.92);
+        backdrop-filter: blur(12px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 1.5rem;
+        cursor: zoom-out;
+    }
+
+    .lightbox-overlay.show {
+        display: flex;
+        animation: lightboxFadeIn 0.25s ease-out;
+    }
+
+    @keyframes lightboxFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .lightbox-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: default;
+    }
+
+    .lightbox-img {
+        max-width: 100%;
+        max-height: 56vh;
+        object-fit: cover;
+        border-radius: var(--radius-lg);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(99, 102, 241, 0.15);
+        animation: lightboxZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes lightboxZoomIn {
+        from { opacity: 0; transform: scale(0.92); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    .lightbox-caption {
+        margin-top: 0.75rem;
+        color: #fff;
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 0.35rem 1rem;
+        border-radius: var(--radius-full);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .lightbox-close-btn {
+        position: absolute;
+        top: -42px;
+        right: 0;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: var(--transition-smooth);
+    }
+
+    .lightbox-close-btn:hover {
+        background: rgba(239, 68, 68, 0.8);
+        border-color: #ef4444;
+        transform: scale(1.08);
+    }
+
+    /* Review Card Footer Actions */
+    .review-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-top: 0.85rem;
+        border-top: 1px solid var(--border-color);
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: rgba(255, 157, 157, 0.12);
+        border: 1px solid rgba(255, 157, 157, 0.35);
+        color: var(--text-secondary, #57616b);
+        padding: 0.4rem 0.95rem;
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        font-family: inherit;
+    }
+
+    .action-btn:hover {
+        background: rgba(255, 157, 157, 0.25);
+        color: var(--text-main);
+        border-color: #FF9D9D;
+    }
+
+    .action-btn.liked {
+        background: rgba(255, 157, 157, 0.3);
+        border-color: #FF9D9D;
+        color: #e25c5c;
+    }
+
+    .action-btn.liked svg {
+        fill: #FF9D9D;
+        stroke: #FF9D9D;
+    }
+
+    /* Comments Section */
+    .comments-section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px dashed var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+
+    .comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .comment-item {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        background: rgba(255, 255, 255, 0.65);
+        padding: 0.75rem 0.85rem;
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(255, 197, 170, 0.4);
+    }
+
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(255, 157, 157, 0.35);
+        flex-shrink: 0;
+    }
+
+    .comment-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .comment-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.2rem;
+        flex-wrap: wrap;
+    }
+
+    .comment-author {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .comment-time {
+        font-size: 0.76rem;
+        color: var(--text-dim);
+    }
+
+    .comment-text {
+        font-size: 0.88rem;
+        color: var(--text-main);
+        line-height: 1.45;
+        word-break: break-word;
+    }
+
+    .comment-form {
+        display: flex;
+        gap: 0.65rem;
+        margin-top: 0.35rem;
+        align-items: center;
+    }
+
+    .comment-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-full);
+        padding: 0.55rem 1rem;
+        color: #fff;
+        font-size: 0.88rem;
+        outline: none;
+        transition: var(--transition-smooth);
+        font-family: inherit;
+    }
+
+    .comment-input:focus {
+        border-color: var(--primary);
+        background: rgba(255, 255, 255, 0.07);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    .comment-submit-btn {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-full);
+        padding: 0.55rem 1.15rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        white-space: nowrap;
+    }
+
+    .comment-submit-btn:hover {
+        background: #4f46e5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    /* Skeleton Loading Placeholder */
+    .skeleton {
+        background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: var(--radius-lg);
+    }
+
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    /* Load More Button */
+    .btn-load-more {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: #fff;
+        padding: 0.85rem 2rem;
+        border-radius: var(--radius-full);
+        font-size: 0.92rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        margin: 2rem auto 0;
+        display: block;
+    }
+
+    .btn-load-more:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 4px 15px var(--primary-glow);
+        transform: translateY(-2px);
+    }
+
+    .state-box {
+        background: var(--bg-card);
+        border: 1px dashed var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 3.5rem 1.5rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    /* Tab Panel Container & Tab Panels Layout */
+    .tab-panel-container {
+        width: 100%;
+        max-width: 100%;
+        margin-top: 0;
+        display: block;
+    }
+
+    .tab-panel {
+        display: none;
+        width: 100%;
+        max-width: 100%;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    .tab-panel.active {
+        display: block;
+        animation: panelFadeIn 0.35s ease;
+    }
+
+    @keyframes panelFadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Popular Places Section on Home Panel */
+    .popular-places-section {
+        margin-bottom: 2rem;
+    }
+
+    .popular-places-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.25rem;
+        margin-top: 0.85rem;
+    }
+
+    .popular-place-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        transition: var(--transition-smooth);
+        box-shadow: var(--shadow-card);
+        display: flex;
+        flex-direction: column;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .popular-place-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--border-color-hover);
+        box-shadow: 0 16px 36px -8px rgba(255, 157, 157, 0.3);
+    }
+
+    .popular-place-image-wrap {
+        position: relative;
+        width: 100%;
+        height: 165px;
+        overflow: hidden;
+        background: #f1f5f9;
+    }
+
+    .popular-place-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+        display: block;
+    }
+
+    .popular-place-card:hover .popular-place-img {
+        transform: scale(1.06);
+    }
+
+    .popular-place-cat-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(187, 241, 210, 0.95);
+        backdrop-filter: blur(6px);
+        color: #065f46;
+        padding: 3px 10px;
+        border-radius: var(--radius-full);
+        font-size: 0.74rem;
+        font-weight: 700;
+        border: 1px solid rgba(187, 241, 210, 0.8);
+    }
+
+    .popular-place-rating-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(254, 243, 199, 0.95);
+        color: #b45309;
+        padding: 3px 8px;
+        border-radius: var(--radius-full);
+        font-size: 0.78rem;
+        font-weight: 700;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .popular-place-body {
+        padding: 0.95rem 1.15rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .popular-place-name {
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: var(--text-main);
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .popular-place-loc {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    </style>
+{% endblock %}
+{% block content %}
+<div class="tab-panel-container">
+
+    <!-- Panel 1: หน้าแรก (Home Feed) -->
+    <div class="tab-panel {% if active_tab != 'search' and active_tab != 'notifications' %}active{% endif %}" id="panel-home">
+        <!-- Hero Banner -->
+        <div class="hero-banner">
+            <div class="hero-content">
+                <h1>สำรวจสถานที่ท่องเที่ยวยอดฮิต & รีวิวจริง</h1>
+                <p>แหล่งรวมจุดเช็คอิน คาเฟ่ ธรรมชาติ และทริปการเดินทางจากเพื่อนนักเดินทางทั่วประเทศไทย</p>
+            </div>
+        </div>
+
+        <!-- Popular Places Preview Cards (มีรูปภาพครบทุกการ์ด + ลิงก์ตรงไปหน้า place_detail) -->
+        <section class="popular-places-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #FF9D9D;">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    จุดเช็คอินแนะนำยอดนิยม
+                </h2>
+                <a href="#search" onclick="switchTab('search')" style="color: #e25c5c; font-size: 0.9rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                    ดูทั้งหมดในหน้าค้นหา ➔
+                </a>
+            </div>
+            <div class="popular-places-grid">
+                {% for p in places|slice:":4" %}
+                <a href="/places/{{ p.id }}/" class="popular-place-card" title="ดูรายละเอียดและแผนที่ของ {{ p.name }}">
+                    <div class="popular-place-image-wrap">
+                        <img src="{{ p.cover_image_url|default:p.image_url }}" alt="{{ p.name }}" class="popular-place-img" loading="lazy">
+                        <span class="popular-place-cat-badge">{{ p.get_category_display|default:'สถานที่ยอดนิยม' }}</span>
+                        <span class="popular-place-rating-badge">★ {{ p.average_rating|default:'4.8' }}</span>
+                    </div>
+                    <div class="popular-place-body">
+                        <h3 class="popular-place-name">{{ p.name }}</h3>
+                        <p class="popular-place-loc">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span>{{ p.address|default:p.location|default:'ทั่วไทย' }}</span>
+                        </p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Recent Reviews Feed (พร้อมรูปภาพประกอบรีวิวขนาดใหญ่) -->
+        <section>
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #FF9D9D;">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    รีวิวล่าสุดจากนักเดินทาง
+                </h2>
+            </div>
+            <div class="feed-container" id="recentReviewsFeed">
+                <!-- Skeleton Slices -->
+                <div class="skeleton" style="height: 200px;"></div>
+                <div class="skeleton" style="height: 200px;"></div>
+                <div class="skeleton" style="height: 200px;"></div>
+            </div>
+            <button type="button"
+                    id="btnLoadMoreReviews"
+                    class="btn-load-more"
+                    onclick="loadMoreReviews()"
+                    style="display: none">โหลดรีวิวเพิ่มเติม</button>
+        </section>
+    </div>
+
+    <!-- Panel 2: ค้นหา (Search & Explore Feed ตามที่ผู้ใช้ต้องการ พร้อมตัวกรองข้างๆ) -->
+    <div class="tab-panel {% if active_tab == 'search' %}active{% endif %}" id="panel-search">
+        <div class="search-explore-wrapper">
+            
+            <!-- Search Top Bar (ช่องค้นหาทรงมน + ปุ่มตัวกรองข้างๆ) -->
+            <div class="search-top-bar-row">
+                <div class="search-pill-input-box">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="exploreSearchInput" class="search-pill-input" placeholder="ค้นหาสถานที่, คาเฟ่, กิจกรรม..." autocomplete="off" aria-label="ค้นหาสถานที่หรือกิจกรรม">
+                    <button type="button" class="btn-clear-search" id="btnClearSearch" title="ล้างคำค้น">✕</button>
+                </div>
+
+                <!-- Side Filter Toggle Button ("ซึ่งตรงค้นหาจะมีการกรองข้างๆ") -->
+                <button type="button" class="btn-side-filter-toggle" id="btnSideFilterToggle" aria-expanded="false" aria-controls="sideFilterPanel">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="21" x2="4" y2="14"></line>
+                        <line x1="4" y1="10" x2="4" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12" y2="3"></line>
+                        <line x1="20" y1="21" x2="20" y2="16"></line>
+                        <line x1="20" y1="12" x2="20" y2="3"></line>
+                        <line x1="1" y1="14" x2="7" y2="14"></line>
+                        <line x1="9" y1="8" x2="15" y2="8"></line>
+                        <line x1="17" y1="16" x2="23" y2="16"></line>
+                    </svg>
+                    <span class="filter-text">ตัวกรอง</span>
+                    <span class="filter-count-badge" id="filterCountBadge" style="display: none;">0</span>
+                </button>
+            </div>
+
+            <!-- Expandable Side Filter Panel -->
+            <div class="side-filter-panel" id="sideFilterPanel">
+                <div class="filter-panel-grid">
+                    <!-- Filter 1: หมวดหมู่ -->
+                    <div class="filter-panel-group">
+                        <h4><span>🏷️</span> หมวดหมู่สถานที่</h4>
+                        <select class="filter-panel-select" id="filterCategorySelect">
+                            <option value="all">ทุกหมวดหมู่ (All)</option>
+                            <option value="cafe">☕ คาเฟ่ & เบเกอรี่ (Cafe)</option>
+                            <option value="restaurant">🍲 ร้านอาหาร & สตรีทฟู้ด (Restaurant)</option>
+                            <option value="nature">🌿 ธรรมชาติ & ฟาร์ม (Nature & Farm)</option>
+                            <option value="travel">✈️ ท่องเที่ยว & จุดเช็คอิน (Travel)</option>
+                            <option value="diy">🧶 งานคราฟต์ & DIY (Craft Workshop)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 2: ทำเล / จังหวัด -->
+                    <div class="filter-panel-group">
+                        <h4><span>📍</span> ทำเล / ย่าน</h4>
+                        <select class="filter-panel-select" id="filterLocationSelect">
+                            <option value="all">ทุกทำเล / ทั่วไทย</option>
+                            <option value="เชียงใหม่">เชียงใหม่ (แม่ริม / นิมมานฯ)</option>
+                            <option value="อยุธยา">พระนครศรีอยุธยา</option>
+                            <option value="เชียงราย">เชียงราย (ภูชี้ดาว / แม่สาย)</option>
+                            <option value="กระบี่">กระบี่ (หาดไร่เลย์ / อ่าวนาง)</option>
+                            <option value="กรุงเทพ">กรุงเทพมหานคร (สวนเบญจกิติ / สยาม)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 3: คะแนนรีวิว -->
+                    <div class="filter-panel-group">
+                        <h4><span>⭐</span> คะแนนรีวิว</h4>
+                        <select class="filter-panel-select" id="filterRatingSelect">
+                            <option value="0">ทุกคะแนน</option>
+                            <option value="4.8">★ 4.8 ดาวขึ้นไป (ยอดเยี่ยม)</option>
+                            <option value="4.5">★ 4.5 ดาวขึ้นไป (ดีมาก)</option>
+                            <option value="4.0">★ 4.0 ดาวขึ้นไป (ดี)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 4: การจัดเรียง -->
+                    <div class="filter-panel-group">
+                        <h4><span>🔄</span> จัดเรียงผลลัพธ์</h4>
+                        <select class="filter-panel-select" id="filterSortSelect">
+                            <option value="recommended">แนะนำสำหรับคุณ</option>
+                            <option value="rating">คะแนนรีวิวสูงสุด</option>
+                            <option value="reviews">รีวิวมากที่สุด</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-panel-actions">
+                    <button type="button" class="btn-reset-filters" id="btnResetFilters">ล้างตัวกรอง</button>
+                    <button type="button" class="btn-apply-filters" id="btnApplyFilters">นำตัวกรองไปใช้</button>
+                </div>
+            </div>
+
+            <!-- Quick Category Chips Scroll Bar -->
+            <div class="filter-chips-scroll-wrap" id="filterQuickChips">
+                <button type="button" class="filter-quick-chip active" data-category="all">✨ ทั้งหมด</button>
+                <button type="button" class="filter-quick-chip" data-category="cafe">☕ คาเฟ่</button>
+                <button type="button" class="filter-quick-chip" data-category="restaurant">🍲 ร้านอาหาร</button>
+                <button type="button" class="filter-quick-chip" data-category="nature">🌿 ธรรมชาติ</button>
+                <button type="button" class="filter-quick-chip" data-category="travel">✈️ ท่องเที่ยว</button>
+                <button type="button" class="filter-quick-chip" data-category="diy">🧶 งานคราฟต์ & DIY</button>
+            </div>
+
+            <!-- Explore Media Grid (เชื่อมต่อกับหน้า place-details โดยตรงผ่าน detail_url) -->
+            <div class="explore-media-grid" id="exploreMediaGrid">
+                {% for item in explore_items %}
+                <a href="{{ item.detail_url }}" class="explore-card" data-category="{{ item.category }}" data-location="{{ item.location }}" data-rating="{{ item.rating }}" data-title="{{ item.title }}" data-place-id="{{ item.id }}" title="คลิกดูแผนที่และรีวิวของ {{ item.title }}">
+                    <!-- Video Play Badge -->
+                    {% if item.is_video %}
+                    <div class="explore-card-video-badge" title="วิดีโอแนะนำ">
+                        <svg viewBox="0 0 24 24">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </div>
+                    {% endif %}
+
+                    <!-- Media Thumbnail -->
+                    <img src="{{ item.image_url }}" alt="{{ item.title }}" class="explore-card-media" loading="lazy">
+
+                    <!-- Hover Prompt -->
+                    <div class="explore-card-hover-prompt">
+                        <span>ดูแผนที่ & รีวิว</span>
+                        <span>➔</span>
+                    </div>
+
+                    <!-- Bottom Gradient & Information Overlay -->
+                    <div class="explore-card-overlay">
+                        <div class="explore-card-title">{{ item.title }}</div>
+                        <div class="explore-card-meta">
+                            <span class="explore-card-tag">{{ item.category_name }}</span>
+                            <span class="explore-card-rating">★ {{ item.rating }}</span>
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="explore-empty-state" id="emptyExploreState">
+                    <div class="icon">📭</div>
+                    <h3>ยังไม่มีสถานที่ในระบบ</h3>
+                    <p>ขณะนี้ยังไม่มีสถานที่ในระบบ</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 3: การแจ้งเตือน (Notifications) -->
+    <div class="tab-panel {% if active_tab == 'notifications' %}active{% endif %}" id="panel-notifications">
+        <div style="max-width: 820px; margin: 0 auto;">
+            <div class="section-header" style="margin-bottom: 1.25rem;">
+                <h2 class="section-title">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #FF9D9D;">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    การแจ้งเตือน (Notifications)
+                </h2>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.9rem;">
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-card); backdrop-filter: blur(12px);">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.1rem; flex-shrink: 0;">✨</div>
+                        <div>
+                            <h4 style="font-size: 0.96rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.2rem;">ยินดีต้อนรับสู่ Zone In</h4>
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">เริ่มสำรวจสถานที่ท่องเที่ยวยอดนิยมและเขียนรีวิวเพื่อแบ่งปันกับเพื่อนๆ ได้แล้ววันนี้</p>
+                        </div>
+                    </div>
+                    <span style="font-size: 0.78rem; color: var(--text-dim); white-space: nowrap;">เมื่อสักครู่</span>
+                </div>
+
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-card); backdrop-filter: blur(12px);">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #BBF1D2, #6ee7b7); display: flex; align-items: center; justify-content: center; color: #065f46; font-size: 1.1rem; flex-shrink: 0;">📍</div>
+                        <div>
+                            <h4 style="font-size: 0.96rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.2rem;">จุดเช็คอินใหม่พร้อมแผนที่นำทาง</h4>
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">สามารถคลิกที่สถานที่เพื่อดูรายละเอียด พิกัด GPS และเปิด Google Maps นำทางได้ทันที</p>
+                        </div>
+                    </div>
+                    <span style="font-size: 0.78rem; color: var(--text-dim); white-space: nowrap;">1 วันที่แล้ว</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Lightbox Image Modal -->
+<div class="lightbox-overlay"
+     id="imageLightbox"
+     onclick="closeImageLightbox(event)">
+    <div class="lightbox-container" onclick="event.stopPropagation()">
+        <button type="button"
+                class="lightbox-close-btn"
+                onclick="closeImageLightbox()"
+                title="ปิด">&times;</button>
+        <img src="" alt="ขยายรูปภาพ" class="lightbox-img" id="lightboxImage">
+        <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+    <script>
+let currentReviewPage = 1;
+let hasNextReviewPage = false;
+let isLoadingReviews = false;
+const likedReviewsMap = new Map();
+const reviewsDataMap = new Map();
+const followedAuthorsSet = new Set();
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadRecentReviews(1);
+    const initialTab = "{{ active_tab|default:'home' }}";
+    const hash = window.location.hash.replace('#', '').toLowerCase();
+    if (hash === 'search' || hash === 'notifications' || hash === 'home') {
+        if (typeof switchTab === 'function') switchTab(hash);
+    } else if (initialTab && initialTab !== 'home') {
+        if (typeof switchTab === 'function') switchTab(initialTab);
+    }
+});
+
+function toggleFollowAuthor(event, authorId, username) {
+    event.stopPropagation();
+    const isFollowing = followedAuthorsSet.has(authorId);
+    if (isFollowing) {
+        followedAuthorsSet.delete(authorId);
+        showToast(`ยกเลิกการติดตาม ${username} แล้ว`);
+    } else {
+        followedAuthorsSet.add(authorId);
+        showToast(`ติดตาม ${username} เรียบร้อยแล้ว`);
+    }
+    updateFollowButtons(authorId, !isFollowing);
+}
+
+function updateFollowButtons(authorId, isFollowing) {
+    const buttons = document.querySelectorAll(`.btn-follow[data-author-id="${authorId}"]`);
+    buttons.forEach(btn => {
+        if (isFollowing) {
+            btn.classList.add("following");
+            btn.innerText = "กำลังติดตาม";
+        } else {
+            btn.classList.remove("following");
+            btn.innerText = "ติดตาม";
+        }
+    });
+}
+
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    if (!toast) return;
+    toast.innerText = message;
+    toast.style.display = "block";
+    setTimeout(() => { toast.style.display = "none"; }, 3500);
+}
+
+function formatRelativeTime(dateString) {
+    if (!dateString) return "";
+    const now = new Date();
+    const past = new Date(dateString);
+    const diffSeconds = Math.max(0, Math.floor((now - past) / 1000));
+
+    if (diffSeconds < 60) return "เมื่อสักครู่";
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    if (diffMinutes < 60) return `เมื่อ ${diffMinutes} นาทีที่แล้ว`;
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `เมื่อ ${diffHours} ชั่วโมงที่แล้ว`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return "เมื่อวานนี้";
+    if (diffDays < 30) return `เมื่อ ${diffDays} วันที่แล้ว`;
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths < 12) return `เมื่อ ${diffMonths} เดือนที่แล้ว`;
+    return `เมื่อ ${Math.floor(diffDays / 365)} ปีที่แล้ว`;
+}
+
+function formatDateTimeWithRelative(dateString) {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    const day = d.getDate();
+    const month = months[d.getMonth()];
+    const year = d.getFullYear() + 543;
+    const relative = formatRelativeTime(dateString);
+    return `${day} ${month} ${year} • ${relative}`;
+}
+
+// Fetch & Render Recent Reviews Feed
+async function loadRecentReviews(page = 1, append = false) {
+    if (isLoadingReviews) return;
+    isLoadingReviews = true;
+
+    const container = document.getElementById("recentReviewsFeed");
+    const loadMoreBtn = document.getElementById("btnLoadMoreReviews");
+
+    if (!append) {
+        container.innerHTML = `
+            <div class="skeleton" style="height: 180px;"></div>
+            <div class="skeleton" style="height: 180px;"></div>
+        `;
+    } else {
+        if (loadMoreBtn) {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.innerText = "กำลังโหลด...";
+        }
+    }
+
+    try {
+        const res = await fetch(`/api/reviews/recent/?page=${page}&limit=5`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const reviews = data.reviews || [];
+        hasNextReviewPage = data.has_next;
+        currentReviewPage = data.page;
+
+        reviews.forEach(r => {
+            reviewsDataMap.set(r.id, r);
+        });
+
+        if (!append && reviews.length === 0) {
+            container.innerHTML = `
+                <div class="state-box">
+                    <h3 style="color: #fff; margin-bottom: 0.5rem;">ยังไม่มีรีวิวล่าสุด</h3>
+                    <p>ร่วมแชร์ประสบการณ์การท่องเที่ยวคนแรกได้เลย!</p>
+                </div>
+            `;
+            if (loadMoreBtn) loadMoreBtn.style.display = "none";
+            return;
+        }
+
+        const cardsHtml = reviews.map(r => renderReviewCardHtml(r)).join("");
+
+        if (append) {
+            container.insertAdjacentHTML("beforeend", cardsHtml);
+        } else {
+            container.innerHTML = cardsHtml;
+        }
+
+        if (loadMoreBtn) {
+            loadMoreBtn.style.display = hasNextReviewPage ? "block" : "none";
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.innerText = "โหลดรีวิวเพิ่มเติม";
+        }
+
+    } catch (err) {
+        console.error(err);
+        if (!append) {
+            container.innerHTML = `
+                <div class="state-box">
+                    <h3 style="color: #fff; margin-bottom: 0.5rem;">เกิดข้อผิดพลาดในการโหลดรีวิว</h3>
+                    <button type="button" class="btn-load-more" onclick="loadRecentReviews(1)" style="margin-top: 1rem;">ลองใหม่อีกครั้ง</button>
+                </div>
+            `;
+        }
+    } finally {
+        isLoadingReviews = false;
+    }
+}
+
+function renderReviewCardHtml(r) {
+    const authorInitial = (r.author?.username || "T")[0].toUpperCase();
+    const stars = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
+    const dateFormatted = formatDateTimeWithRelative(r.created_at);
+    const isLiked = likedReviewsMap.get(r.id) || false;
+    const fakeLikes = 12 + (r.id * 5) + (isLiked ? 1 : 0);
+    const comments = r.comments || [];
+    const commentsCount = comments.length;
+
+    let imgHtml = "";
+    const displayImage = r.image_url || r.place?.image_url || r.place?.cover_image_url;
+    if (displayImage) {
+        const placeName = (r.place?.name || 'รูปรีวิว').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const safeImageUrl = displayImage.replace(/'/g, "\\'");
+        imgHtml = `
+            <div class="review-image-wrap" onclick="openImageLightbox('${safeImageUrl}', '${placeName}')" title="คลิกเพื่อดูรูปภาพขนาดใหญ่">
+                <img src="${displayImage}" alt="${r.place?.name || 'รูปรีวิว'}" class="review-image" loading="lazy">
+                <div class="review-image-overlay-hint">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        <line x1="11" y1="8" x2="11" y2="14"></line>
+                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                    <span>คลิกเพื่อดูรูป</span>
+                </div>
+            </div>
+        `;
+    }
+
+    const commentsListHtml = comments.map(c => `
+        <div class="comment-item" id="comment_${c.id}">
+            <div class="comment-avatar">${(c.author?.username || 'U')[0].toUpperCase()}</div>
+            <div class="comment-body">
+                <div class="comment-meta">
+                    <span class="comment-author">${c.author?.username || 'นักเดินทาง'}</span>
+                    <span class="comment-time">${formatDateTimeWithRelative(c.created_at)}</span>
+                </div>
+                <div class="comment-text">${c.content}</div>
+            </div>
+        </div>
+    `).join("");
+
+    const authorId = r.author?.id || 0;
+    const authorUsername = r.author?.username || 'นักเดินทาง';
+    const isFollowing = followedAuthorsSet.has(authorId);
+
+    return `
+        <article class="review-card" id="review_${r.id}">
+            <div class="review-header">
+                <div class="review-author">
+                    <div class="author-avatar">${authorInitial}</div>
+                    <div>
+                        <div class="author-name-row">
+                            <span class="author-name">${authorUsername}</span>
+                            <button type="button" class="btn-follow ${isFollowing ? 'following' : ''}" data-author-id="${authorId}" onclick="toggleFollowAuthor(event, ${authorId}, '${authorUsername}')">
+                                ${isFollowing ? 'กำลังติดตาม' : 'ติดตาม'}
+                            </button>
+                        </div>
+                        <div class="review-time">${dateFormatted}</div>
+                    </div>
+                </div>
+                <span class="rating-badge" id="rating_badge_${r.id}">${stars} ${r.rating}.0</span>
+            </div>
+
+            ${r.place ? `
+                <a href="/places/${r.place.id}/" class="review-place-tag" title="คลิกเพื่อดูรายละเอียดและแผนที่ของ ${r.place.name}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <span>${r.place.name} (${r.place.location || 'ที่ตั้ง'})</span>
+                    <span style="font-size: 0.75rem; opacity: 0.85; margin-left: 2px;">➔</span>
+                </a>
+            ` : ''}
+
+            <p class="review-content" id="review_content_${r.id}">${r.content || ''}</p>
+
+            ${imgHtml}
+
+            <div class="review-actions">
+                <button type="button" class="action-btn ${isLiked ? 'liked' : ''}" id="like_btn_${r.id}" onclick="toggleLikeReview(${r.id})">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="${isLiked ? '#ec4899' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <span id="like_count_${r.id}">${fakeLikes}</span>
+                </button>
+
+                <button type="button" class="action-btn" onclick="toggleCommentsSection(${r.id})">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>ความคิดเห็น (<span id="comment_count_${r.id}">${commentsCount}</span>)</span>
+                </button>
+
+                <button type="button" class="action-btn" onclick="shareReview(${r.id})">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                    <span>แชร์</span>
+                </button>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="comments-section" id="comments_section_${r.id}">
+                <div class="comments-list" id="comments_list_${r.id}">
+                    ${commentsListHtml}
+                </div>
+                <form class="comment-form" onsubmit="submitComment(event, ${r.id})">
+                    <div class="comment-avatar">U</div>
+                    <input type="text" class="comment-input" id="comment_input_${r.id}" placeholder="เขียนความคิดเห็นของคุณ..." required>
+                    <button type="submit" class="comment-submit-btn">ส่ง</button>
+                </form>
+            </div>
+        </article>
+    `;
+}
+
+function loadMoreReviews() {
+    if (hasNextReviewPage && !isLoadingReviews) {
+        loadRecentReviews(currentReviewPage + 1, true);
+    }
+}
+
+function toggleCommentsSection(reviewId) {
+    const sec = document.getElementById(`comments_section_${reviewId}`);
+    if (!sec) return;
+    const input = document.getElementById(`comment_input_${reviewId}`);
+    if (sec.style.display === "none") {
+        sec.style.display = "flex";
+        if (input) input.focus();
+    } else {
+        if (input) input.focus();
+    }
+}
+
+async function submitComment(event, reviewId) {
+    event.preventDefault();
+    const input = document.getElementById(`comment_input_${reviewId}`);
+    const list = document.getElementById(`comments_list_${reviewId}`);
+    const countEl = document.getElementById(`comment_count_${reviewId}`);
+    if (!input || !input.value.trim()) return;
+
+    const content = input.value.trim();
+    input.value = "";
+
+    try {
+        const res = await fetch(`/api/reviews/${reviewId}/comments/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: content, username: "traveler" }),
+        });
+
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const c = data.comment;
+
+        const newCommentHtml = `
+            <div class="comment-item" id="comment_${c.id}">
+                <div class="comment-avatar">${(c.author?.username || 'U')[0].toUpperCase()}</div>
+                <div class="comment-body">
+                    <div class="comment-meta">
+                        <span class="comment-author">${c.author?.username || 'นักเดินทาง'}</span>
+                        <span class="comment-time">${formatDateTimeWithRelative(c.created_at)}</span>
+                    </div>
+                    <div class="comment-text">${c.content}</div>
+                </div>
+            </div>
+        `;
+
+        list.insertAdjacentHTML("beforeend", newCommentHtml);
+        if (countEl) {
+            countEl.innerText = parseInt(countEl.innerText || 0) + 1;
+        }
+
+        const cached = reviewsDataMap.get(reviewId);
+        if (cached) {
+            if (!cached.comments) cached.comments = [];
+            cached.comments.push(c);
+        }
+
+        showToast("เพิ่มความคิดเห็นเรียบร้อยแล้ว");
+    } catch (err) {
+        console.error(err);
+        showToast("เกิดข้อผิดพลาดในการส่งความคิดเห็น");
+    }
+}
+
+function toggleLikeReview(reviewId) {
+    const isLiked = likedReviewsMap.get(reviewId) || false;
+    const btn = document.getElementById(`like_btn_${reviewId}`);
+    const countEl = document.getElementById(`like_count_${reviewId}`);
+    if (!btn || !countEl) return;
+
+    let count = parseInt(countEl.innerText) || 0;
+    if (isLiked) {
+        likedReviewsMap.set(reviewId, false);
+        btn.classList.remove("liked");
+        countEl.innerText = Math.max(0, count - 1);
+        showToast("ยกเลิกการถูกใจ");
+    } else {
+        likedReviewsMap.set(reviewId, true);
+        btn.classList.add("liked");
+        countEl.innerText = count + 1;
+        showToast("ถูกใจรีวิวนี้แล้ว");
+    }
+}
+
+function shareReview(reviewId) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'ZoneIn Review',
+            text: 'ดูรีวิวสถานที่ท่องเที่ยวนี้บน ZoneIn!',
+            url: window.location.href,
+        }).catch(() => {});
+    } else {
+        showToast("คัดลอกลิงก์เรียบร้อยแล้ว");
+    }
+}
+
+function openImageLightbox(imageUrl, caption = '') {
+    if (!imageUrl) return;
+    const lightbox = document.getElementById("imageLightbox");
+    const img = document.getElementById("lightboxImage");
+    const cap = document.getElementById("lightboxCaption");
+    if (!lightbox || !img) return;
+
+    img.src = imageUrl;
+    if (cap) {
+        if (caption) {
+            cap.innerText = caption;
+            cap.style.display = "block";
+        } else {
+            cap.style.display = "none";
+        }
+    }
+    lightbox.classList.add("show");
+    document.body.style.overflow = "hidden";
+}
+
+function closeImageLightbox(event) {
+    if (event && event.target && event.target.closest(".lightbox-img")) return;
+    const lightbox = document.getElementById("imageLightbox");
+    if (lightbox) {
+        lightbox.classList.remove("show");
+        document.body.style.overflow = "";
+    }
+}
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        closeImageLightbox();
+    }
+});
+    </script>
+{% endblock %}

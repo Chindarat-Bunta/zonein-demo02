@@ -1,0 +1,19 @@
+<!-- Google Maps Navigation Button Component -->
+{# Supports either place object or explicit latitude, longitude, destination_name props #}
+{% with lat=latitude|default:place.latitude lng=longitude|default:place.longitude dest=destination_name|default:place.name addr=place.address %}
+    <a href="{% if place %}{{ place.maps_navigation_url }}{% elif lat and lng %}https://www.google.com/maps/dir/?api=1&destination={{ lat }},{{ lng }}{% elif dest %}https://www.google.com/maps/dir/?api=1&destination={{ dest|urlencode }}{% else %}https://www.google.com/maps{% endif %}"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="btn-google-maps btn-maps-{{ variant|default:'primary' }} btn-maps-{{ size|default:'md' }} {{ custom_class|default:'' }}"
+       data-lat="{{ lat|default:'' }}"
+       data-lng="{{ lng|default:'' }}"
+       data-destination="{{ dest|default:'' }}"
+       data-address="{{ addr|default:'' }}"
+       title="{% if text %}{{ text }}{% else %}นำทางไปยัง {{ dest|default:'สถานที่นี้' }} ด้วย Google Maps{% endif %}"
+       aria-label="{% if text %}{{ text }}{% else %}นำทางไปยัง {{ dest|default:'สถานที่นี้' }} ด้วย Google Maps{% endif %}">
+        <i class="fa-solid fa-diamond-turn-right maps-icon"></i>
+        {% if variant != 'icon-only' %}
+            <span class="maps-btn-label">{{ text|default:'นำทางด้วย Google Maps' }}</span>
+        {% endif %}
+    </a>
+{% endwith %}
