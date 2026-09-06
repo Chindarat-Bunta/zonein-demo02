@@ -110,7 +110,7 @@
                 <div class="tab-glider-pill" id="tabGlider"></div>
 
                 <!-- Tab 1: หน้าแรก -->
-                <a href="/" class="nav-tab-btn active" data-tab="home" id="tabHome">
+                <a href="/#home" class="nav-tab-btn {% if active_tab != 'search' and active_tab != 'notifications' %}active{% endif %}" data-tab="home" id="tabHome">
                     <svg viewBox="0 0 24 24">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -119,7 +119,7 @@
                 </a>
 
                 <!-- Tab 2: ค้นหา -->
-                <a href="#search" class="nav-tab-btn" data-tab="search" id="tabSearch">
+                <a href="/#search" class="nav-tab-btn {% if active_tab == 'search' %}active{% endif %}" data-tab="search" id="tabSearch">
                     <svg viewBox="0 0 24 24">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -128,7 +128,7 @@
                 </a>
 
                 <!-- Tab 3: การแจ้งเตือน -->
-                <a href="#notifications" class="nav-tab-btn" data-tab="notifications" id="tabNotifications">
+                <a href="/#notifications" class="nav-tab-btn {% if active_tab == 'notifications' %}active{% endif %}" data-tab="notifications" id="tabNotifications">
                     <svg viewBox="0 0 24 24">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -163,19 +163,19 @@
 
             <!-- 4. MOBILE: 3 NAV ICONS -->
             <div class="mobile-nav-icons" id="mobileNavIcons" aria-label="แถบนำทางมือถือ">
-                <button type="button" class="mobile-nav-icon-btn active" data-tab="home" id="mobTabHome" aria-label="หน้าแรก" title="หน้าแรก" onclick="switchTab('home')">
+                <button type="button" class="mobile-nav-icon-btn {% if active_tab != 'search' and active_tab != 'notifications' %}active{% endif %}" data-tab="home" id="mobTabHome" aria-label="หน้าแรก" title="หน้าแรก" onclick="switchTab('home')">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                 </button>
-                <button type="button" class="mobile-nav-icon-btn" data-tab="search" id="mobTabSearch" aria-label="ค้นหา" title="ค้นหา" onclick="switchTab('search')">
+                <button type="button" class="mobile-nav-icon-btn {% if active_tab == 'search' %}active{% endif %}" data-tab="search" id="mobTabSearch" aria-label="ค้นหา" title="ค้นหา" onclick="switchTab('search')">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
                 </button>
-                <button type="button" class="mobile-nav-icon-btn" data-tab="notifications" id="mobTabNotifications" aria-label="การแจ้งเตือน" title="การแจ้งเตือน" onclick="switchTab('notifications')">
+                <button type="button" class="mobile-nav-icon-btn {% if active_tab == 'notifications' %}active{% endif %}" data-tab="notifications" id="mobTabNotifications" aria-label="การแจ้งเตือน" title="การแจ้งเตือน" onclick="switchTab('notifications')">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>

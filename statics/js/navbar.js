@@ -95,6 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activePanel) {
             activePanel.classList.add('active');
         }
+
+        // Keep URL hash in sync cleanly
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, null, `#${tabId}`);
+        }
     };
 
     // Mobile Profile Dropdown controls
@@ -237,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const matchesCat = filterState.category === 'all' || category === filterState.category;
 
             // 3. Location Match
-            const matchesLoc = filterState.category === 'all' || filterState.location === 'all' || location.includes(filterState.location);
+            const matchesLoc = filterState.location === 'all' || location.includes(filterState.location);
 
             // 4. Rating Match
             const matchesRating = filterState.minRating === 0 || rating >= filterState.minRating;

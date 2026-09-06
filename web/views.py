@@ -121,10 +121,36 @@ def _ensure_sample_data():
             Comment.objects.create(review=first_review, author=u_backpacker, content="ช่วงเย็นคนเยอะไหมครับ กำลังวางแผนไปเสาร์นี้")
 
 
-def home_view(request):
-    """Render the Home Page Feed view."""
+def home_view(request, active_tab="home"):
+    """Render the Home Page Feed and Search/Explore integrated view."""
     _ensure_sample_data()
-    return render(request, "web/home.html")
+    places = Place.objects.all().order_by("-created_at")
+    category_map = dict(Place.CATEGORY_CHOICES)
+    explore_items = []
+    for p in places:
+        cat_name = category_map.get(p.category, p.category)
+        explore_items.append({
+            "id": p.id,
+            "title": p.name,
+            "category": p.category,
+            "category_name": cat_name,
+            "location": p.location or p.address or "ทั่วไทย",
+            "rating": p.average_rating if p.average_rating else 4.8,
+            "image_url": p.image_url or p.cover_image_url or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1000&auto=format&fit=crop&q=80",
+            "is_video": (p.id % 2 == 1),
+            "detail_url": f"/places/{p.id}/",
+        })
+
+    return render(request, "web/home.html", {
+        "places": places,
+        "explore_items": explore_items,
+        "active_tab": active_tab,
+    })
+
+
+def search_view(request):
+    """Render the Search / Explore page view directly."""
+    return home_view(request, active_tab="search")
 
 
 def index(request):
@@ -349,7 +375,7 @@ def api_recent_reviews(request):
             "id": review.id,
             "rating": review.rating,
             "content": review.content,
-            "image_url": review.image_url,
+            "image_url": review.image_url or (review.place.cover_image_url if review.place else ""),
             "created_at": review.created_at.isoformat(),
             "author": {
                 "id": review.user.id,
