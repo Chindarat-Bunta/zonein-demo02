@@ -51,7 +51,7 @@ def create_or_save_user_profile(sender, instance, created, **kwargs):
 class Place(models.Model):
     """
     Represents a place or travel post created by users:
-    - Title, category, description, and address
+    - Title, category, description, and address / location
     - Coordinates (latitude & longitude) for Google Maps integration
     - Cover image hosted via Cloudinary
     - Author relation
@@ -65,20 +65,25 @@ class Place(models.Model):
         ("other", "อื่นๆ (Other)"),
     ]
 
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="places", verbose_name="ผู้สร้างโพสต์")
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="places",
+        null=True,
+        blank=True,
+        verbose_name="ผู้สร้างโพสต์"
+    )
     name = models.CharField(max_length=255, verbose_name="ชื่อสถานที่")
     slug = models.SlugField(max_length=255, blank=True, db_index=True, verbose_name="Slug")
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default="cafe", verbose_name="หมวดหมู่")
-    description = models.TextField(blank=True, verbose_name="รายละเอียดสถานที่")
-    address = models.CharField(max_length=255, blank=True, verbose_name="ที่อยู่ / พิกัดตำบล-อำเภอ")
-
+    category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default="travel", blank=True, verbose_name="หมวดหมู่")
+    description = models.TextField(blank=True, default="", verbose_name="รายละเอียดสถานที่")
+    address = models.CharField(max_length=255, blank=True, default="", verbose_name="ที่อยู่ / พิกัดตำบล-อำเภอ")
     # Google Maps coordinates
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name="ละติจูด (Google Maps)")
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name="ลองจิจูด (Google Maps)")
-
     # Cloudinary cover image
-    cover_image_url = models.URLField(max_length=500, blank=True, verbose_name="รูปภาพปกสถานที่")
-    cover_image_public_id = models.CharField(max_length=200, blank=True, verbose_name="Cloudinary Cover ID")
+    cover_image_url = models.TextField(blank=True, default="", verbose_name="รูปภาพปกสถานที่")
+    cover_image_public_id = models.CharField(max_length=200, blank=True, default="", verbose_name="Cloudinary Cover ID")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="สร้างเมื่อ")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="แก้ไขล่าสุดเมื่อ")
@@ -89,12 +94,29 @@ class Place(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.name} ({self.get_category_display()})"
+        cat = dict(self.CATEGORY_CHOICES).get(self.category, self.category)
+        return f"{self.name} ({cat})"
 
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name, allow_unicode=True)
         super().save(*args, **kwargs)
+
+    @property
+    def location(self):
+        return self.address
+
+    @location.setter
+    def location(self, val):
+        self.address = val
+
+    @property
+    def image_url(self):
+        return self.cover_image_url
+
+    @image_url.setter
+    def image_url(self, val):
+        self.cover_image_url = val
 
     @property
     def average_rating(self):
@@ -105,6 +127,10 @@ class Place(models.Model):
 
     @property
     def review_count(self):
+        return self.reviews.count()
+
+    @property
+    def reviews_count(self):
         return self.reviews.count()
 
     @property
@@ -145,7 +171,7 @@ class Place(models.Model):
     @property
     def rating_breakdown(self):
         """Calculate review counts and percentages for each star rating (5 down to 1)"""
-        total = self.review_count
+        total = self.reviews_count
         counts = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
         for r in self.reviews.all():
             if r.rating in counts:
@@ -191,14 +217,17 @@ class Review(models.Model):
     - 1 to 5 star rating
     - Text review
     - Link to User and Place
+    - Image attachment
     """
     place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="reviews", verbose_name="สถานที่ที่ถูกรีวิว")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviews", verbose_name="ผู้รีวิว")
     rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        verbose_name="คะแนนดาว (1-5)"
+        verbose_name="คะแนนดาว (1-5)",
+        help_text="คะแนนความประทับใจ 1-5 ดาว",
     )
-    comment = models.TextField(verbose_name="ข้อความรีวิว")
+    comment = models.TextField(blank=True, default="", verbose_name="ข้อความรีวิว", help_text="ข้อความรีวิวบรรยากาศและประสบการณ์")
+    image_url = models.TextField(blank=True, default="", verbose_name="รูปถ่ายสถานที่ประกอบรีวิว", help_text="รูปถ่ายสถานที่ประกอบรีวิว")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="เขียนเมื่อ")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="แก้ไขเมื่อ")
 
@@ -210,9 +239,48 @@ class Review(models.Model):
     def __str__(self):
         return f"★ {self.rating} by {self.user.username} for {self.place.name}"
 
+    @property
+    def author(self):
+        return self.user
+
+    @author.setter
+    def author(self, val):
+        self.user = val
+
+    @property
+    def content(self):
+        return self.comment
+
+    @content.setter
+    def content(self, val):
+        self.comment = val
+
 
 # ==============================================================================
-# 5. Wishlist Model (ระบบสถานที่โปรด: User ID, Place ID)
+# 5. Comment Model (ระบบคอมเมนต์ต่อรีวิว)
+# ==============================================================================
+class Comment(models.Model):
+    """
+    Comment left by viewers on a travel review.
+    ความคิดเห็นของคนที่เข้ามาดูรีวิว
+    """
+    review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name="comments", verbose_name="รีวิวที่คอมเมนต์")
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments", verbose_name="ผู้คอมเมนต์")
+    content = models.TextField(verbose_name="ข้อความความคิดเห็น", help_text="ข้อความความคิดเห็น")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="คอมเมนต์เมื่อ")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="แก้ไขเมื่อ")
+
+    class Meta:
+        verbose_name = "ความคิดเห็น (Comment)"
+        verbose_name_plural = "ความคิดเห็นทั้งหมด (Comments)"
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"{self.author.username} on review #{self.review_id}: {self.content[:30]}"
+
+
+# ==============================================================================
+# 6. Wishlist Model (ระบบสถานที่โปรด: User ID, Place ID)
 # ==============================================================================
 class Wishlist(models.Model):
     """User wishlist / bookmarks for places."""
@@ -231,7 +299,7 @@ class Wishlist(models.Model):
 
 
 # ==============================================================================
-# 6. PlaceLike Model (ระบบ Like / กดหัวใจ: User ID, Place ID)
+# 7. PlaceLike Model (ระบบ Like / กดหัวใจ: User ID, Place ID)
 # ==============================================================================
 class PlaceLike(models.Model):
     """User likes / hearts for places."""
@@ -250,7 +318,7 @@ class PlaceLike(models.Model):
 
 
 # ==============================================================================
-# 7. Notification Model (ระบบการแจ้งเตือน)
+# 8. Notification Model (ระบบการแจ้งเตือน)
 # ==============================================================================
 class Notification(models.Model):
     """
@@ -269,23 +337,18 @@ class Notification(models.Model):
         ("other", "อื่นๆ (Other)"),
     ]
 
-    # 1. ใครเป็นคนกระทำ
     actor = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="notifications_sent",
         verbose_name="ใครเป็นคนกระทำ (Actor / Sender)"
     )
-
-    # 2. ผู้รับการแจ้งเตือน (เจ้าของโพสต์ / ผู้รับ)
     recipient = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="notifications_received",
         verbose_name="ผู้รับการแจ้งเตือน (Recipient)"
     )
-
-    # 3. ทำแอคชันอะไร (เช่น กดไลก์, รีวิว)
     action_type = models.CharField(
         max_length=50,
         choices=ACTION_CHOICES,
@@ -293,8 +356,6 @@ class Notification(models.Model):
         verbose_name="ทำแอคชันอะไร (Action Type)",
         help_text="ประเภทของแอคชัน เช่น like, review, comment, follow"
     )
-
-    # 4. กระทำกับโพสต์ไหน
     post = models.ForeignKey(
         Place,
         on_delete=models.CASCADE,
@@ -303,22 +364,17 @@ class Notification(models.Model):
         related_name="notifications",
         verbose_name="กระทำกับโพสต์ไหน (Target Post / Place)"
     )
-
-    # 5. ผู้ใช้กดอ่านหรือยัง (สถานะ is_read)
     is_read = models.BooleanField(
         default=False,
         db_index=True,
         verbose_name="สถานะกดอ่านแล้วหรือยัง (is_read)"
     )
-
-    # ข้อความเพิ่มเติม (Optional custom message)
     message = models.CharField(
         max_length=255,
         blank=True,
         default="",
         verbose_name="ข้อความแจ้งเตือน"
     )
-
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="เวลาที่เกิดการกระทำ")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="เวลาที่อัปเดตล่าสุด")
 
@@ -335,26 +391,21 @@ class Notification(models.Model):
         post_info = f" บนโพสต์ '{self.post.name}'" if self.post else ""
         return f"{self.actor.username} {self.get_action_type_display()}{post_info} -> {self.recipient.username} ({'อ่านแล้ว' if self.is_read else 'ยังไม่อ่าน'})"
 
-    # Property Aliases for developer convenience
     @property
     def sender(self):
-        """Alias สำหรับ actor (ใครเป็นคนกระทำ)"""
         return self.actor
 
     @property
     def place(self):
-        """Alias สำหรับ post (กระทำกับโพสต์ไหน)"""
         return self.post
 
     def mark_as_read(self):
-        """เปลี่ยนสถานะเป็นอ่านแล้ว"""
         if not self.is_read:
             self.is_read = True
             self.save(update_fields=["is_read", "updated_at"])
 
     @property
     def summary_text(self):
-        """สร้างข้อความสรุปการแจ้งเตือนเป็นภาษาไทย"""
         if self.message:
             return self.message
 

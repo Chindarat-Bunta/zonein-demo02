@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สมัครสมาชิก (Sign Up) — Zone In</title>
+    <meta name="description" content="สร้างบัญชีใหม่ Zone In หรือสมัครสมาชิกผ่าน Google และ Facebook">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #FF9D9D;
+            --primary-dark: #f08383;
+            --primary-light: #FFECEC;
+            --secondary: #BEE3F8;
+            --bg-base: #FAF9F6;
+            --text-main: #2D3748;
+            --text-muted: #718096;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --card-border: rgba(255, 197, 170, 0.45);
+            --radius-pill: 9999px;
+            --radius-card: 28px;
+            --shadow-card: 0 20px 50px -10px rgba(255, 157, 157, 0.22), 0 10px 25px rgba(45, 55, 72, 0.05);
+            --font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(255, 157, 157, 0.25) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(187, 241, 210, 0.28) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(238, 248, 205, 0.35) 0%, transparent 60%),
+                linear-gradient(135deg, #FFF7F3 0%, #FFFDF7 50%, #F4FBF7 100%);
+            background-attachment: fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 16px;
+            font-family: var(--font-family);
+            color: var(--text-main);
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 36px 32px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(255, 157, 157, 0.4);
+        }
+
+        .brand-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .brand-name span {
+            color: #FF9D9D;
+        }
+
+        .auth-title {
+            font-size: 1.55rem;
+            font-weight: 800;
+            text-align: center;
+            letter-spacing: -0.01em;
+            margin-bottom: 6px;
+        }
+
+        .auth-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        /* Flash Messages */
+        .alert-messages {
+            margin-bottom: 20px;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .alert-error {
+            background: rgba(254, 242, 242, 0.95);
+            border: 1px solid rgba(248, 113, 113, 0.4);
+            color: #b91c1c;
+        }
+
+        .alert-success {
+            background: rgba(240, 253, 244, 0.95);
+            border: 1px solid rgba(74, 222, 128, 0.4);
+            color: #15803d;
+        }
+
+        .alert-info {
+            background: rgba(239, 246, 255, 0.95);
+            border: 1px solid rgba(96, 165, 250, 0.4);
+            color: #1d4ed8;
+        }
+
+        /* Social Buttons */
+        .social-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 12px 20px;
+            border-radius: 16px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+            border: 1.5px solid transparent;
+        }
+
+        .social-btn-google {
+            background: #ffffff;
+            color: var(--text-main);
+            border-color: rgba(226, 232, 240, 0.9);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .social-btn-google:hover {
+            border-color: #4285F4;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(66, 133, 244, 0.16);
+        }
+
+        .social-btn-facebook {
+            background: #1877F2;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(24, 119, 242, 0.25);
+        }
+
+        .social-btn-facebook:hover {
+            background: #166fe5;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(24, 119, 242, 0.35);
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .auth-divider span {
+            padding: 0 14px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        /* Form Controls */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .form-row-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            width: 18px;
+            height: 18px;
+            stroke: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            font-family: inherit;
+            font-size: 0.92rem;
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.92);
+            border: 1.5px solid rgba(255, 197, 170, 0.5);
+            border-radius: 14px;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .form-input:focus {
+            background: #ffffff;
+            border-color: #FF9D9D;
+            box-shadow: 0 0 0 4px rgba(255, 157, 157, 0.22);
+        }
+
+        .toggle-pwd-btn {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+        }
+
+        .toggle-pwd-btn:hover {
+            color: var(--text-main);
+        }
+
+        .submit-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 24px;
+            border-radius: var(--radius-pill);
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 24px -4px rgba(255, 157, 157, 0.55);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-top: 6px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px -4px rgba(255, 157, 157, 0.7);
+        }
+
+        .switch-prompt {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .switch-link {
+            font-weight: 700;
+            color: #e56d6d;
+            text-decoration: none;
+            margin-left: 6px;
+        }
+
+        .switch-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card">
+
+            <!-- Brand Logo & Header -->
+            <div class="brand-header">
+                <div class="brand-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                    </svg>
+                </div>
+                <div class="brand-name">Zone<span>In</span></div>
+            </div>
+
+            <!-- Flash Alert Messages -->
+            {% if messages %}
+            <div class="alert-messages">
+                {% for message in messages %}
+                <div class="alert-item alert-{{ message.tags }}">
+                    <span>{% if message.tags == 'error' %}⚠️{% elif message.tags == 'success' %}✓{% else %}ℹ️{% endif %}</span>
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <h1 class="auth-title">สมัครสมาชิก</h1>
+            <p class="auth-subtitle">สร้างบัญชี Zone In เพื่อเริ่มต้นบันทึกและแบ่งปันการเดินทางของคุณ</p>
+
+            <!-- Quick Social Registration Buttons -->
+            <div class="social-buttons">
+                <!-- Google Register Button -->
+                <a href="{% url 'social_login' provider='google' %}" class="social-btn social-btn-google" id="btnGoogleSignUp" title="สมัครด้วย Google">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    <span>สมัครด้วย Google</span>
+                </a>
+
+                <!-- Facebook Register Button -->
+                <a href="{% url 'social_login' provider='facebook' %}" class="social-btn social-btn-facebook" id="btnFacebookSignUp" title="สมัครด้วย Facebook">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    <span>สมัครด้วย Facebook</span>
+                </a>
+            </div>
+
+            <!-- Divider -->
+            <div class="auth-divider">
+                <span>หรือกรอกข้อมูลสมัครสมาชิก</span>
+            </div>
+
+            <!-- Registration Form -->
+            <form action="{% url 'signup' %}" method="POST" class="auth-form">
+                {% csrf_token %}
+                
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="full_name" class="form-label">ชื่อ - นามสกุล</label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <input type="text" id="full_name" name="full_name" class="form-input" placeholder="สมชาย ใจดี" value="{{ full_name|default:'' }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="username" class="form-label">ชื่อผู้ใช้ (Username) *</label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="4"></circle>
+                                <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
+                            </svg>
+                            <input type="text" id="username" name="username" class="form-input" placeholder="somchai99" required value="{{ username|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">อีเมล *</label>
+                    <div class="input-wrap">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="somchai@example.com" required value="{{ email|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="password" class="form-label">รหัสผ่าน *</label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <input type="password" id="password" name="password" class="form-input" placeholder="อย่างน้อย 6 ตัวอักษร" required minlength="6">
+                            <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('password', this)" title="แสดง/ซ่อนรหัสผ่าน">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_password" class="form-label">ยืนยันรหัสผ่าน *</label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <input type="password" id="confirm_password" name="confirm_password" class="form-input" placeholder="กรอกรหัสผ่านอีกครั้ง" required minlength="6">
+                            <button type="button" class="toggle-pwd-btn" onclick="togglePasswordVisibility('confirm_password', this)" title="แสดง/ซ่อนรหัสผ่าน">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="btnSubmitSignUp">
+                    <span>ยืนยันการสมัครสมาชิก</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+            </form>
+
+            <div class="switch-prompt">
+                มีบัญชีสมาชิกอยู่แล้ว?
+                <a href="{% url 'signin' %}" class="switch-link">เข้าสู่ระบบที่นี่</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function togglePasswordVisibility(fieldId, btn) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            if (field.type === 'password') {
+                field.type = 'text';
+                btn.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                `;
+            } else {
+                field.type = 'password';
+                btn.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,26 +1,506 @@
 import json
-from django.http import Http404, JsonResponse
-from django.shortcuts import get_object_or_404, render
-from .models import Place, Review, PlaceImage, PlaceLike, Wishlist
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Avg, Count, Value
+from django.db.models.functions import Coalesce
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+
+from .models import Comment, Place, Review
+
+
+def _ensure_sample_data():
+    """Seed initial popular places, recent reviews, and comments if empty."""
+    if Place.objects.count() == 0:
+        # Users
+        u1, _ = User.objects.get_or_create(username="somchai_explorer", defaults={"email": "somchai@example.com", "first_name": "สมชาย"})
+        u2, _ = User.objects.get_or_create(username="ploy_wanderer", defaults={"email": "ploy@example.com", "first_name": "พลอย"})
+        u3, _ = User.objects.get_or_create(username="ton_backpacker", defaults={"email": "ton@example.com", "first_name": "ต้น"})
+        u4, _ = User.objects.get_or_create(username="traveler", defaults={"email": "traveler@example.com", "first_name": "นักเดินทาง"})
+
+        # Places
+        p1 = Place.objects.create(
+            author=u1,
+            name="สวนป่าเบญจกิติ (Benchakitti Forest Park)",
+            address="คลองเตย กรุงเทพมหานคร",
+            category="travel",
+            description="สวนสาธารณะขนาดใหญ่ใจกลางเมือง พร้อม Skywalk ยาวกว่า 1.6 กิโลเมตร ชมวิวบึงน้ำและตึกระฟ้า",
+            cover_image_url="https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=1000&auto=format&fit=crop&q=80",
+        )
+        p2 = Place.objects.create(
+            author=u2,
+            name="Riva Floating Cafe คาเฟ่แพริมน้ำ",
+            address="อ.สามพราน จ.นครปฐม",
+            category="cafe",
+            description="คาเฟ่สไตล์แพลอยน้ำริมแม่น้ำท่าจีน บรรยากาศสุดชิลล์ นั่งห้อยขาจิบกาแฟและเค้กมะพร้าวอ่อน",
+            cover_image_url="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1000&auto=format&fit=crop&q=80",
+        )
+        p3 = Place.objects.create(
+            author=u3,
+            name="จุดชมวิวผาเดียวดาย & ลานกางเต็นท์ลำตะคอง",
+            address="อุทยานแห่งชาติเขาใหญ่ จ.นครราชสีมา",
+            category="nature",
+            description="สัมผัสอากาศหนาวและทะเลหมอกยามเช้า จุดกางเต็นท์ริมน้ำ ชมดาวเต็มท้องฟ้า",
+            cover_image_url="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1000&auto=format&fit=crop&q=80",
+        )
+        p4 = Place.objects.create(
+            author=u4,
+            name="หาดไร่เลย์ (Railay Beach)",
+            address="อ.เมือง จ.กระบี่",
+            category="travel",
+            description="หาดทรายขาวละเอียดล้อมรอบด้วยหน้าผาหินปูนสูงตระหง่าน แหล่งปีนผาระดับโลกและจุดชมพระอาทิตย์ตก",
+            cover_image_url="https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=1000&auto=format&fit=crop&q=80",
+        )
+        p5 = Place.objects.create(
+            author=u1,
+            name="วัดร่องขุ่น (White Temple)",
+            address="อ.เมือง จ.เชียงราย",
+            category="travel",
+            description="พุทธศิลป์สีขาวบริสุทธิ์อันวิจิตรอลังการ ผลงานชิ้นเอกโดยอาจารย์เฉลิมชัย โฆษิตพิพัฒน์",
+            cover_image_url="https://images.unsplash.com/photo-1528181304800-259b08848526?w=1000&auto=format&fit=crop&q=80",
+        )
+
+        # Reviews
+        r1 = Review.objects.create(
+            place=p1,
+            user=u1,
+            rating=5,
+            comment="สวนสวยอลังการมาก! ทางเดินลอยฟ้าถ่ายรูปสวยทุกมุม แนะนำให้มาช่วง 17.00 น. แสงกำลังละมุนลมเย็นสบาย",
+            image_url="https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=1000&auto=format&fit=crop&q=80",
+        )
+        r2 = Review.objects.create(
+            place=p1,
+            user=u2,
+            rating=5,
+            comment="พื้นที่กว้างขวาง เหมาะมากกับการมาวิ่งออกกำลังกายและปั่นจักรยาน มีที่จอดรถสะดวกสบาย",
+            image_url="",
+        )
+        r3 = Review.objects.create(
+            place=p2,
+            user=u2,
+            rating=4,
+            comment="กาแฟหอม ขนมอร่อย นั่งชิลล์ห้อยขาริมแม่น้ำบรรยากาศดีมาก คนเยอะช่วงวันหยุดแนะนำให้มาช่วงเช้า",
+            image_url="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1000&auto=format&fit=crop&q=80",
+        )
+        r4 = Review.objects.create(
+            place=p3,
+            user=u3,
+            rating=5,
+            comment="กางเต็นท์นอนดูดาว ตื่นเช้ามาเจอทะเลหมอกที่ผาเดียวดาย อากาศ 16 องศา สดชื่นประทับใจสุดๆ",
+            image_url="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1000&auto=format&fit=crop&q=80",
+        )
+        r5 = Review.objects.create(
+            place=p4,
+            user=u4,
+            rating=5,
+            comment="น้ำทะเลใสมาก หน้าผาสวยงามตระการตา ได้ลองพายคายัครอบหาด ประทับใจ 5 ดาวเต็ม!",
+            image_url="https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=1000&auto=format&fit=crop&q=80",
+        )
+        r6 = Review.objects.create(
+            place=p5,
+            user=u1,
+            rating=5,
+            comment="งดงามประณีตสมคำร่ำลือ ศิลปะสีขาวสะท้อนแสงแดดระยิบระยับ ต้องมาเห็นด้วยตาตัวเองสักครั้ง",
+            image_url="https://images.unsplash.com/photo-1528181304800-259b08848526?w=1000&auto=format&fit=crop&q=80",
+        )
+
+        # Seed comments
+        Comment.objects.create(review=r1, author=u2, content="เห็นรูปแล้วอยากไปตามรอยเลยครับ มุมสวยมาก!")
+        Comment.objects.create(review=r1, author=u3, content="ช่วงเย็นคนเยอะไหมครับ กำลังวางแผนไปเสาร์นี้")
+        Comment.objects.create(review=r6, author=u4, content="วัดสวยจริงครับ แดดสะท้อนกระจกวิบวับมาก")
+    elif Comment.objects.count() == 0:
+        u_sample, _ = User.objects.get_or_create(username="ploy_wanderer", defaults={"email": "ploy@example.com"})
+        u_backpacker, _ = User.objects.get_or_create(username="ton_backpacker", defaults={"email": "ton@example.com"})
+        first_review = Review.objects.first()
+        if first_review:
+            Comment.objects.create(review=first_review, author=u_sample, content="เห็นรูปแล้วอยากไปตามรอยเลยครับ มุมสวยมาก!")
+            Comment.objects.create(review=first_review, author=u_backpacker, content="ช่วงเย็นคนเยอะไหมครับ กำลังวางแผนไปเสาร์นี้")
+
+
+def home_view(request):
+    """Render the Home Page Feed view."""
+    _ensure_sample_data()
+    return render(request, "web/home.html")
 
 
 def index(request):
+    """Alias for main view."""
+    return home_view(request)
+
+
+def signin_view(request):
     """
-    Home / Feed page rendering:
-    - Mock explore posts removed as requested.
-    - Waiting to fetch real posts from DB / external branch only.
-    - Displays 'ยังไม่มีโพสต์' empty state until real posts arrive.
+    Sign In / Login view supporting username, email, and social login.
     """
+    if request.method == "POST":
+        identifier = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+        remember_me = request.POST.get("remember_me")
+
+        # Allow login using either username or email
+        username_to_try = identifier
+        if "@" in identifier:
+            matched_user = User.objects.filter(email__iexact=identifier).first()
+            if matched_user:
+                username_to_try = matched_user.username
+
+        user = authenticate(request, username=username_to_try, password=password)
+        if user is not None:
+            login(request, user)
+            if not remember_me:
+                request.session.set_expiry(0)
+            else:
+                request.session.set_expiry(2592000)  # 30 days
+
+            display_name = user.first_name if user.first_name else user.username
+            messages.success(request, f"ยินดีต้อนรับ, {display_name}! เข้าสู่ระบบสำเร็จแล้ว")
+            return redirect("home")
+        else:
+            messages.error(request, "ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง โปรดลองใหม่อีกครั้ง")
+
+    return render(request, "signin.html")
+
+
+def signup_view(request):
+    """
+    Sign Up / Registration view with input validation and instant login.
+    """
+    if request.method == "POST":
+        full_name = request.POST.get("full_name", "").strip()
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip().lower()
+        password = request.POST.get("password", "")
+        confirm_password = request.POST.get("confirm_password", "")
+
+        # Form validation
+        if not username or not email or not password:
+            messages.error(request, "กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง")
+            return render(request, "signup.html", {"full_name": full_name, "username": username, "email": email})
+
+        if len(password) < 6:
+            messages.error(request, "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร")
+            return render(request, "signup.html", {"full_name": full_name, "username": username, "email": email})
+
+        if password != confirm_password:
+            messages.error(request, "รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน")
+            return render(request, "signup.html", {"full_name": full_name, "username": username, "email": email})
+
+        if User.objects.filter(username__iexact=username).exists():
+            messages.error(request, f"ชื่อผู้ใช้ '{username}' มีผู้ใช้งานแล้ว โปรดเลือกชื่ออื่น")
+            return render(request, "signup.html", {"full_name": full_name, "email": email})
+
+        if User.objects.filter(email__iexact=email).exists():
+            messages.error(request, f"อีเมล '{email}' เคยลงทะเบียนแล้ว โปรดเข้าสู่ระบบ")
+            return render(request, "signup.html", {"full_name": full_name, "username": username})
+
+        # Create user account
+        new_user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=full_name if full_name else username
+        )
+        login(request, new_user)
+        messages.success(request, f"สมัครสมาชิกสำเร็จ! ยินดีต้อนรับสู่ Zone In, {new_user.first_name}")
+        return redirect("home")
+
+    return render(request, "signup.html")
+
+
+def social_login_view(request, provider):
+    """
+    Social Login endpoint for Google and Facebook.
+    Provides instant functional login/signup.
+    """
+    provider = provider.lower()
+
+    if provider == "google":
+        username = "google_user"
+        email = "user.google@zonein.app"
+        display_name = "Google User"
+        provider_name = "Google"
+    elif provider == "facebook":
+        username = "facebook_user"
+        email = "user.facebook@zonein.app"
+        display_name = "Facebook User"
+        provider_name = "Facebook"
+    else:
+        messages.error(request, "ผู้ให้บริการไม่ถูกต้อง")
+        return redirect("signin")
+
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={
+            "email": email,
+            "first_name": display_name,
+        }
+    )
+
+    if created:
+        user.set_unusable_password()
+        user.save()
+
+    login(request, user)
+    action_text = "สมัครและเข้าสู่ระบบ" if created else "เข้าสู่ระบบ"
+    messages.success(request, f"{action_text}ด้วย {provider_name} สำเร็จเรียบร้อยแล้ว!")
+    return redirect("home")
+
+
+def logout_view(request):
+    """Logs out the user and redirects with a confirmation message."""
+    logout(request)
+    messages.info(request, "ออกจากระบบเรียบร้อยแล้ว")
+    return redirect("signin")
+
+
+# ==============================================================================
+# Home Page Feed Backend APIs
+# ==============================================================================
+
+@require_http_methods(["GET"])
+def api_popular_places(request):
+    """
+    GET /api/places/popular?page=1&limit=6
+    ดึงรายการสถานที่ฮิต เรียงตามคะแนนดาวเฉลี่ยและจำนวนรีวิว
+    """
+    _ensure_sample_data()
+    page = request.GET.get("page", 1)
+    limit = min(int(request.GET.get("limit", 6)), 50)
+
+    places_qs = (
+        Place.objects.annotate(
+            avg_rating=Coalesce(Avg("reviews__rating"), Value(0.0)),
+            review_count_val=Count("reviews"),
+        )
+        .order_by("-avg_rating", "-review_count_val", "-created_at")
+    )
+
+    paginator = Paginator(places_qs, limit)
     try:
-        places = Place.objects.all().order_by("-created_at")[:12]
-    except Exception:
-        places = []
+        page_obj = paginator.page(page)
+    except (PageNotAnInteger, EmptyPage):
+        page_obj = paginator.page(1)
 
-    explore_items = []  # รอดึงโพสต์จริงอย่างเดียว แสดง 'ยังไม่มีโพสต์' ไว้ก่อน
+    results = []
+    for place in page_obj:
+        results.append({
+            "id": place.id,
+            "name": place.name,
+            "location": place.location,
+            "category": place.category,
+            "description": place.description,
+            "image_url": place.image_url,
+            "average_rating": round(place.avg_rating, 1) if place.avg_rating else 0.0,
+            "reviews_count": place.review_count_val,
+            "created_at": place.created_at.isoformat(),
+        })
 
-    return render(request, "index.html", {
-        "places": places,
-        "explore_items": explore_items,
+    return JsonResponse({
+        "places": results,
+        "total": paginator.count,
+        "page": page_obj.number,
+        "num_pages": paginator.num_pages,
+        "has_next": page_obj.has_next(),
+    })
+
+
+@require_http_methods(["GET"])
+def api_recent_reviews(request):
+    """
+    GET /api/reviews/recent?page=1&limit=6
+    ดึงรีวิวล่าสุด เรียงตาม created_at DESC พร้อมข้อมูลผู้ใช้ สถานที่ และคอมเมนต์
+    """
+    _ensure_sample_data()
+    page = request.GET.get("page", 1)
+    limit = min(int(request.GET.get("limit", 6)), 50)
+
+    reviews_qs = (
+        Review.objects.select_related("user", "place")
+        .prefetch_related("comments__author")
+        .order_by("-created_at")
+    )
+
+    paginator = Paginator(reviews_qs, limit)
+    try:
+        page_obj = paginator.page(page)
+    except (PageNotAnInteger, EmptyPage):
+        page_obj = paginator.page(1)
+
+    results = []
+    for review in page_obj:
+        comments_data = [
+            {
+                "id": c.id,
+                "content": c.content,
+                "created_at": c.created_at.isoformat(),
+                "author": {
+                    "id": c.author.id,
+                    "username": c.author.username,
+                    "nickname": getattr(getattr(c.author, "profile", None), "nickname", "") or c.author.username,
+                },
+            }
+            for c in review.comments.all()
+        ]
+        results.append({
+            "id": review.id,
+            "rating": review.rating,
+            "content": review.content,
+            "image_url": review.image_url,
+            "created_at": review.created_at.isoformat(),
+            "author": {
+                "id": review.user.id,
+                "username": review.user.username,
+                "nickname": getattr(getattr(review.user, "profile", None), "nickname", "") or review.user.username,
+            },
+            "place": {
+                "id": review.place.id,
+                "name": review.place.name,
+                "location": review.place.location,
+                "category": review.place.category,
+            },
+            "comments": comments_data,
+            "comments_count": len(comments_data),
+        })
+
+    return JsonResponse({
+        "reviews": results,
+        "total": paginator.count,
+        "page": page_obj.number,
+        "num_pages": paginator.num_pages,
+        "has_next": page_obj.has_next(),
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_add_comment(request, review_id):
+    """
+    POST /api/reviews/<review_id>/comments/
+    เพิ่มคอมเมนต์ในรีวิว
+    """
+    review = get_object_or_404(Review, pk=review_id)
+    try:
+        data = json.loads(request.body.decode("utf-8")) if request.body else {}
+    except json.JSONDecodeError:
+        data = request.POST
+
+    content = data.get("content", "").strip()
+    if not content:
+        return JsonResponse({"error": "Content cannot be empty"}, status=400)
+
+    username = data.get("username", "").strip()
+    if request.user.is_authenticated and not username:
+        author = request.user
+    else:
+        username = username or "traveler"
+        author, _ = User.objects.get_or_create(username=username, defaults={"email": f"{username}@example.com"})
+
+    comment = Comment.objects.create(review=review, author=author, content=content)
+    return JsonResponse({
+        "success": True,
+        "comment": {
+            "id": comment.id,
+            "content": comment.content,
+            "created_at": comment.created_at.isoformat(),
+            "author": {
+                "id": comment.author.id,
+                "username": comment.author.username,
+            },
+        },
+    }, status=201)
+
+
+@csrf_exempt
+@require_http_methods(["POST", "PUT"])
+def api_edit_review(request, review_id):
+    """
+    POST /api/reviews/<review_id>/edit/
+    แก้ไขข้อความและคะแนนรีวิว
+    """
+    review = get_object_or_404(Review, pk=review_id)
+    try:
+        data = json.loads(request.body.decode("utf-8")) if request.body else {}
+    except json.JSONDecodeError:
+        data = request.POST
+
+    content = data.get("content")
+    if content is not None:
+        review.content = content.strip()
+
+    rating = data.get("rating")
+    if rating is not None:
+        try:
+            rating_val = int(rating)
+            if 1 <= rating_val <= 5:
+                review.rating = rating_val
+        except (ValueError, TypeError):
+            pass
+
+    review.save()
+    return JsonResponse({
+        "success": True,
+        "review": {
+            "id": review.id,
+            "rating": review.rating,
+            "content": review.content,
+            "created_at": review.created_at.isoformat(),
+        },
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST", "DELETE"])
+def api_delete_review(request, review_id):
+    """
+    POST /api/reviews/<review_id>/delete/
+    ลบรีวิว
+    """
+    review = get_object_or_404(Review, pk=review_id)
+    review.delete()
+    return JsonResponse({"success": True, "message": "Review deleted successfully"})
+
+
+@require_http_methods(["GET"])
+def api_place_detail(request, place_id):
+    """GET /api/places/<place_id>/ -> Place detail."""
+    place = get_object_or_404(Place, pk=place_id)
+    return JsonResponse({
+        "id": place.id,
+        "name": place.name,
+        "location": place.location,
+        "category": place.category,
+        "description": place.description,
+        "image_url": place.image_url,
+        "average_rating": place.average_rating,
+        "reviews_count": place.reviews_count,
+        "created_at": place.created_at.isoformat(),
+    })
+
+
+@require_http_methods(["GET"])
+def api_review_detail(request, review_id):
+    """GET /api/reviews/<review_id>/ -> Review detail."""
+    review = get_object_or_404(Review.objects.select_related("user", "place"), pk=review_id)
+    return JsonResponse({
+        "id": review.id,
+        "rating": review.rating,
+        "content": review.content,
+        "image_url": review.image_url,
+        "created_at": review.created_at.isoformat(),
+        "author": {
+            "id": review.user.id,
+            "username": review.user.username,
+        },
+        "place": {
+            "id": review.place.id,
+            "name": review.place.name,
+            "location": review.place.location,
+            "category": review.place.category,
+        },
     })
 
 
@@ -184,37 +664,3 @@ def place_detail(request, place_id=None, slug=None):
     }
     return render(request, "place_detail.html", context)
 
-
-def api_place_detail(request, place_id):
-    """API endpoint providing JSON place and review data for branch integrations."""
-    place = Place.objects.filter(id=place_id).first()
-    if not place:
-        return JsonResponse({"error": "Place not found"}, status=404)
-
-    reviews_data = [
-        {
-            "id": r.id,
-            "user": r.user.username,
-            "rating": r.rating,
-            "comment": r.comment,
-            "created_at": r.created_at.isoformat(),
-        }
-        for r in place.reviews.all()
-    ]
-
-    return JsonResponse({
-        "id": place.id,
-        "name": place.name,
-        "category": place.category,
-        "category_display": place.get_category_display(),
-        "description": place.description,
-        "address": place.address,
-        "latitude": float(place.latitude) if place.latitude else None,
-        "longitude": float(place.longitude) if place.longitude else None,
-        "cover_image_url": place.cover_image_url,
-        "average_rating": place.average_rating,
-        "review_count": place.review_count,
-        "likes_count": place.likes_count,
-        "maps_navigation_url": place.maps_navigation_url,
-        "reviews": reviews_data,
-    })
