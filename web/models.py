@@ -553,3 +553,5 @@ class Notification(models.Model):
 # Backward compatibility aliases
 TravelPost = Place
 PostLike = PlaceLike
+PostComment = Comment
+

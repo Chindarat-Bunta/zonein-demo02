@@ -73,3 +73,4 @@ class NotificationAdmin(admin.ModelAdmin):
     search_fields = ("actor__username", "recipient__username", "post__name", "message")
     list_editable = ("is_read",)
     readonly_fields = ("created_at", "updated_at")
+

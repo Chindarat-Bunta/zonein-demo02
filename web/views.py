@@ -81,7 +81,7 @@ def profile_settings_view(request):
         if upload_success:
             messages.success(request, "บันทึกและอัปเดตข้อมูลส่วนตัวเรียบร้อยแล้ว!")
 
-        return redirect("profile_settings")
+        return redirect("web:profile_settings")
 
     context = {
         "username": username,
