@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'web/base.html' %}
 {% load static %}
 {% block title %}{{ place.name }} - ZoneIn รีวิว{% endblock %}
 {% block content %}
@@ -7,7 +7,7 @@
             <a href="{% url 'web:index' %}"><i class="fa-solid fa-house"></i> หน้าแรก</a>
             <span>/</span>
             {% if place.category %}
-                <a href="{% url 'web:index' %}?category={{ place.category }}">{{ place.get_category_display|default:place.category }}</a>
+                <a href="{% url 'web:index' %}?category={{ place.category.slug }}">{{ place.category.name }}</a>
                 <span>/</span>
             {% endif %}
             <span>{{ place.name }}</span>
@@ -15,7 +15,7 @@
         <div class="place-detail-card">
             <div class="detail-header-grid">
                 <div class="detail-image-gallery">
-                    <img src="{{ place.image_url|default:'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80' }}"
+                    <img src="{{ place.image_url }}"
                          alt="{{ place.name }}"
                          class="detail-main-img">
                 </div>
@@ -23,8 +23,8 @@
                     <div class="detail-badge-group">
                         {% if place.category %}
                             <span class="place-category-badge"
-                                  style="background: #10b981">
-                                <i class="fa-solid fa-location-dot"></i> {{ place.get_category_display|default:place.category }}
+                                  style="background: {{ place.category.color }}">
+                                <i class="fa-solid {{ place.category.icon }}"></i> {{ place.category.name }}
                             </span>
                         {% endif %}
                         {% if place.is_featured %}
@@ -42,7 +42,7 @@
                     </div>
                     <div class="detail-location-row">
                         <i class="fa-solid fa-location-dot"></i>
-                        <span><strong>ทำเล/ที่อยู่:</strong> {{ place.address }}</span>
+                        <span><strong>ย่าน:</strong> {{ place.location.zone }}, {{ place.location.city }}</span>
                     </div>
                     <div class="detail-address-box">
                         <i class="fa-regular fa-map"></i>
@@ -56,13 +56,6 @@
                         </div>
                     {% endif %}
                     <div class="detail-actions">
-                        <button type="button"
-                                class="btn-wishlist-detail btn-wishlist-toggle {% if is_wishlisted or place.id in wishlist_ids %}active{% endif %}"
-                                data-place-id="{{ place.id }}"
-                                data-place-name="{{ place.name }}">
-                            <i class="fa-solid fa-heart icon-heart"></i>
-                            <span class="wishlist-btn-text">{% if is_wishlisted or place.id in wishlist_ids %}บันทึกแล้วในรายการโปรด{% else %}บันทึกเป็นสถานที่โปรด{% endif %}</span>
-                        </button>
                         <a href="https://maps.google.com/?q={{ place.name }}+{{ place.address }}"
                            target="_blank"
                            rel="noopener"
@@ -85,7 +78,7 @@
                 <h2 class="section-heading"><i class="fa-solid fa-fire"></i> สถานที่ใกล้เคียง / หมวดหมู่เดียวกัน</h2>
                 <div class="places-grid">
                     {% for r_place in related_places %}
-                        {% include 'components/place_card.html' with place=r_place %}
+                        {% include 'web/components/place_card.html' with place=r_place %}
                     {% endfor %}
                 </div>
             </section>

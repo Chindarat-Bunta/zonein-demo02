@@ -3,9 +3,10 @@ URL configuration for zonein02 project.
 """
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/", include("web.api.urls")),
     path("", include("web.urls", namespace="web")),
 ]

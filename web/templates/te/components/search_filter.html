@@ -1,10 +1,10 @@
-<!-- Search & Filter Component for Sisaket Province -->
+<!-- Search & Filter Component -->
 <section class="search-filter-wrapper" id="search-filter-section">
     <div class="search-filter-card">
         <!-- Main Search Form -->
         <form id="filter-form"
               action="{% url 'web:index' %}"
-              method="get"
+              method="GET"
               class="filter-form">
             <!-- Top Search Input Bar -->
             <div class="search-input-group">
@@ -14,7 +14,7 @@
                            id="search-input"
                            name="q"
                            value="{{ filters.q }}"
-                           placeholder="ค้นหาชื่อสถานที่ท่องเที่ยวในศรีสะเกษ (เช่น ผามออีแดง, วัดล้านขวด, ไก่ย่างไม้มะดัน)..."
+                           placeholder="ค้นหาชื่อสถานที่, บรรยากาศ, เมนู หรือคำบรรยาย (เช่น กาแฟ specialty, ดาดฟ้า, อารีย์)..."
                            autocomplete="off"
                            class="search-input">
                     <button type="button"
@@ -25,16 +25,8 @@
                     </button>
                 </div>
                 <button type="submit" class="btn-primary-search" id="btn-submit-search">
-                    <i class="fa-solid fa-magnifying-glass"></i> ค้นหา
+                    <i class="fa-solid fa-sliders"></i> ค้นหา
                 </button>
-                <a href="https://www.google.com/maps/search/?api=1&query=สถานที่ท่องเที่ยว+ศรีสะเกษ"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   class="btn-map-view"
-                   id="btn-map-view"
-                   title="เปิดดูแผนที่สถานที่ท่องเที่ยวศรีสะเกษบน Google Maps">
-                    <i class="fa-solid fa-map-location-dot"></i> แผนที่
-                </a>
             </div>
             <!-- Category Filter Chips -->
             <div class="filter-row category-chips-row">
@@ -47,7 +39,7 @@
                     </button>
                     {% for cat in categories %}
                         <button type="button"
-                                class="filter-chip {% if filters.category == cat.slug %}active{% endif %}"
+                                class="filter-chip {% if filters.category == cat.slug or filters.category == cat.id|stringformat:'i' %}active{% endif %}"
                                 data-category="{{ cat.slug }}"
                                 style="--chip-accent: {{ cat.color }}">
                             <i class="fa-solid {{ cat.icon }}"></i> {{ cat.name }}
@@ -62,18 +54,23 @@
             </div>
             <!-- Secondary Filters: Location & Rating & Sort -->
             <div class="filter-secondary-row">
-                <!-- Location Dropdown (Sisaket Districts) -->
+                <!-- Location Dropdown -->
                 <div class="filter-select-group">
-                    <label for="location-select"><i class="fa-solid fa-location-dot"></i> ทำเล/อำเภอ:</label>
+                    <label for="location-select"><i class="fa-solid fa-location-dot"></i> ทำเล/ย่าน:</label>
                     <div class="custom-select-wrapper">
                         <select name="location" id="location-select" class="form-select">
                             <option value="all"
-                                    {% if not filters.location or filters.location == 'all' %}selected{% endif %}>ทุกทำเล / ทั่วทั้งศรีสะเกษ</option>
-                            {% for loc in locations %}
-                                <option value="{{ loc.slug }}"
-                                        {% if filters.location == loc.slug %}selected{% endif %}>
-                                    {{ loc.zone }}
-                                </option>
+                                    {% if not filters.location or filters.location == 'all' %}selected{% endif %}>ทุกทำเล / ทั่วไทย</option>
+                            {% regroup locations by city as city_list %}
+                            {% for city in city_list %}
+                                <optgroup label="📍 {{ city.grouper }}">
+                                    {% for loc in city.list %}
+                                        <option value="{{ loc.slug }}"
+                                                {% if filters.location == loc.slug or filters.location == loc.id|stringformat:'i' %}selected{% endif %}>
+                                            {{ loc.zone }} ({{ loc.city }})
+                                        </option>
+                                    {% endfor %}
+                                </optgroup>
                             {% endfor %}
                         </select>
                     </div>
@@ -122,7 +119,7 @@
                 <span class="text-muted">(จากทั้งหมด {{ all_places_count }} แห่ง)</span>
             </div>
             <div class="search-mode-tag">
-                <span class="live-dot"></span> ระบบค้นหาและตัวกรองพร้อมใช้งาน
+                <span class="live-dot"></span> กรองผลแบบ Real-time
             </div>
         </div>
     </div>
