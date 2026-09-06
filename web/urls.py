@@ -12,6 +12,7 @@ urlpatterns = [
     path("explore/", views.search_view, name="explore"),
     path("wishlist/", views.wishlist_page_view, name="wishlist"),
     path("profile/", views.profile_view, name="profile"),
+    path("profile/settings/", views.profile_settings_view, name="profile_settings"),
     path("places/", views.home_view, name="places_list"),
     path("signin/", views.signin_view, name="signin"),
     path("login/", views.signin_view, name="login"),
@@ -19,6 +20,7 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("social-login/<str:provider>/", views.social_login_view, name="social_login"),
     # REST APIs
+    path("api/profile/update/", views.update_profile_api, name="update_profile_api"),
     path("api/places/", views.api_places_view, name="api_places"),
     path("api/places/popular/", views.api_popular_places, name="api_popular_places"),
     path("api/places/<int:place_id>/", views.api_place_detail, name="api_place_detail"),
