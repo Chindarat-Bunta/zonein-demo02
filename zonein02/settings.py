@@ -48,6 +48,8 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "[::1]",
+    "testserver",
+    "*",
 ]
 if "ALLOWED_HOSTS" in os.environ:
     ALLOWED_HOSTS.extend(

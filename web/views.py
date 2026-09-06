@@ -69,14 +69,12 @@ def api_places_view(request):
 def wishlist_page_view(request):
     wishlist_ids = get_user_wishlist_place_ids(request)
     places = Place.objects.filter(id__in=wishlist_ids)
-    all_places = Place.objects.all()
 
     return render(
         request,
         "wishlist.html",
         {
             "places": places,
-            "all_places": all_places,
             "total_wishlist_count": places.count(),
             "wishlist_ids": wishlist_ids,
         },

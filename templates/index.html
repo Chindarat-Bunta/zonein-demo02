@@ -1,26 +1,4 @@
 {% extends 'base.html' %}
 {% load static %}
-
-{% block title %}ZoneIn - บันทึกและจัดการสถานที่โปรด (Wishlist){% endblock %}
-
-{% block content %}
-    <!-- Hero Section for Wishlist -->
-    <section class="hero-section" style="min-height: 70vh; display: flex; align-items: center;">
-        <div class="container hero-inner" style="max-width: 800px; margin: 0 auto; text-align: center;">
-            <div class="hero-badge" style="background: rgba(236, 72, 153, 0.12); color: #db2777; border-color: rgba(236, 72, 153, 0.3); display: inline-flex; margin-bottom: 1.25rem;">
-                <i class="fa-solid fa-heart"></i> ระบบบันทึกสถานที่โปรด (Wishlist)
-            </div>
-            <h1 class="hero-title" style="font-size: 2.75rem; font-weight: 800; line-height: 1.3; margin-bottom: 1rem;">
-                บันทึกและจัดการ <span style="background: linear-gradient(135deg, #ec4899, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">สถานที่โปรด</span> ของคุณ
-            </h1>
-            <p class="hero-subtitle" style="font-size: 1.15rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 2rem;">
-                รวบรวมสถานที่โปรดของคุณไว้ในที่เดียว พร้อมเรียกดูและจัดการสถานที่ที่คุณบันทึกไว้ได้ตลอดเวลา
-            </p>
-            <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-                <a href="{% url 'web:wishlist' %}" class="btn-primary-wishlist" style="padding: 1rem 2.2rem; font-size: 1.1rem; border-radius: 9999px;">
-                    <i class="fa-solid fa-heart"></i> เปิดดูรายการสถานที่โปรดของฉัน
-                </a>
-            </div>
-        </div>
-    </section>
-{% endblock %}
+{% block title %}ZoneIn - ค้นหาและรีวิวสถานที่ท่องเที่ยว จ.ศรีสะเกษ{% endblock %}
+{% block content %}{% endblock %}
