@@ -323,6 +323,75 @@ a {
     box-shadow: 0 6px 16px var(--primary-glow);
 }
 
+.btn-primary-map-nav {
+    padding: 0 1.5rem;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.btn-primary-map-nav:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+    color: #fff;
+}
+
+.btn-primary-wishlist {
+    padding: 0 1.5rem;
+    background: linear-gradient(135deg, #ec4899, #db2777);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.25);
+}
+
+.btn-primary-wishlist:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(236, 72, 153, 0.35);
+    color: #fff;
+}
+
+.btn-wishlist-inline-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: none;
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--primary-light);
+    transition: var(--transition);
+}
+
+.btn-wishlist-inline-link:hover {
+    background: #e0e7ff;
+    transform: translateX(2px);
+}
+
 /* Category Chips Row */
 .category-chips-row {
     display: flex;

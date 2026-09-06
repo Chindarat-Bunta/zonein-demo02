@@ -1,4 +1,4 @@
-<!-- Search & Filter Component -->
+<!-- Search & Filter Component for Sisaket Province -->
 <section class="search-filter-wrapper" id="search-filter-section">
     <div class="search-filter-card">
         <!-- Main Search Form -->
@@ -6,7 +6,7 @@
               action="{% url 'web:index' %}"
               method="get"
               class="filter-form">
-            <!-- Top Search Input Bar -->
+            <!-- Top Search Input Bar with Search & Maps Buttons -->
             <div class="search-input-group">
                 <div class="search-input-box">
                     <i class="fa-solid fa-magnifying-glass search-icon"></i>
@@ -14,7 +14,7 @@
                            id="search-input"
                            name="q"
                            value="{{ filters.q }}"
-                           placeholder="ค้นหาชื่อสถานที่, บรรยากาศ, เมนู หรือคำบรรยาย (เช่น กาแฟ specialty, ดาดฟ้า, อารีย์)..."
+                           placeholder="ค้นหาชื่อสถานที่ท่องเที่ยว, โบราณสถาน, คาเฟ่, ร้านอาหาร ใน จ.ศรีสะเกษ..."
                            autocomplete="off"
                            class="search-input">
                     <button type="button"
@@ -24,10 +24,22 @@
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
+                <!-- Search Button -->
                 <button type="submit" class="btn-primary-search" id="btn-submit-search">
                     <i class="fa-solid fa-sliders"></i> ค้นหา
                 </button>
+                <!-- Maps Button next to search -->
+                <a href="https://www.google.com/maps/search/?api=1&query=สถานที่ท่องเที่ยว+จังหวัดศรีสะเกษ"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="btn-primary-map-nav"
+                   id="btn-maps-nav"
+                   title="เปิดดูแผนที่สถานที่ท่องเที่ยวศรีสะเกษบน Google Maps">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    <span>แผนที่</span>
+                </a>
             </div>
+
             <!-- Category Filter Chips -->
             <div class="filter-row category-chips-row">
                 <span class="filter-label"><i class="fa-solid fa-shapes"></i> หมวดหมู่:</span>
@@ -52,29 +64,26 @@
                        id="selected-category"
                        value="{{ filters.category|default:'all' }}">
             </div>
-            <!-- Secondary Filters: Location & Rating & Sort -->
+
+            <!-- Secondary Filters: Location (Sisaket Districts) & Rating & Sort -->
             <div class="filter-secondary-row">
-                <!-- Location Dropdown -->
+                <!-- Location Dropdown (Sisaket Districts) -->
                 <div class="filter-select-group">
-                    <label for="location-select"><i class="fa-solid fa-location-dot"></i> ทำเล/ย่าน:</label>
+                    <label for="location-select"><i class="fa-solid fa-location-dot"></i> ทำเล/อำเภอ:</label>
                     <div class="custom-select-wrapper">
                         <select name="location" id="location-select" class="form-select">
                             <option value="all"
-                                    {% if not filters.location or filters.location == 'all' %}selected{% endif %}>ทุกทำเล / ทั่วไทย</option>
-                            {% regroup locations by city as city_list %}
-                            {% for city in city_list %}
-                                <optgroup label="📍 {{ city.grouper }}">
-                                    {% for loc in city.list %}
-                                        <option value="{{ loc.slug }}"
-                                                {% if filters.location == loc.slug or filters.location == loc.id|stringformat:'i' %}selected{% endif %}>
-                                            {{ loc.zone }} ({{ loc.city }})
-                                        </option>
-                                    {% endfor %}
-                                </optgroup>
+                                    {% if not filters.location or filters.location == 'all' %}selected{% endif %}>ทุกทำเล / ทั่วศรีสะเกษ</option>
+                            {% for loc in locations %}
+                                <option value="{{ loc.slug }}"
+                                        {% if filters.location == loc.slug or filters.location == loc.id|stringformat:'i' %}selected{% endif %}>
+                                    {{ loc.zone }}
+                                </option>
                             {% endfor %}
                         </select>
                     </div>
                 </div>
+
                 <!-- Rating Filter -->
                 <div class="filter-select-group">
                     <label for="rating-select"><i class="fa-solid fa-star"></i> คะแนนรีวิว:</label>
@@ -87,6 +96,7 @@
                         </select>
                     </div>
                 </div>
+
                 <!-- Sort Filter -->
                 <div class="filter-select-group">
                     <label for="sort-select"><i class="fa-solid fa-arrow-down-short-wide"></i> เรียงตาม:</label>
@@ -100,6 +110,7 @@
                         </select>
                     </div>
                 </div>
+
                 <!-- Reset Filter Button -->
                 <div class="filter-actions-group">
                     <button type="button"
@@ -112,14 +123,15 @@
                 </div>
             </div>
         </form>
+
         <!-- Active Search Feedback / Counter Bar -->
         <div class="search-feedback-bar">
             <div class="results-counter" id="results-counter">
                 พบ <strong id="count-number">{{ total_count }}</strong> สถานที่
-                <span class="text-muted">(จากทั้งหมด {{ all_places_count }} แห่ง)</span>
+                <span class="text-muted">(ในจังหวัดศรีสะเกษ)</span>
             </div>
             <div class="search-mode-tag">
-                <span class="live-dot"></span> กรองผลแบบ Real-time
+                <span class="live-dot"></span> ระบบค้นหาและตัวกรองพร้อมใช้งาน
             </div>
         </div>
     </div>

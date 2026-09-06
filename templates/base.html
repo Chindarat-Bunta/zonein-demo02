@@ -4,9 +4,9 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% block title %}ZoneIn - ค้นหาและรีวิวสถานที่ คาเฟ่ ร้านอาหาร ที่พัก ทั่วไทย{% endblock %}</title>
+        <title>{% block title %}ZoneIn - ค้นหาและรีวิวสถานที่ท่องเที่ยว จ.ศรีสะเกษ{% endblock %}</title>
         <meta name="description"
-              content="{% block meta_desc %}ค้นหาสถานที่ยอดนิยม คาเฟ่ ร้านอาหาร ที่พัก และที่เที่ยว พร้อมตัวกรองตามหมวดหมู่และย่านทำเลที่คุณชื่นชอบ{% endblock %}">
+              content="{% block meta_desc %}ค้นหาสถานที่ท่องเที่ยว Unseen โบราณสถาน คาเฟ่ ร้านอาหาร และที่พักผ่อนในจังหวัดศรีสะเกษ พร้อมแผนที่นำทาง{% endblock %}">
         <!-- Google Fonts: Plus Jakarta Sans & Prompt -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,20 +29,13 @@
                     </div>
                     <div class="logo-text">Zone<span>In</span></div>
                 </a>
-                <nav class="nav-links">
-                    <a href="{% url 'web:index' %}" class="nav-link"><i class="fa-solid fa-compass"></i> สำรวจสถานที่</a>
-                    <a href="{% url 'web:index' %}?category=cafe" class="nav-link"><i class="fa-solid fa-mug-hot"></i> คาเฟ่</a>
-                    <a href="{% url 'web:index' %}?category=restaurant" class="nav-link"><i class="fa-solid fa-utensils"></i> ร้านอาหาร</a>
-                    <a href="{% url 'web:index' %}?category=hotel" class="nav-link"><i class="fa-solid fa-bed"></i> ที่พัก</a>
-                    <a href="{% url 'web:index' %}?category=travel" class="nav-link"><i class="fa-solid fa-mountain-sun"></i> ที่เที่ยว</a>
-                </nav>
                 <div class="header-actions">
                     <a href="{% url 'web:wishlist' %}"
                        class="btn-wishlist-header"
                        id="header-wishlist-link"
                        title="ดูสถานที่โปรดที่บันทึกไว้">
                         <i class="fa-solid fa-heart"></i>
-                        <span class="header-wishlist-text">รายการโปรด</span>
+                        <span class="header-wishlist-text">สถานที่โปรด</span>
                         <span class="wishlist-badge" id="wishlist-header-count">0</span>
                     </a>
                     <a href="{% url 'admin:index' %}"
@@ -79,7 +72,6 @@
         </footer>
         <!-- App Scripts -->
         <script src="{% static 'js/wishlist.js' %}"></script>
-        <script src="{% static 'js/search-filter.js' %}"></script>
         {% block extra_js %}{% endblock %}
     </body>
 </html>

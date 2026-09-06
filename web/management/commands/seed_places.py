@@ -3,214 +3,171 @@ from web.models import Category, Location, Place
 
 
 class Command(BaseCommand):
-    help = "Seeds demo categories, locations, and places for ZoneIn review app"
+    help = "Seeds demo categories, locations, and places in Sisaket for ZoneIn"
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.NOTICE("[*] Seeding ZoneIn places review data..."))
+        self.stdout.write(self.style.NOTICE("[*] Seeding Sisaket places review data..."))
 
         # 1. Categories
         categories_data = [
+            {"name": "สถานที่ท่องเที่ยว & ธรรมชาติ", "slug": "travel", "icon": "fa-mountain-sun", "color": "#10b981"},
+            {"name": "โบราณสถาน & วัดวาอาราม", "slug": "culture", "icon": "fa-landmark-dome", "color": "#8b5cf6"},
             {"name": "คาเฟ่ & กาแฟ", "slug": "cafe", "icon": "fa-mug-hot", "color": "#f97316"},
             {"name": "ร้านอาหาร & สตรีทฟู้ด", "slug": "restaurant", "icon": "fa-utensils", "color": "#ef4444"},
-            {"name": "ที่พัก & โรงแรม", "slug": "hotel", "icon": "fa-bed", "color": "#3b82f6"},
-            {"name": "สถานที่ท่องเที่ยว", "slug": "travel", "icon": "fa-mountain-sun", "color": "#10b981"},
-            {"name": "บาร์ & ไนท์ไลฟ์", "slug": "bar", "icon": "fa-martini-glass-citrus", "color": "#8b5cf6"},
+            {"name": "ที่พัก & รีสอร์ต", "slug": "hotel", "icon": "fa-bed", "color": "#3b82f6"},
         ]
 
         cat_objs = {}
         for c in categories_data:
-            obj, _ = Category.objects.get_or_create(
+            obj, _ = Category.objects.update_or_create(
                 slug=c["slug"],
                 defaults={"name": c["name"], "icon": c["icon"], "color": c["color"]},
             )
             cat_objs[c["slug"]] = obj
 
-        # 2. Locations
+        # Clear old non-Sisaket locations
+        Location.objects.exclude(city="ศรีสะเกษ").delete()
+
+        # 2. Sisaket Locations
         locations_data = [
-            {"city": "กรุงเทพมหานคร", "zone": "อารีย์ - พหลโยธิน", "slug": "bkk-ari"},
-            {"city": "กรุงเทพมหานคร", "zone": "ทองหล่อ - เอกมัย", "slug": "bkk-thonglor"},
-            {"city": "กรุงเทพมหานคร", "zone": "สยาม - ปทุมวัน", "slug": "bkk-siam"},
-            {"city": "กรุงเทพมหานคร", "zone": "เยาวราช - ตลาดน้อย", "slug": "bkk-yaowarat"},
-            {"city": "เชียงใหม่", "zone": "นิมมานเหมินท์", "slug": "cnx-nimman"},
-            {"city": "เชียงใหม่", "zone": "แม่ริม - ภูเขา", "slug": "cnx-maerim"},
-            {"city": "ชลบุรี", "zone": "บางแสน - ชายหาด", "slug": "cbi-bangsaen"},
-            {"city": "ภูเก็ต", "zone": "ย่านเมืองเก่า (Old Town)", "slug": "pkt-oldtown"},
+            {"city": "ศรีสะเกษ", "zone": "อ.เมืองศรีสะเกษ", "slug": "ssk-muang"},
+            {"city": "ศรีสะเกษ", "zone": "อ.กันทรลักษ์", "slug": "ssk-kantharalak"},
+            {"city": "ศรีสะเกษ", "zone": "อ.อุทุมพรพิสัย", "slug": "ssk-uthumphon"},
+            {"city": "ศรีสะเกษ", "zone": "อ.ขุนหาญ", "slug": "ssk-khunhan"},
+            {"city": "ศรีสะเกษ", "zone": "อ.ราษีไศล", "slug": "ssk-rasisalai"},
+            {"city": "ศรีสะเกษ", "zone": "อ.ขุขันธ์", "slug": "ssk-khukhan"},
+            {"city": "ศรีสะเกษ", "zone": "อ.ห้วยทับทัน", "slug": "ssk-huaitapthan"},
+            {"city": "ศรีสะเกษ", "zone": "อ.ไพรบึง", "slug": "ssk-phraibueng"},
         ]
 
         loc_objs = {}
         for l in locations_data:
-            obj, _ = Location.objects.get_or_create(
+            obj, _ = Location.objects.update_or_create(
                 slug=l["slug"],
                 defaults={"city": l["city"], "zone": l["zone"]},
             )
             loc_objs[l["slug"]] = obj
 
-        # 3. Places
+        # 3. Sisaket Places
         places_data = [
             {
-                "name": "Factory Coffee - Specialty BKK",
-                "slug": "factory-coffee-specialty",
-                "category": cat_objs["cafe"],
-                "location": loc_objs["bkk-ari"],
-                "rating": 4.9,
-                "review_count": 348,
-                "price_level": 2,
-                "address": "49 ถนนพญาไท แขวงถนนพญาไท เขตราชเทวี กรุงเทพฯ",
-                "image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&auto=format&fit=crop&q=80",
-                "description": "ร้านกาแฟระดับแชมป์การันตีรางวัลมากมาย โดดเด่นด้วย Specialty Coffee เมนู Signature หลากหลาย นั่งชิลล์คุยงานสบาย พร้อมบาริสต้ามืออาชีพแนะนำเมล็ด",
-                "tags": "Specialty Coffee, กาแฟดริป, แชมป์บาริสต้า, มีที่จอดรถ, อารีย์",
-                "is_featured": True,
-            },
-            {
-                "name": "Nana Coffee Roasters Ari",
-                "slug": "nana-coffee-roasters-ari",
-                "category": cat_objs["cafe"],
-                "location": loc_objs["bkk-ari"],
-                "rating": 4.8,
-                "review_count": 215,
-                "price_level": 2,
-                "address": "ซอยอารีย์ 4 ฝั่งเหนือ แขวงพญาไท เขตพญาไท กรุงเทพฯ",
-                "image_url": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&auto=format&fit=crop&q=80",
-                "description": "คาเฟ่บรรยากาศสวนทรอปิคอลใจกลางอารีย์ มุมถ่ายรูปเพียบ มีเบเกอรี่และกาแฟ House Blend หลากหลายเมล็ด เหมาะกับคนชอบถ่ายรูปและนั่งพักผ่อน",
-                "tags": "ถ่ายรูปสวย, สวนสวย, ขนมเค้ก, คาเฟ่อารีย์, Co-working",
-                "is_featured": True,
-            },
-            {
-                "name": "เจ๊โอว ข้าวต้มเป็ด (Jeh O Chula)",
-                "slug": "jeh-o-chula",
-                "category": cat_objs["restaurant"],
-                "location": loc_objs["bkk-siam"],
-                "rating": 4.7,
-                "review_count": 920,
-                "price_level": 2,
-                "address": "113 ซอยจุฬาลงกรณ์ 22 แขวงรองเมือง เขตปทุมวัน กรุงเทพฯ",
-                "image_url": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&auto=format&fit=crop&q=80",
-                "description": "ตำนานมาม่าต้มยำหม้อไฟรอบดึกระดับมิชลินไกด์ หมูกรอบยำแซ่บ ยำกุ้งเต้น และเป็ดพะโล้เนื้อนุ่ม รสชาติจัดจ้านถึงใจสไตล์สตรีทฟู้ดกรุงเทพฯ",
-                "tags": "มิชลินไกด์, มาม่าโอ้โห, อาหารรอบดึก, สยาม, สตรีทฟู้ด",
-                "is_featured": True,
-            },
-            {
-                "name": "theCOMMONS Thonglor",
-                "slug": "thecommons-thonglor",
-                "category": cat_objs["bar"],
-                "location": loc_objs["bkk-thonglor"],
-                "rating": 4.6,
-                "review_count": 480,
-                "price_level": 3,
-                "address": "335 ซอยทองหล่อ 17 แขวงคลองตันเหนือ เขตวัฒนา กรุงเทพฯ",
-                "image_url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
-                "description": "คอมมูนิตี้มอลล์สุดชิคสไตล์ Open-air แหล่งรวมร้านอาหาร บาร์ คราฟต์เบียร์ และกิจกรรมไลฟ์สไตล์ใจกลางทองหล่อ เป็นมิตรกับสัตว์เลี้ยง",
-                "tags": "บาร์, ดนตรีสด, Pet-friendly, ทองหล่อ, นั่งชิลล์",
-                "is_featured": False,
-            },
-            {
-                "name": "Graph Contemporary Chiang Mai",
-                "slug": "graph-contemporary-cnx",
-                "category": cat_objs["cafe"],
-                "location": loc_objs["cnx-nimman"],
-                "rating": 4.8,
-                "review_count": 180,
-                "price_level": 2,
-                "address": "ถนนเจริญเมือง ต.วัดเกต อ.เมือง เชียงใหม่",
-                "image_url": "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop&q=80",
-                "description": "คาเฟ่สไตล์วินเทจคลาสสิก ผสมผสานศิลปะและกาแฟ Specialty เมนู Nitro และ Mocktail รสสัมผัสแปลกใหม่ กลิ่นอายเมืองเหนือสุดอบอุ่น",
-                "tags": "เชียงใหม่, นิมมาน, กาแฟ Specialty, มู้ดวินเทจ, ศิลปะ",
-                "is_featured": True,
-            },
-            {
-                "name": "Onsen At Moncham Resort",
-                "slug": "onsen-at-moncham-resort",
-                "category": cat_objs["hotel"],
-                "location": loc_objs["cnx-maerim"],
-                "rating": 4.9,
-                "review_count": 270,
-                "price_level": 4,
-                "address": "293 หมู่ 2 ต.โป่งแยง อ.แม่ริม เชียงใหม่",
-                "image_url": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&auto=format&fit=crop&q=80",
-                "description": "ที่พักออนเซ็นสไตล์เรียวกังญี่ปุ่นท่ามกลางหุบเขาแม่ริม อากาศเย็นสบายตลอดปี มีบ่อน้ำแร่ธรรมชาติ วิวทะเลหมอกยามเช้า และอาหารไคเซกิ",
-                "tags": "ออนเซ็น, วิวภูเขา, ทะเลหมอก, ญี่ปุ่น, ที่พักเชียงใหม่, แม่ริม",
-                "is_featured": True,
-            },
-            {
-                "name": "Torry's Ice Cream Phuket Old Town",
-                "slug": "torrys-ice-cream-phuket",
-                "category": cat_objs["cafe"],
-                "location": loc_objs["pkt-oldtown"],
-                "rating": 4.7,
-                "review_count": 510,
-                "price_level": 2,
-                "address": "16 ซอยรมณีย์ ต.ตลาดเหนือ อ.เมือง ภูเก็ต",
-                "image_url": "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=800&auto=format&fit=crop&q=80",
-                "description": "ร้านไอศกรีมพรีเมียมในตึกเก่าชิโนโปรตุกีส เสิร์ฟไอศกรีมรสชาติขนมพื้นเมืองภูเก็ต เช่น บีโกหมอย และโอ้เอ๋ว รสชาติเป็นเอกลักษณ์",
-                "tags": "ไอศกรีมโฮมเมด, ภูเก็ตโอลด์ทาวน์, ขนมพื้นเมือง, ถ่ายรูปชิคๆ",
-                "is_featured": False,
-            },
-            {
-                "name": "Chariot Bangsaen Beachfront",
-                "slug": "chariot-bangsaen-beachfront",
-                "category": cat_objs["restaurant"],
-                "location": loc_objs["cbi-bangsaen"],
-                "rating": 4.6,
-                "review_count": 390,
-                "price_level": 3,
-                "address": "ถนนรอบเขาสามมุข ต.แสนสุข อ.เมือง ชลบุรี",
-                "image_url": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800&auto=format&fit=crop&q=80",
-                "description": "ร้านอาหารริมทะเลเขาสามมุข วิวพระอาทิตย์ตกดินสุดโรแมนติก อาหารทะเลสดๆ ปลากะพงทอดน้ำปลา กุ้งแม่น้ำเผา นั่งรับลมทะเลสบายๆ",
-                "tags": "อาหารทะเล, ริมทะเล, พระอาทิตย์ตก, บางแสน, เขาสามมุข",
-                "is_featured": False,
-            },
-            {
-                "name": "Ba Hao Tian Mi 八號甜蜜 (เยาวราช)",
-                "slug": "ba-hao-tian-mi-yaowarat",
-                "category": cat_objs["cafe"],
-                "location": loc_objs["bkk-yaowarat"],
-                "rating": 4.5,
-                "review_count": 320,
-                "price_level": 1,
-                "address": "8 ถนนผดุงด้าว แขวงสัมพันธวงศ์ เขตสัมพันธวงศ์ กรุงเทพฯ",
-                "image_url": "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=800&auto=format&fit=crop&q=80",
-                "description": "คาเฟ่พุดดิ้งสไตล์โมเดิร์นไชนิสชื่อดังแห่งเยาวราช พุดดิ้งงาดำ พุดดิ้งชานมไข่มุก และโทสต์ฉ่ำเนย ทานง่าย หวานกำลังดี",
-                "tags": "พุดดิ้ง, เยาวราช, ขนมหวาน, สไตล์จีน, ของกินกลางคืน",
-                "is_featured": False,
-            },
-            {
-                "name": "The Slate Phuket Resort & Spa",
-                "slug": "the-slate-phuket-resort",
-                "category": cat_objs["hotel"],
-                "location": loc_objs["pkt-oldtown"],
-                "rating": 4.9,
-                "review_count": 420,
-                "price_level": 4,
-                "address": "116 หมู่ 1 หาดในยาง ต.สาคู อ.ถลาง ภูเก็ต",
-                "image_url": "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&auto=format&fit=crop&q=80",
-                "description": "รีสอร์ตหรูดีไซน์ Industrial Chic ที่ได้รับแรงบันดาลใจจากประวัติศาสตร์เหมืองแร่ดีบุกภูเก็ต สระว่ายน้ำ 3 สระ สปาระดับโลก ติดหาดในยาง",
-                "tags": "รีสอร์ตหรู, ภูเก็ต, สปา, ติดทะเล, พูลวิลล่า, ถ่ายรูปสวย",
-                "is_featured": True,
-            },
-            {
-                "name": "เขาช่องลม นครนายก",
-                "slug": "khao-chong-lom-nakhorn-nayok",
+                "name": "ผามออีแดง ชายแดนไทย",
+                "slug": "pha-mo-e-dang",
                 "category": cat_objs["travel"],
-                "location": loc_objs["cnx-maerim"], # or general travel
-                "rating": 4.6,
-                "review_count": 650,
+                "location": loc_objs["ssk-kantharalak"],
+                "rating": 4.9,
+                "review_count": 890,
                 "price_level": 1,
-                "address": "เขื่อนขุนด่านปราการชล ต.หินตั้ง อ.เมือง นครนายก",
-                "image_url": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=80",
-                "description": "กรีนแลนด์เมืองไทย นั่งเรือหางยาวเข้าไปชมทุ่งหญ้าเขียวขจีและลำธารใสเย็นกลางหุบเขา เหมาะแก่การเดินป่าเบาๆ ถ่ายภาพธรรมชาติ",
-                "tags": "ธรรมชาติ, เดินป่า, ภูเขา, น้ำตก, ถ่ายรูปธรรมชาติ, Unseen Thailand",
+                "address": "อุทยานแห่งชาติเขาพระวิหาร ต.เสาธงชัย อ.กันทรลักษ์ จ.ศรีสะเกษ",
+                "image_url": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=80",
+                "description": "จุดชมวิวหน้าผาสูงตระหง่าน ชมทะเลหมอกและพระอาทิตย์ขึ้นสุดอลังการ มองเห็นผืนป่ากัมพูชาและภาพสลักนูนต่ำอายุกว่าพันปี",
+                "tags": "ทะเลหมอก, พระอาทิตย์ขึ้น, จุดชมวิว, เขาพระวิหาร, ธรรมชาติ",
+                "is_featured": True,
+            },
+            {
+                "name": "วัดพระธาตุสุพรรณหงส์",
+                "slug": "wat-phra-that-suphannahong",
+                "category": cat_objs["culture"],
+                "location": loc_objs["ssk-muang"],
+                "rating": 4.8,
+                "review_count": 510,
+                "price_level": 1,
+                "address": "บ้านหว้าน ต.น้ำคำ อ.เมือง จ.ศรีสะเกษ",
+                "image_url": "https://images.unsplash.com/photo-1528181304800-259b08848526?w=800&auto=format&fit=crop&q=80",
+                "description": "พระอุโบสถบนเรือสุพรรณหงส์จำลองสีทองอร่ามกลางสระน้ำขนาดใหญ่ ตกแต่งวิจิตรงดงาม พร้อมตลาดโบราณและสะพานไม้ชมบัว",
+                "tags": "เรือสุพรรณหงส์, บึงบัว, ไหว้พระ, ถ่ายรูปสวย, วัฒนธรรม",
+                "is_featured": True,
+            },
+            {
+                "name": "ปราสาทสระกำแพงใหญ่",
+                "slug": "prasat-sa-kamphaeng-yai",
+                "category": cat_objs["culture"],
+                "location": loc_objs["ssk-uthumphon"],
+                "rating": 4.7,
+                "review_count": 420,
+                "price_level": 1,
+                "address": "วัดสระกำแพงใหญ่ ต.สระกำแพงใหญ่ อ.อุทุมพรพิสัย จ.ศรีสะเกษ",
+                "image_url": "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=800&auto=format&fit=crop&q=80",
+                "description": "ปราสาทขอมโบราณที่สมบูรณ์และใหญ่ที่สุดในจังหวัดศรีสะเกษ สร้างด้วยหินทรายและศิลาแลง ศิลปะแบบบาปวนอายุกว่า 1,000 ปี",
+                "tags": "ปราสาทขอม, โบราณสถาน, ประวัติศาสตร์, หินทราย, ศรีสะเกษ",
+                "is_featured": True,
+            },
+            {
+                "name": "วัดล้านขวด (วัดป่ามหาเจดีย์แก้ว)",
+                "slug": "wat-lan-khuat",
+                "category": cat_objs["culture"],
+                "location": loc_objs["ssk-khunhan"],
+                "rating": 4.8,
+                "review_count": 630,
+                "price_level": 1,
+                "address": "ต.สิ อ.ขุนหาญ จ.ศรีสะเกษ",
+                "image_url": "https://images.unsplash.com/photo-1548013146-72479768bada?w=800&auto=format&fit=crop&q=80",
+                "description": "มหาเจดีย์และอุโบสถกลางน้ำที่สร้างขึ้นจากขวดแก้วรีไซเคิลกว่า 1.5 ล้านขวด สะท้อนแสงแดดระยิบระยับสวยงาม แปลกตาและมีเอกลักษณ์ระดับโลก",
+                "tags": "วัดล้านขวด, Unseen Thailand, ขุนหาญ, สถาปัตยกรรม, ถ่ายรูป",
+                "is_featured": True,
+            },
+            {
+                "name": "สวนสมเด็จพระศรีนครินทร์ ศรีสะเกษ",
+                "slug": "somdej-park-sisaket",
+                "category": cat_objs["travel"],
+                "location": loc_objs["ssk-muang"],
+                "rating": 4.6,
+                "review_count": 350,
+                "price_level": 1,
+                "address": "วิทยาลัยเกษตรและเทคโนโลยี ต.หนองครก อ.เมือง จ.ศรีสะเกษ",
+                "image_url": "https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&auto=format&fit=crop&q=80",
+                "description": "สวนสมเด็จฯ แห่งแรกของประเทศไทย แหล่งรวมต้นลำดวนกว่า 40,000 ต้น พร้อมสวนสัตว์ สวนน้ำ และเส้นทางปั่นจักรยานพักผ่อนใจกลางเมือง",
+                "tags": "ดงลำดวน, สวนสาธารณะ, พักผ่อน, สวนสัตว์, ดอกลำดวน",
                 "is_featured": False,
-            }
+            },
+            {
+                "name": "น้ำตกสำโรงเกียรติ",
+                "slug": "samrong-kiat-waterfall",
+                "category": cat_objs["travel"],
+                "location": loc_objs["ssk-khunhan"],
+                "rating": 4.7,
+                "review_count": 280,
+                "price_level": 1,
+                "address": "เขตรักษาพันธุ์สัตว์ป่าพนมดงรัก ต.บักดอง อ.ขุนหาญ จ.ศรีสะเกษ",
+                "image_url": "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=800&auto=format&fit=crop&q=80",
+                "description": "น้ำตกหินทรายขนาดใหญ่สูงกว่า 8 เมตร ไหลผ่านหน้าผาสู่แอ่งน้ำใส ร่มรื่นด้วยพรรณไม้นานาพันธุ์ เหมาะแก่การปิคนิคและเล่นน้ำคลายร้อน",
+                "tags": "น้ำตก, เล่นน้ำ, ธรรมชาติ, ป่าไม้, ขุนหาญ",
+                "is_featured": False,
+            },
+            {
+                "name": "เขื่อนราษีไศล & สะพานข้ามแม่น้ำมูล",
+                "slug": "rasi-salai-dam",
+                "category": cat_objs["travel"],
+                "location": loc_objs["ssk-rasisalai"],
+                "rating": 4.6,
+                "review_count": 210,
+                "price_level": 1,
+                "address": "ต.หนองแค อ.ราษีไศล จ.ศรีสะเกษ",
+                "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80",
+                "description": "จุดชมวิวแม่น้ำมูลสุดกว้างขวาง พระอาทิตย์ตกดินสะท้อนผิวน้ำงดงาม ลมพัดเย็นสบาย พร้อมร้านอาหารปลาเผาริมเขื่อน",
+                "tags": "เขื่อน, แม่น้ำมูล, ชมพระอาทิตย์ตก, จุดชมวิว, ราษีไศล",
+                "is_featured": False,
+            },
+            {
+                "name": "ไก่ย่างไม้มะดัน ห้วยทับทัน",
+                "slug": "huai-thap-than-grilled-chicken",
+                "category": cat_objs["restaurant"],
+                "location": loc_objs["ssk-huaitapthan"],
+                "rating": 4.9,
+                "review_count": 750,
+                "price_level": 1,
+                "address": "ริมทางหลวง 226 ต.ห้วยทับทัน อ.ห้วยทับทัน จ.ศรีสะเกษ",
+                "image_url": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&auto=format&fit=crop&q=80",
+                "description": "ของดีเมืองศรีสะเกษ ไก่บ้านหมักเครื่องเทศย่างด้วยไม้มะดันสด หอมกลิ่นควันไม้และสมุนไพรเฉพาะตัว หนังกรอบเนื้อนุ่ม จิ้มแจ่วรสเด็ด",
+                "tags": "ของดีศรีสะเกษ, ไก่ย่างไม้มะดัน, อาหารอีสาน, ส้มตำ, อร่อยบอกต่อ",
+                "is_featured": True,
+            },
         ]
 
-        for p_data in places_data:
+        for p in places_data:
             Place.objects.update_or_create(
-                slug=p_data["slug"],
-                defaults=p_data,
+                slug=p["slug"],
+                defaults=p,
             )
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"[OK] Successfully seeded {Category.objects.count()} categories, {Location.objects.count()} locations, and {Place.objects.count()} places!"
-            )
-        )
+        self.stdout.write(self.style.SUCCESS(f"[OK] Successfully seeded {len(places_data)} Sisaket places!"))
