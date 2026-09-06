@@ -1,0 +1,523 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ place.name }} — รายละเอียดสถานที่ &amp; แผนที่นำทาง | Zone In</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Base & Place Detail Stylesheets -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/place_detail.css' %}">
+</head>
+<body>
+
+    <!-- ==========================================================================
+         TOP FLOATING MODERN NAVBAR
+         ========================================================================== -->
+    <header class="navbar-wrapper">
+        <nav class="navbar" id="mainNavbar">
+            <!-- 1. LEFT: LOGO -->
+            <a href="/" class="brand-link" id="brandLogo">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="word-zone">Zone</span>
+                    <span class="word-in">In</span>
+                    <span class="brand-pulse-dot"></span>
+                </div>
+            </a>
+
+            <!-- 2. CENTER: NAVIGATION TABS (DESKTOP) -->
+            <div class="nav-center-tabs" id="navTabsContainer">
+                <div class="tab-glider-pill" id="tabGlider"></div>
+                <a href="/" class="nav-tab-btn" data-tab="home" id="tabHome">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span>หน้าแรก</span>
+                </a>
+                <a href="/#search" class="nav-tab-btn active" data-tab="search" id="tabSearch">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>ค้นหา</span>
+                </a>
+                <a href="/#notifications" class="nav-tab-btn" data-tab="notifications" id="tabNotifications">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span>การแจ้งเตือน</span>
+                </a>
+            </div>
+
+            <!-- 3. RIGHT: SIGN IN / SIGN UP (DESKTOP) -->
+            <div class="nav-auth-group">
+                <button class="btn-signin" onclick="triggerAuth('Sign In')">Sign In</button>
+                <button class="btn-signup" onclick="triggerAuth('Sign Up')">
+                    <span>Sign Up</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 4. MOBILE: 3 NAV ICONS ON SAME BAR AS LOGO -->
+            <div class="mobile-nav-icons" id="mobileNavIcons" aria-label="แถบนำทางมือถือ">
+                <a href="/" class="mobile-nav-icon-btn" aria-label="หน้าแรก" title="หน้าแรก">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </a>
+                <a href="/#search" class="mobile-nav-icon-btn active" aria-label="ค้นหา" title="ค้นหา">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </a>
+                <a href="/#notifications" class="mobile-nav-icon-btn" aria-label="การแจ้งเตือน" title="การแจ้งเตือน">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- 5. MOBILE: PROFILE ICON WITH DROPDOWN -->
+            <div class="mobile-profile-wrapper" id="mobileProfileWrapper">
+                <button type="button" class="mobile-profile-btn" id="mobileProfileBtn" aria-label="เมนูโปรไฟล์">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+
+                <div class="mobile-profile-dropdown" id="mobileProfileDropdown" role="menu">
+                    <div class="dropdown-header">
+                        <div class="dropdown-avatar-circle">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div class="dropdown-user-info">
+                            <span class="user-greeting">Zone In Account</span>
+                            <span class="user-status">เข้าสู่ระบบหรือสร้างบัญชีใหม่</span>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-actions">
+                        <button type="button" class="dropdown-auth-btn signin-btn" onclick="handleMobileAuth('Sign In')">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                <polyline points="10 17 15 12 10 7"></polyline>
+                                <line x1="15" y1="12" x2="3" y2="12"></line>
+                            </svg>
+                            <span>Sign In / เข้าสู่ระบบ</span>
+                        </button>
+                        <button type="button" class="dropdown-auth-btn signup-btn" onclick="handleMobileAuth('Sign Up')">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                            <span>Sign Up / สมัครสมาชิก</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- ==========================================================================
+         MAIN PLACE DETAIL CONTAINER
+         ========================================================================== -->
+    <main class="place-detail-container">
+        
+        <!-- Top Bar: Back Button & Quick Actions -->
+        <div class="detail-top-bar">
+            <a href="/#search" class="btn-back-link" id="btnBackToSearch">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                <span>ย้อนกลับไปหน้าค้นหา</span>
+            </a>
+
+            <div class="detail-actions-group">
+                <!-- Like Button -->
+                <button type="button" class="action-chip-btn" id="btnPlaceLike" title="ถูกใจสถานที่นี้">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <span id="likeCount">{{ place.likes_count|default:"142" }}</span>
+                </button>
+
+                <!-- Wishlist Bookmark Button -->
+                <button type="button" class="action-chip-btn" id="btnPlaceWishlist" title="บันทึกในรายการโปรด">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>บันทึกสถานที่</span>
+                </button>
+
+                <!-- Share Button -->
+                <button type="button" class="action-chip-btn" id="btnPlaceShare" title="แชร์ลิงก์สถานที่">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                    <span>แชร์</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Place Header Card -->
+        <div class="place-header-card">
+            <div class="place-badge-row">
+                <span class="category-tag">
+                    <span>✨</span>
+                    <span>{{ place.get_category_display|default:"สถานที่ยอดนิยม" }}</span>
+                </span>
+                <span class="rating-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <span>{{ place.average_rating|default:"4.8" }}</span>
+                    <span style="color: var(--text-muted); font-weight: 500;">({{ place.review_count|default:"28" }} รีวิว)</span>
+                </span>
+            </div>
+
+            <h1 class="place-main-title">{{ place.name }}</h1>
+
+            <div class="place-location-snippet">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>{{ place.address|default:"อำเภอแม่ริม จังหวัดเชียงใหม่" }}</span>
+            </div>
+        </div>
+
+        <!-- Photo Gallery Showcase -->
+        <div class="place-gallery-grid">
+            <div class="gallery-main-photo">
+                <img src="{{ place.cover_image_url|default:'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1400&auto=format&fit=crop' }}" alt="{{ place.name }}">
+            </div>
+            <div class="gallery-side-thumbs">
+                {% for img in gallery_images|slice:":2" %}
+                <div class="thumb-photo-box">
+                    <img src="{{ img.image_url }}" alt="{{ img.caption|default:place.name }}">
+                    {% if img.caption %}
+                    <div class="thumb-caption">{{ img.caption }}</div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="thumb-photo-box">
+                    <img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=800&auto=format&fit=crop" alt="เครื่องดื่ม">
+                    <div class="thumb-caption">เครื่องดื่มและของว่าง</div>
+                </div>
+                <div class="thumb-photo-box">
+                    <img src="https://images.unsplash.com/photo-1497636577773-f1231844b336?q=80&w=800&auto=format&fit=crop" alt="บรรยากาศ">
+                    <div class="thumb-caption">บรรยากาศธรรมชาติ</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Content Layout: 2 Columns (Main Content + Sidebar Map) -->
+        <div class="place-content-layout">
+            
+            <!-- LEFT COLUMN: Description & Reviews Section -->
+            <div class="place-main-column">
+                
+                <!-- Card 1: เกี่ยวกับสถานที่ (About & Atmosphere) -->
+                <section class="content-card">
+                    <div class="card-title-row">
+                        <div class="card-icon">🌿</div>
+                        <h2>เกี่ยวกับสถานที่และบรรยากาศ</h2>
+                    </div>
+
+                    <p class="place-desc-text">
+                        {{ place.description|default:"ฟาร์มสเตย์และคาเฟ่สไตล์ญี่ปุ่นกลางหุบเขา โอบล้อมด้วยธรรมชาติ ทิวทัศน์ภูเขา และอากาศบริสุทธิ์ มีมุมถ่ายรูปสไตล์มินิมอลแบบชนบทญี่ปุ่น เสิร์ฟเครื่องดื่มกาแฟดริป ชาเขียวมัทฉะแท้ และเบเกอรี่โฮมเมดสูตรเฉพาะ เหมาะสำหรับการพักผ่อน สูดอากาศดี และหลีกหนีความวุ่นวาย" }}
+                    </p>
+
+                    <!-- Highlights Pills -->
+                    <div class="highlights-grid">
+                        <div class="highlight-pill"><span class="icon">☕</span><span>กาแฟดริปพิเศษ</span></div>
+                        <div class="highlight-pill"><span class="icon">⛰️</span><span>วิวภูเขาพาโนรามา</span></div>
+                        <div class="highlight-pill"><span class="icon">🚗</span><span>มีที่จอดรถสะดวก</span></div>
+                        <div class="highlight-pill"><span class="icon">📶</span><span>ฟรี Wi-Fi</span></div>
+                        <div class="highlight-pill"><span class="icon">🐾</span><span>Pet Friendly</span></div>
+                        <div class="highlight-pill"><span class="icon">📸</span><span>มุมถ่ายรูปสวย</span></div>
+                    </div>
+                </section>
+
+                <!-- Card 2: พื้นที่สำหรับดึงคอมเมนต์รีวิวมาแสดง (Reviews & Comments Section) -->
+                <section class="content-card" id="reviewsSection">
+                    <div class="card-title-row">
+                        <div class="card-icon">💬</div>
+                        <h2>ความคิดเห็นและรีวิวจากผู้ใช้งาน</h2>
+                        <span style="margin-left: auto; font-size: 0.88rem; color: var(--text-muted); font-weight: 600;">
+                            {{ place.review_count|default:"28" }} ความคิดเห็น
+                        </span>
+                    </div>
+
+                    <!-- Rating Overview Scorecard -->
+                    <div class="rating-overview-box">
+                        <div class="score-card-big">
+                            <div class="score-number">{{ place.average_rating|default:"4.8" }}</div>
+                            <div class="score-stars-row">★★★★★</div>
+                            <div class="score-total-reviews">จาก {{ place.review_count|default:"28" }} นักเดินทาง</div>
+                        </div>
+
+                        <!-- 5 to 1 Star Progress Breakdown -->
+                        <div class="rating-bars-list">
+                            {% for b in rating_breakdown %}
+                            <div class="star-bar-item">
+                                <span class="star-bar-label">{{ b.star }} ดาว</span>
+                                <div class="star-progress-track">
+                                    <div class="star-progress-fill" style="width: {{ b.percentage }}%;"></div>
+                                </div>
+                                <span class="star-bar-count">{{ b.count }}</span>
+                            </div>
+                            {% empty %}
+                            <div class="star-bar-item">
+                                <span class="star-bar-label">5 ดาว</span>
+                                <div class="star-progress-track"><div class="star-progress-fill" style="width: 78%;"></div></div>
+                                <span class="star-bar-count">22</span>
+                            </div>
+                            <div class="star-bar-item">
+                                <span class="star-bar-label">4 ดาว</span>
+                                <div class="star-progress-track"><div class="star-progress-fill" style="width: 18%;"></div></div>
+                                <span class="star-bar-count">5</span>
+                            </div>
+                            <div class="star-bar-item">
+                                <span class="star-bar-label">3 ดาว</span>
+                                <div class="star-progress-track"><div class="star-progress-fill" style="width: 4%;"></div></div>
+                                <span class="star-bar-count">1</span>
+                            </div>
+                            <div class="star-bar-item">
+                                <span class="star-bar-label">2 ดาว</span>
+                                <div class="star-progress-track"><div class="star-progress-fill" style="width: 0%;"></div></div>
+                                <span class="star-bar-count">0</span>
+                            </div>
+                            <div class="star-bar-item">
+                                <span class="star-bar-label">1 ดาว</span>
+                                <div class="star-progress-track"><div class="star-progress-fill" style="width: 0%;"></div></div>
+                                <span class="star-bar-count">0</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Write a Review Box (ฟอร์มเขียนรีวิวใหม่) -->
+                    <div class="write-review-card">
+                        <h4>✍️ เขียนรีวิวและให้คะแนนสถานที่นี้</h4>
+                        <form id="reviewForm">
+                            <!-- Interactive Star Picker -->
+                            <div class="star-picker-row">
+                                <div id="starPicker">
+                                    <span class="star-picker-star selected" data-value="1">★</span>
+                                    <span class="star-picker-star selected" data-value="2">★</span>
+                                    <span class="star-picker-star selected" data-value="3">★</span>
+                                    <span class="star-picker-star selected" data-value="4">★</span>
+                                    <span class="star-picker-star selected" data-value="5">★</span>
+                                </div>
+                                <input type="hidden" id="selectedRatingInput" name="rating" value="5">
+                                <span class="star-picker-hint" id="starPickerHint">5 ดาว — ยอดเยี่ยม ประทับใจมาก</span>
+                            </div>
+
+                            <textarea id="reviewTextarea" class="review-textarea" placeholder="บอกเล่าความประทับใจ บรรยากาศ รสชาติเครื่องดื่ม หรือคำแนะนำสำหรับนักเดินทางคนอื่นๆ..." required></textarea>
+
+                            <div class="review-form-actions">
+                                <button type="submit" class="btn-submit-review" id="btnSubmitReview">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                    <span>ส่งรีวิวของคุณ</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Review Filter Bar -->
+                    <div class="reviews-filter-bar">
+                        <button type="button" class="filter-btn active" data-filter="all">รีวิวทั้งหมด</button>
+                        <button type="button" class="filter-btn" data-filter="5star">5 ดาว</button>
+                        <button type="button" class="filter-btn" data-filter="4star">4 ดาว</button>
+                    </div>
+
+                    <!-- Reviews List Container (รองรับการดึงรีวิวแบบ Dynamic จาก Branch อื่น) -->
+                    <div id="reviewsList" data-place-id="{{ place.id|default:'2' }}">
+                        {% for r in reviews %}
+                        <div class="review-item-card">
+                            <div class="review-author-row">
+                                <div class="author-profile-box">
+                                    <img src="{{ r.user_avatar|default:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' }}" class="author-avatar" alt="{{ r.user_name }}">
+                                    <div class="author-meta">
+                                        <span class="author-name">{{ r.user_name }}</span>
+                                        <span class="author-date">{{ r.created_at }}</span>
+                                    </div>
+                                </div>
+                                <div class="review-stars-score" title="{{ r.rating }} ดาว">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="review-body-text">{{ r.comment }}</div>
+                        </div>
+                        {% empty %}
+                        <div class="review-item-card">
+                            <p style="color: var(--text-muted); text-align: center; padding: 20px;">ยังไม่มีรีวิวสำหรับสถานที่นี้ เป็นคนแรกที่เริ่มเขียนรีวิวเลย!</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+
+            <!-- RIGHT COLUMN: Map & Navigation Sticky Sidebar (สำคัญมาก) -->
+            <aside class="place-sidebar-column">
+                <div class="sidebar-sticky-wrapper">
+                    
+                    <!-- Card: แผนที่และการนำทาง (Map & Navigation Card) -->
+                    <div class="map-card-box">
+                        <div class="card-title-row" style="margin-bottom: 14px;">
+                            <div class="card-icon">🧭</div>
+                            <h3>แผนที่และการนำทาง</h3>
+                        </div>
+
+                        <!-- 1. ปุ่มนำทาง Google Maps ขนาดใหญ่ (PROMINENT NAVIGATION BUTTON) -->
+                        <a href="{{ maps_navigation_url }}" target="_blank" rel="noopener noreferrer" class="btn-navigate-google-maps" id="btnGoogleMapsNav">
+                            <div class="nav-btn-icon">
+                                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                                </svg>
+                            </div>
+                            <div class="nav-btn-text">
+                                <span class="nav-btn-title">นำทางด้วย Google Maps</span>
+                                <span class="nav-btn-subtitle">เปิด GPS นำทางไปยังสถานที่ทันที</span>
+                            </div>
+                            <div class="nav-btn-arrow">➔</div>
+                        </a>
+
+                        <!-- 2. ปุ่มค้นหาตำแหน่งบน Google Maps -->
+                        <a href="{{ maps_search_url }}" target="_blank" rel="noopener noreferrer" class="btn-search-google-maps" id="btnGoogleMapsSearch">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span>ดูตำแหน่งบนแผนที่ Google Maps</span>
+                        </a>
+
+                        <!-- 3. พื้นที่แสดงแผนที่ (Interactive Map Preview Frame) -->
+                        <div class="map-frame-container" id="mapPreviewContainer">
+                            <iframe 
+                                id="mapsEmbedFrame" 
+                                src="{{ maps_embed_url }}" 
+                                title="Google Maps Preview of {{ place.name }}"
+                                allowfullscreen="" 
+                                loading="lazy" 
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+
+                        <!-- 4. ข้อมูลพิกัดและที่อยู่ (Coordinates & Address info panel) -->
+                        <div class="location-info-panel">
+                            <!-- พิกัดละติจูด ลองจิจูด -->
+                            <div class="info-item-row">
+                                <div class="info-item-label">
+                                    <span>🌐</span>
+                                    <span>พิกัด GPS:</span>
+                                </div>
+                                <div class="info-item-value" style="display: flex; align-items: center; gap: 6px;">
+                                    <span>{{ place.latitude|default:"18.8954" }}, {{ place.longitude|default:"98.8682" }}</span>
+                                    <button type="button" class="btn-copy-small" onclick="copyCoordinates('{{ place.latitude|default:18.8954 }}, {{ place.longitude|default:98.8682 }}')">คัดลอก</button>
+                                </div>
+                            </div>
+
+                            <!-- ที่อยู่สถานที่ -->
+                            <div class="info-item-row" style="flex-direction: column; gap: 4px;">
+                                <div class="info-item-label">
+                                    <span>📍</span>
+                                    <span>ที่อยู่สถานที่:</span>
+                                </div>
+                                <div class="info-item-value" style="text-align: left; font-size: 0.84rem; color: var(--text-secondary);">
+                                    {{ place.address|default:"88/1 หมู่ 3 ต.โป่งแยง อ.แม่ริม จ.เชียงใหม่" }}
+                                    <button type="button" class="btn-copy-small" style="margin-left: 6px;" onclick="copyAddress('{{ place.address|default:place.name }}')">คัดลอกที่อยู่</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card: ข้อมูลติดต่อและเวลาเปิด-ปิด -->
+                    <div class="amenities-card-box">
+                        <div class="card-title-row" style="margin-bottom: 12px;">
+                            <div class="card-icon">🕒</div>
+                            <h3>เวลาทำการ &amp; ข้อมูลติดต่อ</h3>
+                        </div>
+
+                        <div class="amenity-row">
+                            <div class="amenity-icon">⏰</div>
+                            <div>
+                                <span class="amenity-text-bold">เวลาเปิด-ปิด:</span>
+                                <span class="amenity-text-desc">เปิดทุกวัน 08:30 – 17:30 น.</span>
+                            </div>
+                        </div>
+
+                        <div class="amenity-row">
+                            <div class="amenity-icon">📞</div>
+                            <div>
+                                <span class="amenity-text-bold">เบอร์โทรศัพท์:</span>
+                                <a href="tel:0819518668" style="color: var(--color-coral-dark); text-decoration: none; font-weight: 600;">081-951-8668</a>
+                            </div>
+                        </div>
+
+                        <div class="amenity-row">
+                            <div class="amenity-icon">🚗</div>
+                            <div>
+                                <span class="amenity-text-bold">ที่จอดรถ:</span>
+                                <span class="amenity-text-desc">มีลานจอดรถส่วนตัวฟรี</span>
+                            </div>
+                        </div>
+
+                        <div class="amenity-row">
+                            <div class="amenity-icon">💳</div>
+                            <div>
+                                <span class="amenity-text-bold">การชำระเงิน:</span>
+                                <span class="amenity-text-desc">เงินสด / โอนเงินผ่าน QR</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Interactive Scripts -->
+    <script src="{% static 'js/navbar.js' %}"></script>
+    <script src="{% static 'js/place_detail.js' %}"></script>
+</body>
+</html>

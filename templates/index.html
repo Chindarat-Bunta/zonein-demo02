@@ -13,6 +13,7 @@
     
     <!-- Custom Design System Stylesheet from statics/ -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/search_explore.css' %}">
 </head>
 <body>
 
@@ -243,10 +244,6 @@
             <!-- Panel 1: หน้าแรก -->
             <div class="tab-panel active" id="panel-home">
                 <h3 style="font-size: 1.4rem; margin-bottom: 12px; color: var(--text-primary);">🌟 หน้าแรก (Home)</h3>
-                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
-                    ทดลองคลิกสลับระหว่างแท็บ <strong>"หน้าแรก"</strong>, <strong>"ค้นหา"</strong> หรือ <strong>"การแจ้งเตือน"</strong> ด้านบน เพื่อชมลูกเล่นแอนิเมชัน Sliding Pill ที่เคลื่อนไหวตามตำแหน่งจริง
-                </p>
-                <div class="interactive-feature-grid">
                     <div class="feature-card">
                         <div class="feature-card-icon">⚡</div>
                         <h4>Sliding Glider Pill</h4>
@@ -265,16 +262,142 @@
                 </div>
             </div>
 
-            <!-- Panel 2: ค้นหา -->
+            <!-- Panel 2: ค้นหา (Explore Feed ตามรูปแบบที่ผู้ใช้ต้องการ พร้อมตัวกรองข้างๆ) -->
             <div class="tab-panel" id="panel-search">
-                <h3 style="font-size: 1.4rem; margin-bottom: 12px; color: var(--text-primary);">🔍 ค้นหา (Search)</h3>
-                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
-                    เมนูค้นหาจัดเตรียมไว้สำหรับเชื่อมต่อไปยังหน้าค้นหา (Search Page) ที่จะสร้างขึ้นในภายหลัง
-                </p>
-                <div style="background: rgba(255,255,255,0.7); border: 1px dashed rgba(255, 157, 157, 0.45); border-radius: 16px; padding: 28px; text-align: center;">
-                    <p style="color: var(--text-secondary); font-size: 0.95rem;">
-                        💡 สามารถเปลี่ยนค่า <code>href="#search"</code> ใน Navbar เป็น URL ปลายทาง เช่น <code>href="/search/"</code> ได้ทันที
-                    </p>
+                <div class="search-explore-wrapper">
+                    
+                    <!-- Search Top Bar (ช่องค้นหาทรงมน + ปุ่มตัวกรองข้างๆ) -->
+                    <div class="search-top-bar-row">
+                        <div class="search-pill-input-box">
+                            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="exploreSearchInput" class="search-pill-input" placeholder="ค้นหา" autocomplete="off" aria-label="ค้นหาสถานที่หรือกิจกรรม">
+                            <button type="button" class="btn-clear-search" id="btnClearSearch" title="ล้างคำค้น">✕</button>
+                        </div>
+
+                        <!-- Side Filter Toggle Button ("ซึ่งตรงค้นหาจะมีการกรองข้างๆ") -->
+                        <button type="button" class="btn-side-filter-toggle" id="btnSideFilterToggle" aria-expanded="false" aria-controls="sideFilterPanel">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="4" y1="21" x2="4" y2="14"></line>
+                                <line x1="4" y1="10" x2="4" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12" y2="3"></line>
+                                <line x1="20" y1="21" x2="20" y2="16"></line>
+                                <line x1="20" y1="12" x2="20" y2="3"></line>
+                                <line x1="1" y1="14" x2="7" y2="14"></line>
+                                <line x1="9" y1="8" x2="15" y2="8"></line>
+                                <line x1="17" y1="16" x2="23" y2="16"></line>
+                            </svg>
+                            <span class="filter-text">ตัวกรอง</span>
+                            <span class="filter-count-badge" id="filterCountBadge" style="display: none;">0</span>
+                        </button>
+                    </div>
+
+                    <!-- Expandable Side Filter Panel -->
+                    <div class="side-filter-panel" id="sideFilterPanel">
+                        <div class="filter-panel-grid">
+                            <!-- Filter 1: หมวดหมู่ -->
+                            <div class="filter-panel-group">
+                                <h4><span>🏷️</span> หมวดหมู่สถานที่</h4>
+                                <select class="filter-panel-select" id="filterCategorySelect">
+                                    <option value="all">ทุกหมวดหมู่ (All)</option>
+                                    <option value="cafe">☕ คาเฟ่ & เบเกอรี่ (Cafe)</option>
+                                    <option value="restaurant">🍲 ร้านอาหาร & สตรีทฟู้ด (Restaurant)</option>
+                                    <option value="nature">🌿 ธรรมชาติ & ฟาร์ม (Nature & Farm)</option>
+                                    <option value="diy">🧶 งานคราฟต์ & DIY (Craft Workshop)</option>
+                                </select>
+                            </div>
+
+                            <!-- Filter 2: ทำเล / จังหวัด -->
+                            <div class="filter-panel-group">
+                                <h4><span>📍</span> ทำเล / ย่าน</h4>
+                                <select class="filter-panel-select" id="filterLocationSelect">
+                                    <option value="all">ทุกทำเล / ทั่วไทย</option>
+                                    <option value="เชียงใหม่">เชียงใหม่ (แม่ริม / นิมมานฯ)</option>
+                                    <option value="อยุธยา">พระนครศรีอยุธยา</option>
+                                    <option value="เชียงราย">เชียงราย (ภูชี้ดาว)</option>
+                                    <option value="กทม.">กรุงเทพมหานคร (อารีย์ / สยาม / สุขุมวิท)</option>
+                                </select>
+                            </div>
+
+                            <!-- Filter 3: คะแนนรีวิว -->
+                            <div class="filter-panel-group">
+                                <h4><span>⭐</span> คะแนนรีวิว</h4>
+                                <select class="filter-panel-select" id="filterRatingSelect">
+                                    <option value="0">ทุกคะแนน</option>
+                                    <option value="4.8">★ 4.8 ดาวขึ้นไป (ยอดเยี่ยม)</option>
+                                    <option value="4.5">★ 4.5 ดาวขึ้นไป (ดีมาก)</option>
+                                    <option value="4.0">★ 4.0 ดาวขึ้นไป (ดี)</option>
+                                </select>
+                            </div>
+
+                            <!-- Filter 4: การจัดเรียง -->
+                            <div class="filter-panel-group">
+                                <h4><span>🔄</span> จัดเรียงผลลัพธ์</h4>
+                                <select class="filter-panel-select" id="filterSortSelect">
+                                    <option value="recommended">แนะนำสำหรับคุณ</option>
+                                    <option value="rating">คะแนนรีวิวสูงสุด</option>
+                                    <option value="reviews">รีวิวมากที่สุด</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="filter-panel-actions">
+                            <button type="button" class="btn-reset-filters" id="btnResetFilters">ล้างตัวกรอง</button>
+                            <button type="button" class="btn-apply-filters" id="btnApplyFilters">นำตัวกรองไปใช้</button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Category Chips Scroll Bar -->
+                    <div class="filter-chips-scroll-wrap" id="filterQuickChips">
+                        <button type="button" class="filter-quick-chip active" data-category="all">✨ ทั้งหมด</button>
+                        <button type="button" class="filter-quick-chip" data-category="cafe">☕ คาเฟ่</button>
+                        <button type="button" class="filter-quick-chip" data-category="restaurant">🍲 ร้านอาหาร</button>
+                        <button type="button" class="filter-quick-chip" data-category="nature">🌿 ธรรมชาติ</button>
+                        <button type="button" class="filter-quick-chip" data-category="diy">🧶 งานคราฟต์ & DIY</button>
+                    </div>
+
+                    <!-- Explore Media Grid (ตามภาพตัวอย่าง 4 คอลัมน์ + ไอคอนเล่นวิดีโอที่มุมขวาบน) -->
+                    <div class="explore-media-grid" id="exploreMediaGrid">
+                        {% for item in explore_items %}
+                        <a href="{{ item.detail_url }}" class="explore-card" data-category="{{ item.category }}" data-location="{{ item.location }}" data-rating="{{ item.rating }}" data-title="{{ item.title }}" data-place-id="{{ item.id }}">
+                            <!-- Video Play Badge (ตรงตามภาพตัวอย่าง) -->
+                            {% if item.is_video %}
+                            <div class="explore-card-video-badge" title="วิดีโอแนะนำ">
+                                <svg viewBox="0 0 24 24">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                            </div>
+                            {% endif %}
+
+                            <!-- Media Thumbnail -->
+                            <img src="{{ item.image_url }}" alt="{{ item.title }}" class="explore-card-media" loading="lazy">
+
+                            <!-- Hover Prompt -->
+                            <div class="explore-card-hover-prompt">
+                                <span>ดูแผนที่ & รีวิว</span>
+                                <span>➔</span>
+                            </div>
+
+                            <!-- Bottom Gradient & Information Overlay -->
+                            <div class="explore-card-overlay">
+                                <div class="explore-card-title">{{ item.title }}</div>
+                                <div class="explore-card-meta">
+                                    <span class="explore-card-tag">{{ item.category_name }}</span>
+                                    <span class="explore-card-rating">★ {{ item.rating }}</span>
+                                </div>
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="explore-empty-state" id="emptyExploreState">
+                            <div class="icon">📭</div>
+                            <h3>ยังไม่มีโพสต์</h3>
+                            <p>ขณะนี้ยังไม่มีโพสต์ในระบบ รอดึงข้อมูลโพสต์จริงมาแสดงผล</p>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 

@@ -6,6 +6,8 @@ urlpatterns = [
     path("", views.home_view, name="index"),
     path("", views.home_view, name="home"),
     path("feed/", views.home_view, name="feed"),
+    path("search/", views.search_view, name="search"),
+    path("explore/", views.search_view, name="explore"),
     path("signin/", views.signin_view, name="signin"),
     path("login/", views.signin_view, name="login"),
     path("signup/", views.signup_view, name="signup"),
@@ -23,4 +25,8 @@ urlpatterns = [
     path("api/reviews/<int:review_id>/comments/", views.api_add_comment, name="api_add_comment"),
     path("api/reviews/<int:review_id>/edit/", views.api_edit_review, name="api_edit_review"),
     path("api/reviews/<int:review_id>/delete/", views.api_delete_review, name="api_delete_review"),
+
+    # Place Details
+    path("places/<int:place_id>/", views.place_detail, name="place_detail"),
+    path("places/<slug:slug>/", views.place_detail, name="place_detail_slug"),
 ]
