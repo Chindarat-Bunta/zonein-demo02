@@ -246,7 +246,7 @@ class PlaceFilterEngine {
 
         const locationTag = place.location ? `
             <span class="place-location-tag">
-                <i class="fa-solid fa-location-dot"></i> ${this.escapeHTML(place.location.zone)}, ${this.escapeHTML(place.location.city)}
+                <i class="fa-solid fa-location-dot"></i> ${this.escapeHTML(place.location.zone)}
             </span>
         ` : '';
 
@@ -258,15 +258,11 @@ class PlaceFilterEngine {
 
         return `
             <article class="place-card" data-place-id="${place.id}">
-                <div class="place-card-image-wrap">
-                    <img 
-                        src="${this.escapeHTML(place.image_url)}" 
-                        alt="${this.escapeHTML(place.name)}" 
-                        class="place-card-img"
-                        loading="lazy"
-                    >
-                    ${categoryBadge}
-                    ${featuredBadge}
+                <div class="place-card-header">
+                    <div class="place-badge-row">
+                        ${categoryBadge}
+                        ${featuredBadge}
+                    </div>
                     <div class="place-rating-badge">
                         <i class="fa-solid fa-star star-icon"></i> ${place.rating.toFixed(1)}
                         <span class="review-count">(${place.review_count})</span>
@@ -282,10 +278,6 @@ class PlaceFilterEngine {
                     <h3 class="place-card-title">
                         <a href="/places/${place.slug}/">${this.escapeHTML(place.name)}</a>
                     </h3>
-
-                    <p class="place-card-desc">
-                        ${this.escapeHTML(this.truncateWords(place.description, 18))}
-                    </p>
 
                     ${tagsHTML}
 

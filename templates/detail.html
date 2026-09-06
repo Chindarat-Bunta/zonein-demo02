@@ -13,59 +13,52 @@
             <span>{{ place.name }}</span>
         </div>
         <div class="place-detail-card">
-            <div class="detail-header-grid">
-                <div class="detail-image-gallery">
-                    <img src="{{ place.image_url }}"
-                         alt="{{ place.name }}"
-                         class="detail-main-img">
-                </div>
-                <div class="detail-info-panel">
-                    <div class="detail-badge-group">
-                        {% if place.category %}
-                            <span class="place-category-badge"
-                                  style="background: {{ place.category.color }}">
-                                <i class="fa-solid {{ place.category.icon }}"></i> {{ place.category.name }}
-                            </span>
-                        {% endif %}
-                        {% if place.is_featured %}
-                            <span class="place-featured-badge"><i class="fa-solid fa-crown"></i> แนะนำ</span>
-                        {% endif %}
-                        <span class="detail-price-pill">{{ place.price_display }}</span>
-                    </div>
-                    <h1 class="detail-title">{{ place.name }}</h1>
-                    <div class="detail-rating-row">
-                        <div class="star-rating">
-                            <i class="fa-solid fa-star"></i>
-                            <span class="score">{{ place.rating|floatformat:1 }}</span>
-                        </div>
-                        <span class="review-counter">จาก {{ place.review_count }} รีวิวจากผู้ใช้งานจริง</span>
-                    </div>
-                    <div class="detail-location-row">
-                        <i class="fa-solid fa-location-dot"></i>
-                        <span><strong>ย่าน:</strong> {{ place.location.zone }}, {{ place.location.city }}</span>
-                    </div>
-                    <div class="detail-address-box">
-                        <i class="fa-regular fa-map"></i>
-                        <span>{{ place.address }}</span>
-                    </div>
-                    {% if place.tag_list %}
-                        <div class="detail-tags-group">
-                            {% for tag in place.tag_list %}
-                                <a href="{% url 'web:index' %}?q={{ tag }}" class="tag-chip">#{{ tag }}</a>
-                            {% endfor %}
-                        </div>
+            <div class="detail-info-panel">
+                <div class="detail-badge-group">
+                    {% if place.category %}
+                        <span class="place-category-badge"
+                              style="background: {{ place.category.color }}">
+                            <i class="fa-solid {{ place.category.icon }}"></i> {{ place.category.name }}
+                        </span>
                     {% endif %}
-                    <div class="detail-actions">
-                        <a href="https://maps.google.com/?q={{ place.name }}+{{ place.address }}"
-                           target="_blank"
-                           rel="noopener"
-                           class="btn-primary-map">
-                            <i class="fa-solid fa-map-location-dot"></i> เปิดดูบน Google Maps
-                        </a>
-                        <a href="{% url 'web:index' %}" class="btn-secondary-back">
-                            <i class="fa-solid fa-arrow-left"></i> กลับไปค้นหา
-                        </a>
+                    {% if place.is_featured %}
+                        <span class="place-featured-badge"><i class="fa-solid fa-crown"></i> แนะนำ</span>
+                    {% endif %}
+                    <span class="detail-price-pill">{{ place.price_display }}</span>
+                </div>
+                <h1 class="detail-title">{{ place.name }}</h1>
+                <div class="detail-rating-row">
+                    <div class="star-rating">
+                        <i class="fa-solid fa-star"></i>
+                        <span class="score">{{ place.rating|floatformat:1 }}</span>
                     </div>
+                    <span class="review-counter">จาก {{ place.review_count }} รีวิวจากผู้ใช้งานจริง</span>
+                </div>
+                <div class="detail-location-row">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span><strong>ทำเล/อำเภอ:</strong> {{ place.location.zone }}</span>
+                </div>
+                <div class="detail-address-box">
+                    <i class="fa-regular fa-map"></i>
+                    <span>{{ place.address }}</span>
+                </div>
+                {% if place.tag_list %}
+                    <div class="detail-tags-group">
+                        {% for tag in place.tag_list %}
+                            <a href="{% url 'web:index' %}?q={{ tag }}" class="tag-chip">#{{ tag }}</a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <div class="detail-actions">
+                    <a href="https://maps.google.com/?q={{ place.name }}+{{ place.address }}"
+                       target="_blank"
+                       rel="noopener"
+                       class="btn-primary-map">
+                        <i class="fa-solid fa-map-location-dot"></i> เปิดดูบน Google Maps
+                    </a>
+                    <a href="{% url 'web:index' %}" class="btn-secondary-back">
+                        <i class="fa-solid fa-arrow-left"></i> กลับไปค้นหา
+                    </a>
                 </div>
             </div>
             <div class="detail-body-section">
