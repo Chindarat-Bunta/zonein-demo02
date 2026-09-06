@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}ZoneIn - ค้นหาและรีวิวสถานที่ท่องเที่ยว จ.ศรีสะเกษ{% endblock %}
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container hero-inner">
+            <div class="hero-badge">
+                <i class="fa-solid fa-sparkles"></i> แพลตฟอร์มค้นหาสถานที่ท่องเที่ยวศรีสะเกษ
+            </div>
+            <h1 class="hero-title">
+                ค้นพบสถานที่น่าเที่ยวใน <span>ศรีสะเกษ</span> ที่คุณหลงรัก
+            </h1>
+            <p class="hero-subtitle">
+                ค้นหาสถานที่ท่องเที่ยว Unseen โบราณสถาน คาเฟ่ ร้านอาหารชื่อดัง และที่พักผ่อนในจังหวัดศรีสะเกษ พร้อมลิงก์แผนที่นำทาง
+            </p>
+        </div>
+    </section>
+    <!-- Main Search & Filter Section -->
+    <div class="container">{% include 'components/search_filter.html' %}</div>
+{% endblock %}

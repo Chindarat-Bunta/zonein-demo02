@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรไฟล์ส่วนตัว (My Profile) — Zone In</title>
+    <meta name="description" content="หน้าโปรไฟล์ส่วนตัว ประวัติการรีวิว และ Wishlist ของคุณบน Zone In">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #FF9D9D;
+            --primary-dark: #f08383;
+            --primary-light: #FFF0F0;
+            --secondary: #BEE3F8;
+            --accent: #FFB095;
+            --bg-base: #FAF9F6;
+            --text-main: #2D3748;
+            --text-muted: #718096;
+            --card-bg: rgba(255, 255, 255, 0.94);
+            --card-border: rgba(255, 197, 170, 0.4);
+            --radius-pill: 9999px;
+            --radius-card: 24px;
+            --radius-sm: 14px;
+            --shadow-card: 0 16px 40px -10px rgba(255, 157, 157, 0.16), 0 8px 24px rgba(45, 55, 72, 0.04);
+            --font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background: 
+                radial-gradient(circle at 10% 15%, rgba(255, 157, 157, 0.2) 0%, transparent 35%),
+                radial-gradient(circle at 90% 85%, rgba(187, 241, 210, 0.22) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(238, 248, 205, 0.25) 0%, transparent 55%),
+                linear-gradient(135deg, #FFF7F3 0%, #FFFDF7 50%, #F4FBF7 100%);
+            background-attachment: fixed;
+            font-family: var(--font-family);
+            color: var(--text-main);
+            padding-bottom: 60px;
+        }
+
+        /* App Bar */
+        .app-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 197, 170, 0.35);
+            padding: 14px 24px;
+        }
+
+        .app-bar-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(255, 157, 157, 0.4);
+        }
+
+        .brand-text {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-text span {
+            color: #FF9D9D;
+        }
+
+        .profile-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: var(--primary-light);
+            border: 1px solid rgba(255, 157, 157, 0.4);
+            border-radius: var(--radius-pill);
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #e56d6d;
+        }
+
+        /* Container */
+        .page-container {
+            max-width: 1000px;
+            margin: 32px auto 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Profile Hero Card */
+        .profile-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card);
+            padding: 36px 32px;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-card-glow {
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 157, 157, 0.25) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .profile-header-layout {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            flex-wrap: wrap;
+        }
+
+        /* Avatar Point (จุดรูปโปรไฟล์) */
+        .avatar-wrapper {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .avatar-circle {
+            width: 104px;
+            height: 104px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 50%, #f9846b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 2.5rem;
+            font-weight: 800;
+            box-shadow: 
+                0 12px 28px -6px rgba(255, 157, 157, 0.5),
+                0 0 0 5px #ffffff,
+                0 0 0 7.5px rgba(255, 157, 157, 0.35);
+            user-select: none;
+        }
+
+        .avatar-online-dot {
+            position: absolute;
+            bottom: 4px;
+            right: 6px;
+            width: 20px;
+            height: 20px;
+            background: #48BB78;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        }
+
+        .avatar-camera-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 30px;
+            height: 30px;
+            background: #ffffff;
+            border: 1px solid rgba(255, 157, 157, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e56d6d;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .avatar-camera-btn:hover {
+            transform: scale(1.1);
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        /* User Info (ชื่อของ user) */
+        .profile-info {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .profile-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+
+        .btn-edit-profile {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            color: #ffffff;
+            font-size: 0.88rem;
+            font-weight: 700;
+            border-radius: var(--radius-pill);
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(255, 157, 157, 0.4);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-edit-profile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 157, 157, 0.55);
+            color: #ffffff;
+        }
+
+        .btn-edit-profile:active {
+            transform: translateY(0);
+        }
+
+        .btn-edit-profile svg {
+            flex-shrink: 0;
+        }
+
+        .user-name-title {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            background: rgba(255, 157, 157, 0.15);
+            color: #e56d6d;
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .user-handle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-meta-chips {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .meta-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Stats Bar (เริ่มที่ 0) */
+        .profile-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 26px;
+            padding-top: 22px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px 8px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 197, 170, 0.35);
+            border-radius: var(--radius-sm);
+            transition: all 0.25s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            background: #ffffff;
+            box-shadow: 0 6px 18px rgba(255, 157, 157, 0.18);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Tab Navigation */
+        .profile-tabs-nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            padding: 6px;
+            border-radius: var(--radius-pill);
+            border: 1px solid rgba(255, 197, 170, 0.4);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+        }
+
+        .tab-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 13px 20px;
+            border-radius: var(--radius-pill);
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 20px -4px rgba(255, 157, 157, 0.55);
+        }
+
+        .tab-count-badge {
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+            font-size: 0.78rem;
+            font-weight: 800;
+            background: rgba(0, 0, 0, 0.06);
+            color: inherit;
+        }
+
+        .tab-btn.active .tab-count-badge {
+            background: rgba(255, 255, 255, 0.28);
+            color: #ffffff;
+        }
+
+        /* Tab Content Panels */
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Clean Empty State Box */
+        .empty-state-box {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1.5px dashed rgba(255, 197, 170, 0.55);
+            border-radius: var(--radius-card);
+            padding: 64px 24px;
+            text-align: center;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-icon-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .empty-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .empty-desc {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 640px) {
+            .profile-card {
+                padding: 24px 20px;
+            }
+            .profile-header-layout {
+                flex-direction: column;
+                text-align: center;
+                gap: 18px;
+            }
+            .profile-title-row {
+                justify-content: center;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .user-name-title {
+                justify-content: center;
+            }
+            .user-handle {
+                justify-content: center;
+            }
+            .user-meta-chips {
+                justify-content: center;
+            }
+            .profile-tabs-nav {
+                flex-direction: column;
+                border-radius: var(--radius-card);
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header / App Bar -->
+    <header class="app-bar">
+        <div class="app-bar-inner">
+            <a href="{% url 'profile' %}" class="brand-link">
+                <div class="brand-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                    </svg>
+                </div>
+                <div class="brand-text">Zone<span>In</span></div>
+            </a>
+            
+            <div class="profile-badge-pill">
+                <span>👤 โปรไฟล์ส่วนตัว</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="page-container">
+
+        <!-- User Profile Hero Card -->
+        <section class="profile-card">
+            <div class="profile-card-glow"></div>
+            
+            <div class="profile-header-layout">
+                <!-- จุดรูปโปรไฟล์ (Profile Avatar Point) -->
+                <div class="avatar-wrapper">
+                    <div class="avatar-circle" title="รูปโปรไฟล์ {{ display_name }}">
+                        {{ display_name|slice:":1"|upper }}
+                    </div>
+                    <!-- Online indicator dot -->
+                    <div class="avatar-online-dot" title="สถานะ: กำลังออนไลน์"></div>
+                    <!-- Edit camera button -->
+                    <a href="/profile/settings/" class="avatar-camera-btn" title="เปลี่ยนรูปโปรไฟล์ / แก้ไขข้อมูล">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- ชื่อของ User & ข้อมูลโปรไฟล์ -->
+                <div class="profile-info">
+                    <div class="profile-title-row">
+                        <h1 class="user-name-title">
+                            <span>{{ display_name }}</span>
+                            <span class="user-badge">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                                สมาชิก Zone In
+                            </span>
+                        </h1>
+                        <a href="/profile/settings/" class="btn-edit-profile" id="btnEditProfile" title="ไปยังหน้าแก้ไขข้อมูลส่วนตัว">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            <span>แก้ไขโปรไฟล์</span>
+                        </a>
+                    </div>
+                    
+                    <div class="user-handle">
+                        <span>@{{ username }}</span>
+                        <span>•</span>
+                        <span>{{ email }}</span>
+                    </div>
+
+                    <div class="user-meta-chips">
+                        <div class="meta-chip">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            <span>สมาชิกตั้งแต่ {{ join_date }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Bar (รีวิวและสถิติเริ่มต้นที่ 0) -->
+            <div class="profile-stats-row">
+                <div class="stat-item">
+                    <div class="stat-value">{{ reviews_count }}</div>
+                    <div class="stat-label">📝 รีวิวทั้งหมด</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ wishlist_count }}</div>
+                    <div class="stat-label">❤️ รายการโปรด</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ likes_count }}</div>
+                    <div class="stat-label">👍 ได้รับการกดไลก์</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs: Reviews & Wishlist -->
+        <nav class="profile-tabs-nav" aria-label="Profile Tabs">
+            <button class="tab-btn active" id="btnTabReviews" onclick="switchTab('reviews')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span>ประวัติการรีวิว (My Reviews)</span>
+                <span class="tab-count-badge">{{ reviews_count }}</span>
+            </button>
+
+            <button class="tab-btn" id="btnTabWishlist" onclick="switchTab('wishlist')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                <span>Wishlist ของตัวเอง (My Wishlist)</span>
+                <span class="tab-count-badge">{{ wishlist_count }}</span>
+            </button>
+        </nav>
+
+        <!-- ==========================================================================
+             PANEL 1: ประวัติการรีวิว (Reviews)
+             ========================================================================== -->
+        <section class="tab-panel active" id="panel-reviews">
+            {% if reviews %}
+                <div class="reviews-list">
+                    {% for rev in reviews %}
+                    <!-- review card -->
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Clean Empty State for Reviews -->
+                <div class="empty-state-box">
+                    <div class="empty-icon-circle">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FF9D9D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <h3 class="empty-title">ยังไม่มีประวัติการรีวิว</h3>
+                    <p class="empty-desc">เมื่อคุณเขียนรีวิวสถานที่ท่องเที่ยว คาเฟ่ หรือที่พัก ประวัติการรีวิวของคุณจะปรากฏที่นี่</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- ==========================================================================
+             PANEL 2: Wishlist ของตัวเอง (Wishlist)
+             ========================================================================== -->
+        <section class="tab-panel" id="panel-wishlist">
+            {% if wishlist %}
+                <div class="wishlist-grid">
+                    {% for item in wishlist %}
+                    <!-- wishlist card -->
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Clean Empty State for Wishlist -->
+                <div class="empty-state-box">
+                    <div class="empty-icon-circle">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FF9D9D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="empty-title">ยังไม่มีรายการใน Wishlist</h3>
+                    <p class="empty-desc">เมื่อคุณกดบันทึกสถานที่โปรดที่อยากไป สถานที่จะถูกรวบรวมไว้ที่นี่</p>
+                </div>
+            {% endif %}
+        </section>
+
+    </main>
+
+    <!-- JavaScript for Tab Switching -->
+    <script>
+        function switchTab(tabName) {
+            const btnReviews = document.getElementById('btnTabReviews');
+            const btnWishlist = document.getElementById('btnTabWishlist');
+            const panelReviews = document.getElementById('panel-reviews');
+            const panelWishlist = document.getElementById('panel-wishlist');
+
+            if (tabName === 'reviews') {
+                btnReviews.classList.add('active');
+                btnWishlist.classList.remove('active');
+                panelReviews.classList.add('active');
+                panelWishlist.classList.remove('active');
+            } else if (tabName === 'wishlist') {
+                btnWishlist.classList.add('active');
+                btnReviews.classList.remove('active');
+                panelWishlist.classList.add('active');
+                panelReviews.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>

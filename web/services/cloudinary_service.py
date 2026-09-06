@@ -28,7 +28,7 @@ def is_cloudinary_configured() -> bool:
 
 def upload_image(
     file,
-    folder: str = "zonein/avatars",
+    folder: str = "zonein",
     public_id: str = None,
     tags: list = None,
     transformation: list = None,
@@ -47,6 +47,7 @@ def upload_image(
     :return: dict containing upload results (success, url, public_id, etc.)
     """
     try:
+        # Default optimization options
         upload_options = {
             "folder": folder,
             "resource_type": resource_type,
@@ -63,12 +64,15 @@ def upload_image(
         if transformation:
             upload_options["transformation"] = transformation
         else:
+            # Standard optimization: auto quality, auto format
             upload_options["transformation"] = [
                 {"quality": "auto", "fetch_format": "auto"}
             ]
 
+        # Merge any additional Cloudinary upload options
         upload_options.update(kwargs)
 
+        # Call Cloudinary API
         response = cloudinary.uploader.upload(file, **upload_options)
 
         return {
@@ -96,6 +100,10 @@ def upload_image(
 def delete_image(public_id: str, resource_type: str = "image", **kwargs) -> dict:
     """
     Delete an image or media asset from Cloudinary by its public_id.
+
+    :param public_id: Cloudinary public_id of the image to remove.
+    :param resource_type: Resource type ('image', 'video', 'raw').
+    :return: dict with success status and Cloudinary result.
     """
     if not public_id:
         return {"success": False, "error": "public_id is required"}
@@ -135,6 +143,15 @@ def get_optimized_url(
 ) -> str:
     """
     Generate an optimized delivery URL for a Cloudinary asset with on-the-fly transformations.
+
+    :param public_id: Cloudinary public_id.
+    :param width: Desired width in pixels.
+    :param height: Desired height in pixels.
+    :param crop: Crop mode ('fill', 'scale', 'fit', 'thumb', etc.).
+    :param quality: Compression quality ('auto', 'auto:good', 'auto:best', or 1-100).
+    :param fetch_format: File format ('auto' for WebP/AVIF depending on browser support).
+    :param secure: Use HTTPS protocol.
+    :return: Formatted URL string.
     """
     if not public_id:
         return ""
@@ -151,6 +168,7 @@ def get_optimized_url(
         if height:
             transformation["height"] = height
 
+    # Support extra transformation parameters like gravity="auto"
     transformation.update(kwargs)
 
     url, _ = cloudinary.utils.cloudinary_url(
@@ -168,6 +186,10 @@ def upload_multiple_images(
 ) -> list:
     """
     Batch upload multiple image files to Cloudinary.
+
+    :param files: List of files or file paths.
+    :param folder: Target folder.
+    :return: List of upload result dicts.
     """
     results = []
     for file in files:
