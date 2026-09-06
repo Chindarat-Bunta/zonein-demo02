@@ -166,10 +166,12 @@ class Command(BaseCommand):
             },
         ]
 
+        valid_fields = {f.name for f in Place._meta.get_fields()}
         for p in places_data:
+            model_data = {k: v for k, v in p.items() if k in valid_fields}
             Place.objects.update_or_create(
                 slug=p["slug"],
-                defaults=p,
+                defaults=model_data,
             )
 
         self.stdout.write(
