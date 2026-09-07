@@ -27,14 +27,13 @@
                 <button type="submit" class="btn-primary-search" id="btn-submit-search">
                     <i class="fa-solid fa-magnifying-glass"></i> ค้นหา
                 </button>
-                <a href="https://www.google.com/maps/search/?api=1&query=สถานที่ท่องเที่ยว+ศรีสะเกษ"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   class="btn-map-view"
-                   id="btn-map-view"
-                   title="เปิดดูแผนที่สถานที่ท่องเที่ยวศรีสะเกษบน Google Maps">
+                <button type="button"
+                        class="btn-map-view"
+                        id="btn-map-view"
+                        onclick="openMapPickerModal('search')"
+                        title="เปิดแผนที่เพื่อปักหมุดตำแหน่งและค้นหา">
                     <i class="fa-solid fa-map-location-dot"></i> แผนที่
-                </a>
+                </button>
             </div>
             <!-- Category Filter Chips -->
             <div class="filter-row category-chips-row">

@@ -669,8 +669,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const location = card.getAttribute('data-location') || '';
             const rating = parseFloat(card.getAttribute('data-rating') || '0');
 
-            // 1. Text Query Match
-            const matchesQuery = !filterState.query || title.includes(filterState.query.toLowerCase());
+            // 1. Text Query Match (matches Place Title, Location, and District)
+            const q = filterState.query.toLowerCase();
+            const matchesQuery = !filterState.query || title.includes(q) || location.toLowerCase().includes(q);
 
             // 2. Category Match
             const matchesCat = filterState.category === 'all' || category === filterState.category;

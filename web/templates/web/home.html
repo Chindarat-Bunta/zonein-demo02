@@ -924,8 +924,8 @@
                     <span class="filter-count-badge" id="filterCountBadge" style="display: none;">0</span>
                 </button>
 
-                <!-- Google Maps Button Beside Filter (ดึงจาก components/maps_button.html) -->
-                {% include 'components/maps_button.html' with text="Google Maps" variant="outline" size="md" custom_class="btn-maps-search-top" destination_name="สถานที่ท่องเที่ยว ศรีสะเกษ" %}
+                <!-- Google Maps Button Beside Filter (ดึงจาก components/maps_button.html แบบเปิด Map Picker ปักหมุด) -->
+                {% include 'components/maps_button.html' with mode="picker" target="search" text="Google Maps" variant="outline" size="md" custom_class="btn-maps-search-top" %}
             </div>
 
             <!-- Expandable Side Filter Panel -->

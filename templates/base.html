@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <!-- Font Awesome Icons for legacy component compatibility -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Leaflet CSS for Map Pin Picker -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 
     <style>
         /* Base page content layout integration */
@@ -97,6 +99,9 @@
     <!-- Create Post Popup Modal Component -->
     {% include 'components/create_post_modal.html' %}
 
+    <!-- Interactive Map Pin Picker Modal Component -->
+    {% include 'components/map_picker_modal.html' %}
+
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
@@ -105,8 +110,11 @@
         <p>© 2026 Zone In — แพลตฟอร์มค้นหาและรีวิวสถานที่ท่องเที่ยวยอดฮิต</p>
     </footer>
 
+    <!-- Leaflet Map JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <!-- JavaScript from Dev -->
     <script src="{% static 'js/navbar.js' %}"></script>
+    <script src="{% static 'js/map_picker.js' %}"></script>
     {% block extra_scripts %}{% endblock %}
     {% block extra_js %}{% endblock %}
 </body>

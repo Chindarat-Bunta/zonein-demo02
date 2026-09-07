@@ -96,8 +96,11 @@
                                 </svg>
                                 <span>📍 เช็กอินพิกัดปัจจุบัน</span>
                             </button>
-                            <!-- นำ components/maps_button.html มาใช้ -->
-                            {% include 'components/maps_button.html' with text="Google Maps" variant="outline" size="sm" custom_class="btn-maps-modal-link" destination_name="ศรีสะเกษ" %}
+                            <!-- นำปุ่มปักหมุด Google Maps แบบอินเตอร์แอคทีฟมาใช้ -->
+                            <button type="button" class="btn-google-maps btn-maps-outline btn-maps-sm btn-maps-modal-link" onclick="openMapPickerModal('post')" title="เปิดแผนที่เพื่อปักหมุดตำแหน่ง">
+                                <i class="fa-solid fa-map-location-dot maps-icon"></i>
+                                <span class="maps-btn-label">ปักหมุด Google Maps</span>
+                            </button>
                         </div>
                     </div>
 
@@ -132,15 +135,24 @@
                                 </svg>
                                 <span>แผนที่ปักหมุดเช็กอิน</span>
                             </span>
-                            <span class="map-badge" id="mapStatusBadge">พร้อมปักหมุด</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" class="btn-quick-open-picker" onclick="openMapPickerModal('post')" title="เปิดแผนที่เพื่อเลือกตำแหน่งใหม่" style="background: rgba(255, 157, 157, 0.16); border: 1px solid #FF9D9D; color: #e25c5c; padding: 2px 10px; border-radius: 9999px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span>📍 ปักหมุดบนแผนที่</span>
+                                </button>
+                                <span class="map-badge" id="mapStatusBadge">พร้อมปักหมุด</span>
+                            </div>
                         </div>
-                        <div class="post-map-frame-box">
+                        <div class="post-map-frame-box" onclick="openMapPickerModal('post')" title="คลิกเพื่อเปิดแผนที่ปักหมุดตำแหน่งแบบเต็มตา" style="cursor: pointer; position: relative;">
                             <iframe id="postMapEmbed"
                                     src="https://maps.google.com/maps?q=ศรีสะเกษ&hl=th&z=13&output=embed"
                                     title="Google Maps Check-in Preview"
                                     loading="lazy"
-                                    allowfullscreen="">
+                                    allowfullscreen=""
+                                    style="pointer-events: none;">
                             </iframe>
+                            <div class="map-overlay-hover-tip" style="position: absolute; inset: 0; background: rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                                <span style="background: rgba(15, 23, 42, 0.75); color: #fff; padding: 6px 14px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">🔍 คลิกเพื่อเปิดแผนที่ปักหมุดแบบอินเตอร์แอคทีฟ</span>
+                            </div>
                         </div>
                     </div>
 
