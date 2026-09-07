@@ -216,21 +216,381 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Handler for Floating Action Button (Post)
-    let toastTimeout = null;
+    // =========================================================================
+    // CREATE POST MODAL & MAP CHECK-IN ENGINE
+    // =========================================================================
     window.handlePostClick = function (e) {
         if (e) e.preventDefault();
-        console.log("[Zone In]: Floating Post button clicked — ready for post creation feature integration");
+        window.openCreatePostModal();
+    };
 
-        const toast = document.getElementById('zoneinToast');
-        if (toast) {
-            toast.classList.add('show');
-            if (toastTimeout) clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3200);
+    window.openCreatePostModal = function () {
+        const modal = document.getElementById('createPostModal');
+        if (!modal) return;
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+
+        setTimeout(() => {
+            const nameInput = document.getElementById('postPlaceName');
+            if (nameInput) nameInput.focus();
+        }, 120);
+    };
+
+    window.closeCreatePostModal = function () {
+        const modal = document.getElementById('createPostModal');
+        if (!modal) return;
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+
+        // Reset error box
+        const errorBox = document.getElementById('postErrorBox');
+        if (errorBox) errorBox.style.display = 'none';
+    };
+
+    window.handlePostBackdropClick = function (e) {
+        if (e && e.target && e.target.id === 'createPostModal') {
+            window.closeCreatePostModal();
         }
     };
+
+    // Category pill selection
+    window.selectPostCategory = function (categoryVal, btnElem) {
+        const input = document.getElementById('postCategoryInput');
+        if (input) input.value = categoryVal;
+
+        const allPills = document.querySelectorAll('#postCategoryGrid .category-pill');
+        allPills.forEach(pill => pill.classList.remove('active'));
+        if (btnElem) btnElem.classList.add('active');
+    };
+
+    // Quick location chips
+    window.applyLocationChip = function (locText) {
+        const addrInput = document.getElementById('postAddress');
+        if (addrInput) {
+            addrInput.value = locText;
+            addrInput.focus();
+            window.updatePostMapLocation(locText);
+        }
+    };
+
+    // Live Map Check-in & Search Updates
+    let mapUpdateTimer = null;
+    window.updatePostMapLocation = function (query) {
+        if (mapUpdateTimer) clearTimeout(mapUpdateTimer);
+        mapUpdateTimer = setTimeout(() => {
+            const mapFrame = document.getElementById('postMapEmbed');
+            const mapStatusBadge = document.getElementById('mapStatusBadge');
+            const placeName = document.getElementById('postPlaceName')?.value || '';
+            const searchQuery = query || placeName || 'ศรีสะเกษ';
+
+            if (mapFrame) {
+                mapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(searchQuery)}&hl=th&z=15&output=embed`;
+            }
+            if (mapStatusBadge) {
+                mapStatusBadge.textContent = query ? `📍 ปักหมุด: ${query}` : 'พร้อมปักหมุด';
+            }
+        }, 350);
+    };
+
+    window.handlePlaceNameInput = function (placeName) {
+        const addrInput = document.getElementById('postAddress');
+        if (!addrInput || !addrInput.value.trim()) {
+            window.updatePostMapLocation(placeName);
+        }
+    };
+
+    // GPS Current Location Check-in
+    window.getCurrentLocationCheckIn = function () {
+        const btn = document.getElementById('btnCheckInGPS');
+        const badge = document.getElementById('mapStatusBadge');
+        const addrInput = document.getElementById('postAddress');
+        const latInput = document.getElementById('postLatitude');
+        const lngInput = document.getElementById('postLongitude');
+        const mapFrame = document.getElementById('postMapEmbed');
+
+        if (!navigator.geolocation) {
+            alert('เบราว์เซอร์ของคุณไม่รองรับการดึงพิกัด GPS');
+            return;
+        }
+
+        if (btn) btn.classList.add('loading');
+        if (badge) badge.textContent = '🛰️ กำลังค้นหาพิกัด...';
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+
+                if (latInput) latInput.value = lat.toFixed(6);
+                if (lngInput) lngInput.value = lng.toFixed(6);
+
+                if (addrInput) {
+                    addrInput.value = `พิกัดเช็กอิน: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                }
+
+                if (mapFrame) {
+                    mapFrame.src = `https://maps.google.com/maps?q=${lat},${lng}&hl=th&z=16&output=embed`;
+                }
+
+                if (badge) {
+                    badge.textContent = `📍 เช็กอินแล้ว (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+                    badge.classList.add('checked-in');
+                }
+
+                if (btn) btn.classList.remove('loading');
+            },
+            (err) => {
+                console.warn("[Zone In GPS Error]:", err);
+                if (badge) badge.textContent = '⚠️ ไม่สามารถดึง GPS ได้';
+                if (btn) btn.classList.remove('loading');
+                alert('ไม่สามารถระบุพิกัดตำแหน่งปัจจุบันได้ กรุณาอนุญาตการเข้าถึงตำแหน่งในเบราว์เซอร์ของคุณ');
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        );
+    };
+
+    // Photo Dropzone and File selection
+    window.triggerPostFileInput = function () {
+        const fileInput = document.getElementById('postImageInput');
+        if (fileInput) fileInput.click();
+    };
+
+    window.handlePostFileSelect = function (e) {
+        const file = e.target.files ? e.target.files[0] : null;
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('กรุณาเลือกไฟล์รูปภาพ (JPG, PNG, WEBP, GIF)');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const previewImg = document.getElementById('postImagePreview');
+            const previewContainer = document.getElementById('postPreviewContainer');
+            const dropzone = document.getElementById('postDropzone');
+
+            if (previewImg && previewContainer && dropzone) {
+                previewImg.src = event.target.result;
+                previewContainer.style.display = 'block';
+                dropzone.style.display = 'none';
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    window.removePostImage = function () {
+        const fileInput = document.getElementById('postImageInput');
+        const urlInput = document.getElementById('postImageUrlInput');
+        const previewImg = document.getElementById('postImagePreview');
+        const previewContainer = document.getElementById('postPreviewContainer');
+        const dropzone = document.getElementById('postDropzone');
+
+        if (fileInput) fileInput.value = '';
+        if (urlInput) urlInput.value = '';
+        if (previewImg) previewImg.src = '';
+        if (previewContainer) previewContainer.style.display = 'none';
+        if (dropzone) dropzone.style.display = 'block';
+    };
+
+    window.togglePostUrlInput = function () {
+        const wrap = document.getElementById('postUrlInputWrap');
+        if (!wrap) return;
+        const isHidden = wrap.style.display === 'none' || wrap.style.display === '';
+        wrap.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) {
+            const input = document.getElementById('postImageUrlInput');
+            if (input) input.focus();
+        }
+    };
+
+    window.handlePostUrlInput = function (urlVal) {
+        if (!urlVal || !urlVal.trim()) return;
+        const cleanUrl = urlVal.trim();
+        if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+            const previewImg = document.getElementById('postImagePreview');
+            const previewContainer = document.getElementById('postPreviewContainer');
+            const dropzone = document.getElementById('postDropzone');
+
+            if (previewImg && previewContainer && dropzone) {
+                previewImg.src = cleanUrl;
+                previewContainer.style.display = 'block';
+                dropzone.style.display = 'none';
+            }
+        }
+    };
+
+    // Star Rating
+    const ratingLabels = {
+        1: "⭐ 1.0 ต้องปรับปรุง",
+        2: "⭐ 2.0 พอใช้",
+        3: "⭐ 3.0 ปานกลาง",
+        4: "⭐ 4.0 ดีมาก",
+        5: "⭐ 5.0 ยอดเยี่ยมมาก!"
+    };
+
+    window.setPostRating = function (ratingVal) {
+        const ratingInput = document.getElementById('postRatingInput');
+        if (ratingInput) ratingInput.value = ratingVal;
+
+        const starBtns = document.querySelectorAll('#postStarRating .star-btn');
+        starBtns.forEach(btn => {
+            const r = parseInt(btn.getAttribute('data-rating'), 10);
+            if (r <= ratingVal) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        const badge = document.getElementById('postRatingBadge');
+        if (badge && ratingLabels[ratingVal]) {
+            badge.textContent = ratingLabels[ratingVal];
+        }
+    };
+
+    // Character Counter
+    window.updatePostCharCount = function (textarea) {
+        const counter = document.getElementById('postCharCount');
+        if (counter && textarea) {
+            counter.textContent = `${textarea.value.length} / 800`;
+        }
+    };
+
+    // Form submission via AJAX
+    window.handleCreatePostSubmit = async function (e) {
+        e.preventDefault();
+
+        const nameInput = document.getElementById('postPlaceName');
+        const errorBox = document.getElementById('postErrorBox');
+        const errorText = document.getElementById('postErrorText');
+        const submitBtn = document.getElementById('btnSubmitPost');
+        const btnText = submitBtn ? submitBtn.querySelector('.btn-text') : null;
+        const btnSpinner = submitBtn ? submitBtn.querySelector('.btn-spinner') : null;
+
+        if (!nameInput || !nameInput.value.trim()) {
+            if (errorBox && errorText) {
+                errorText.textContent = "กรุณากรอกชื่อสถานที่หรือหัวข้อโพสต์";
+                errorBox.style.display = 'flex';
+            }
+            if (nameInput) nameInput.focus();
+            return;
+        }
+
+        if (errorBox) errorBox.style.display = 'none';
+
+        // Set Loading state
+        if (submitBtn) submitBtn.disabled = true;
+        if (btnText) btnText.textContent = "กำลังเผยแพร่...";
+        if (btnSpinner) btnSpinner.style.display = 'inline-block';
+
+        const form = document.getElementById('createPostForm');
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('/api/places/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                // Success Toast
+                const toast = document.getElementById('toast') || document.getElementById('zoneinToast');
+                if (toast) {
+                    toast.innerHTML = `<span style="font-size: 1.1rem;">🎉</span> <span>โพสต์สถานที่ของคุณสำเร็จแล้ว!</span>`;
+                    toast.classList.add('show');
+                    toast.style.display = 'block';
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        toast.style.display = 'none';
+                    }, 4000);
+                }
+
+                // Reset form & preview
+                form.reset();
+                window.removePostImage();
+                window.closeCreatePostModal();
+
+                // If detail URL provided, navigate smoothly
+                if (data.place && data.place.detail_url) {
+                    setTimeout(() => {
+                        window.location.href = data.place.detail_url;
+                    }, 650);
+                } else {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 800);
+                }
+            } else {
+                const errMsg = data.error || (data.message ? data.message : "เกิดข้อผิดพลาดในการบันทึกโพสต์ กรุณาลองใหม่อีกครั้ง");
+                if (errorBox && errorText) {
+                    errorText.textContent = errMsg;
+                    errorBox.style.display = 'flex';
+                }
+            }
+        } catch (err) {
+            console.error("[Zone In] Post submit error:", err);
+            if (errorBox && errorText) {
+                errorText.textContent = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง";
+                errorBox.style.display = 'flex';
+            }
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+            if (btnText) btnText.textContent = "เผยแพร่โพสต์";
+            if (btnSpinner) btnSpinner.style.display = 'none';
+        }
+    };
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('createPostModal');
+            if (modal && modal.classList.contains('active')) {
+                window.closeCreatePostModal();
+            }
+        }
+    });
+
+    // Setup drag and drop listeners for post dropzone
+    document.addEventListener('DOMContentLoaded', () => {
+        const dropzone = document.getElementById('postDropzone');
+        if (dropzone) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.add('dragover');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.remove('dragover');
+                });
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    const input = document.getElementById('postImageInput');
+                    if (input) {
+                        input.files = files;
+                        window.handlePostFileSelect({ target: { files: files } });
+                    }
+                }
+            });
+        }
+    });
 
     window.addEventListener('resize', () => {
         const currentActive = document.querySelector('.nav-tab-btn.active');

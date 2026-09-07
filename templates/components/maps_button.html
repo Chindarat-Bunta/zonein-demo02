@@ -1,19 +1,35 @@
 <!-- Google Maps Navigation Button Component -->
 {# Supports either place object or explicit latitude, longitude, destination_name props #}
-{% with lat=latitude|default:place.latitude lng=longitude|default:place.longitude dest=destination_name|default:place.name addr=place.address %}
-    <a href="{% if place %}{{ place.maps_navigation_url }}{% elif lat and lng %}https://www.google.com/maps/dir/?api=1&destination={{ lat }},{{ lng }}{% elif dest %}https://www.google.com/maps/dir/?api=1&destination={{ dest|urlencode }}{% else %}https://www.google.com/maps{% endif %}"
+{% if place %}
+    <a href="{{ place.maps_navigation_url }}"
        target="_blank"
        rel="noopener noreferrer"
        class="btn-google-maps btn-maps-{{ variant|default:'primary' }} btn-maps-{{ size|default:'md' }} {{ custom_class|default:'' }}"
-       data-lat="{{ lat|default:'' }}"
-       data-lng="{{ lng|default:'' }}"
-       data-destination="{{ dest|default:'' }}"
-       data-address="{{ addr|default:'' }}"
-       title="{% if text %}{{ text }}{% else %}นำทางไปยัง {{ dest|default:'สถานที่นี้' }} ด้วย Google Maps{% endif %}"
-       aria-label="{% if text %}{{ text }}{% else %}นำทางไปยัง {{ dest|default:'สถานที่นี้' }} ด้วย Google Maps{% endif %}">
+       data-lat="{{ place.latitude|default:'' }}"
+       data-lng="{{ place.longitude|default:'' }}"
+       data-destination="{{ place.name|default:'' }}"
+       data-address="{{ place.address|default:'' }}"
+       title="{% if text %}{{ text }}{% else %}นำทางไปยัง {{ place.name|default:'สถานที่นี้' }} ด้วย Google Maps{% endif %}"
+       aria-label="{% if text %}{{ text }}{% else %}นำทางไปยัง {{ place.name|default:'สถานที่นี้' }} ด้วย Google Maps{% endif %}">
         <i class="fa-solid fa-diamond-turn-right maps-icon"></i>
         {% if variant != 'icon-only' %}
             <span class="maps-btn-label">{{ text|default:'นำทางด้วย Google Maps' }}</span>
         {% endif %}
     </a>
-{% endwith %}
+{% else %}
+    <a href="{% if latitude and longitude %}https://www.google.com/maps/dir/?api=1&destination={{ latitude }},{{ longitude }}{% elif destination_name %}https://www.google.com/maps/dir/?api=1&destination={{ destination_name|urlencode }}{% else %}https://www.google.com/maps{% endif %}"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="btn-google-maps btn-maps-{{ variant|default:'primary' }} btn-maps-{{ size|default:'md' }} {{ custom_class|default:'' }}"
+       data-lat="{{ latitude|default:'' }}"
+       data-lng="{{ longitude|default:'' }}"
+       data-destination="{{ destination_name|default:'' }}"
+       data-address="{{ address|default:'' }}"
+       title="{% if text %}{{ text }}{% else %}เปิดดู {{ destination_name|default:'ศรีสะเกษ' }} บน Google Maps{% endif %}"
+       aria-label="{% if text %}{{ text }}{% else %}เปิดดู {{ destination_name|default:'ศรีสะเกษ' }} บน Google Maps{% endif %}">
+        <i class="fa-solid fa-diamond-turn-right maps-icon"></i>
+        {% if variant != 'icon-only' %}
+            <span class="maps-btn-label">{{ text|default:'นำทางด้วย Google Maps' }}</span>
+        {% endif %}
+    </a>
+{% endif %}

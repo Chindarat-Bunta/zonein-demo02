@@ -171,7 +171,13 @@ class Place(models.Model):
 
     @property
     def is_featured(self):
+        if hasattr(self, "_is_featured"):
+            return self._is_featured
         return self.id is not None and self.id % 2 == 1
+
+    @is_featured.setter
+    def is_featured(self, value):
+        self._is_featured = bool(value)
 
     @property
     def price_display(self):

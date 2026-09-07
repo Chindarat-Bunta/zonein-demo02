@@ -36,7 +36,10 @@ def profile_settings_view(request):
         # Fallback / demo profile for previewing without requiring login
         demo_user, _ = User.objects.get_or_create(
             username="zonein_user",
-            defaults={"first_name": "คุณภัทรพล วงศ์สว่าง", "email": "patraphon.w@zonein.app"}
+            defaults={
+                "first_name": "คุณภัทรพล วงศ์สว่าง",
+                "email": "patraphon.w@zonein.app",
+            },
         )
         profile, _ = UserProfile.objects.get_or_create(user=demo_user)
         username = demo_user.username
@@ -62,7 +65,9 @@ def profile_settings_view(request):
                 profile.avatar_public_id = upload_res.get("public_id", "")
             else:
                 upload_success = False
-                messages.error(request, f"อัปโหลดรูปภาพไม่สำเร็จ: {upload_res.get('error')}")
+                messages.error(
+                    request, f"อัปโหลดรูปภาพไม่สำเร็จ: {upload_res.get('error')}"
+                )
 
         # 2. Update nickname & bio
         profile.nickname = new_nickname
@@ -72,7 +77,11 @@ def profile_settings_view(request):
         # 3. Update username if provided and changed
         target_user = user if user.is_authenticated else demo_user
         if new_username and new_username != target_user.username:
-            if not User.objects.filter(username__iexact=new_username).exclude(id=target_user.id).exists():
+            if (
+                not User.objects.filter(username__iexact=new_username)
+                .exclude(id=target_user.id)
+                .exists()
+            ):
                 target_user.username = new_username
                 target_user.save()
             else:
@@ -92,12 +101,20 @@ def update_profile_api(request):
     AJAX endpoint for popup modal submission with real-time feedback.
     """
     if request.method != "POST":
-        return JsonResponse({"success": False, "error": "POST method required"}, status=405)
+        return JsonResponse(
+            {"success": False, "error": "POST method required"}, status=405
+        )
 
     user = request.user
-    target_user = user if user.is_authenticated else User.objects.filter(username="zonein_user").first()
+    target_user = (
+        user
+        if user.is_authenticated
+        else User.objects.filter(username="zonein_user").first()
+    )
     if not target_user:
-        target_user, _ = User.objects.get_or_create(username="zonein_user", defaults={"first_name": "User"})
+        target_user, _ = User.objects.get_or_create(
+            username="zonein_user", defaults={"first_name": "User"}
+        )
 
     profile, _ = UserProfile.objects.get_or_create(user=target_user)
 
@@ -115,27 +132,40 @@ def update_profile_api(request):
             profile.avatar_url = avatar_url
             profile.avatar_public_id = upload_res.get("public_id", "")
         else:
-            return JsonResponse({"success": False, "error": f"อัปโหลดรูปภาพล้มเหลว: {upload_res.get('error')}"})
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": f"อัปโหลดรูปภาพล้มเหลว: {upload_res.get('error')}",
+                }
+            )
 
     profile.nickname = new_nickname
     profile.bio = new_bio
     profile.save()
 
     if new_username and new_username != target_user.username:
-        if not User.objects.filter(username__iexact=new_username).exclude(id=target_user.id).exists():
+        if (
+            not User.objects.filter(username__iexact=new_username)
+            .exclude(id=target_user.id)
+            .exists()
+        ):
             target_user.username = new_username
             target_user.save()
         else:
-            return JsonResponse({"success": False, "error": f"ชื่อผู้ใช้ '{new_username}' ถูกใช้งานแล้ว"})
+            return JsonResponse(
+                {"success": False, "error": f"ชื่อผู้ใช้ '{new_username}' ถูกใช้งานแล้ว"}
+            )
 
-    return JsonResponse({
-        "success": True,
-        "message": "อัปเดตข้อมูลส่วนตัวสำเร็จ!",
-        "nickname": profile.get_display_name(),
-        "username": target_user.username,
-        "bio": profile.bio,
-        "avatar_url": profile.avatar_url,
-    })
+    return JsonResponse(
+        {
+            "success": True,
+            "message": "อัปเดตข้อมูลส่วนตัวสำเร็จ!",
+            "nickname": profile.get_display_name(),
+            "username": target_user.username,
+            "bio": profile.bio,
+            "avatar_url": profile.avatar_url,
+        }
+    )
 
 
 def profile_view(request):
@@ -153,12 +183,24 @@ def profile_view(request):
         avatar_url = profile.avatar_url or ""
         username = user.username
         email = user.email if user.email else f"{username}@zonein.app"
-        join_date = user.date_joined.strftime("%b %Y") if hasattr(user, "date_joined") and user.date_joined else "ก.ย. 2026"
+        join_date = (
+            user.date_joined.strftime("%b %Y")
+            if hasattr(user, "date_joined") and user.date_joined
+            else "ก.ย. 2026"
+        )
 
-        wishlist_qs = Wishlist.objects.filter(user=user).select_related("place").order_by("-created_at")
+        wishlist_qs = (
+            Wishlist.objects.filter(user=user)
+            .select_related("place")
+            .order_by("-created_at")
+        )
         wishlist = [w.place for w in wishlist_qs if w.place]
         wishlist_ids = set(p.id for p in wishlist)
-        reviews = list(Review.objects.filter(user=user).select_related("place").order_by("-created_at"))
+        reviews = list(
+            Review.objects.filter(user=user)
+            .select_related("place")
+            .order_by("-created_at")
+        )
         likes_count = PlaceLike.objects.filter(user=user).count()
     else:
         nickname = "User Profile"
@@ -294,7 +336,9 @@ def _ensure_sample_data():
 def get_user_wishlist_place_ids(request):
     if request.user.is_authenticated:
         return set(
-            Wishlist.objects.filter(user=request.user).values_list("place_id", flat=True)
+            Wishlist.objects.filter(user=request.user).values_list(
+                "place_id", flat=True
+            )
         )
     return set(request.session.get("wishlist", []))
 
@@ -327,19 +371,51 @@ def home_view(request, active_tab="home"):
         )
 
     categories = [
-        {"name": "สถานที่ท่องเที่ยว & ธรรมชาติ", "slug": "travel", "icon": "fa-mountain-sun", "color": "#10b981"},
-        {"name": "โบราณสถาน & วัดวาอาราม", "slug": "culture", "icon": "fa-landmark-dome", "color": "#8b5cf6"},
-        {"name": "คาเฟ่ & กาแฟ", "slug": "cafe", "icon": "fa-mug-hot", "color": "#f97316"},
-        {"name": "ร้านอาหาร & สตรีทฟู้ด", "slug": "restaurant", "icon": "fa-utensils", "color": "#ef4444"},
+        {
+            "name": "สถานที่ท่องเที่ยว & ธรรมชาติ",
+            "slug": "travel",
+            "icon": "fa-mountain-sun",
+            "color": "#10b981",
+        },
+        {
+            "name": "โบราณสถาน & วัดวาอาราม",
+            "slug": "culture",
+            "icon": "fa-landmark-dome",
+            "color": "#8b5cf6",
+        },
+        {
+            "name": "คาเฟ่ & กาแฟ",
+            "slug": "cafe",
+            "icon": "fa-mug-hot",
+            "color": "#f97316",
+        },
+        {
+            "name": "ร้านอาหาร & สตรีทฟู้ด",
+            "slug": "restaurant",
+            "icon": "fa-utensils",
+            "color": "#ef4444",
+        },
         {"name": "ที่พัก & โรงแรม", "slug": "hotel", "icon": "fa-bed", "color": "#3b82f6"},
     ]
 
     locations = [
         {"city": "ศรีสะเกษ", "zone": "อ.เมืองศรีสะเกษ", "slug": "ssk-muang"},
-        {"city": "ศรีสะเกษ", "zone": "อ.กันทรลักษ์ (ผามออีแดง - เขาพระวิหาร)", "slug": "ssk-kantharalak"},
+        {
+            "city": "ศรีสะเกษ",
+            "zone": "อ.กันทรลักษ์ (ผามออีแดง - เขาพระวิหาร)",
+            "slug": "ssk-kantharalak",
+        },
         {"city": "ศรีสะเกษ", "zone": "อ.ขุนหาญ (วัดล้านขวด - น้ำตก)", "slug": "ssk-khunhan"},
-        {"city": "ศรีสะเกษ", "zone": "อ.อุทุมพรพิสัย (ปราสาทสระกำแพงใหญ่)", "slug": "ssk-uthumphon"},
-        {"city": "ศรีสะเกษ", "zone": "อ.ห้วยทับทัน (ไก่ย่างไม้มะดัน)", "slug": "ssk-huai-thap-than"},
+        {
+            "city": "ศรีสะเกษ",
+            "zone": "อ.อุทุมพรพิสัย (ปราสาทสระกำแพงใหญ่)",
+            "slug": "ssk-uthumphon",
+        },
+        {
+            "city": "ศรีสะเกษ",
+            "zone": "อ.ห้วยทับทัน (ไก่ย่างไม้มะดัน)",
+            "slug": "ssk-huai-thap-than",
+        },
         {"city": "ศรีสะเกษ", "zone": "อ.ปรางค์กู่ (ปราสาทปรางค์กู่)", "slug": "ssk-prang-ku"},
         {"city": "ศรีสะเกษ", "zone": "อ.ราษีไศล (เขื่อนราษีไศล)", "slug": "ssk-rasi-salai"},
     ]
@@ -389,6 +465,7 @@ def signin_view(request):
     if request.method != "POST":
         # Clear any stale session messages before showing sign in page
         from django.contrib.messages import get_messages
+
         storage = get_messages(request)
         for _ in storage:
             pass
@@ -429,6 +506,7 @@ def signup_view(request):
     if request.method != "POST":
         # Clear any stale session messages before showing sign up page
         from django.contrib.messages import get_messages
+
         storage = get_messages(request)
         for _ in storage:
             pass
@@ -524,6 +602,7 @@ def social_login_view(request, provider):
     login(request, user)
     # Clear any residual messages so none leak to future users
     from django.contrib.messages import get_messages
+
     storage = get_messages(request)
     for _ in storage:
         pass
@@ -535,6 +614,7 @@ def logout_view(request):
     logout(request)
     # Clear any leftover messages in storage so next user sees a clean screen
     from django.contrib.messages import get_messages
+
     storage = get_messages(request)
     for _ in storage:
         pass
@@ -812,7 +892,13 @@ def api_places_view(request):
 
     if q:
         from django.db.models import Q
-        qs = qs.filter(Q(name__icontains=q) | Q(description__icontains=q) | Q(address__icontains=q) | Q(tags__icontains=q))
+
+        qs = qs.filter(
+            Q(name__icontains=q)
+            | Q(description__icontains=q)
+            | Q(address__icontains=q)
+            | Q(tags__icontains=q)
+        )
     if category and category != "all":
         qs = qs.filter(category=category)
     if location and location != "all":
@@ -830,8 +916,15 @@ def api_places_view(request):
                 "description": p.description,
                 "address": p.address,
                 "location": {"zone": p.address},
-                "category": {"name": cat_name, "slug": p.category, "color": "#10b981", "icon": "fa-location-dot"},
-                "image_url": p.image_url or p.cover_image_url or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80",
+                "category": {
+                    "name": cat_name,
+                    "slug": p.category,
+                    "color": "#10b981",
+                    "icon": "fa-location-dot",
+                },
+                "image_url": p.image_url
+                or p.cover_image_url
+                or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80",
                 "rating": float(p.rating),
                 "review_count": p.review_count,
                 "price_display": p.price_display,
@@ -869,7 +962,9 @@ def place_detail(request, place_id=None, slug=None):
         return redirect("web:index")
 
     wishlist_ids = get_user_wishlist_place_ids(request)
-    related_places = Place.objects.filter(category=place.category).exclude(id=place.id)[:3]
+    related_places = Place.objects.filter(category=place.category).exclude(id=place.id)[
+        :3
+    ]
 
     # Pull reviews and gallery for place_detail.html
     db_reviews = place.reviews.select_related("user").order_by("-created_at")
@@ -878,13 +973,19 @@ def place_detail(request, place_id=None, slug=None):
         avatar = ""
         if hasattr(r.user, "profile") and r.user.profile.avatar_url:
             avatar = r.user.profile.avatar_url
-        reviews.append({
-            "user_name": r.user.profile.get_display_name() if hasattr(r.user, "profile") else r.user.username,
-            "user_avatar": avatar,
-            "rating": r.rating,
-            "created_at": r.created_at.strftime("%d %b %Y"),
-            "comment": r.comment,
-        })
+        reviews.append(
+            {
+                "user_name": (
+                    r.user.profile.get_display_name()
+                    if hasattr(r.user, "profile")
+                    else r.user.username
+                ),
+                "user_avatar": avatar,
+                "rating": r.rating,
+                "created_at": r.created_at.strftime("%d %b %Y"),
+                "comment": r.comment,
+            }
+        )
 
     # If place has fewer reviews, provide realistic sample reviews to complement
     if len(reviews) == 0:
@@ -908,16 +1009,28 @@ def place_detail(request, place_id=None, slug=None):
     db_images = place.images.all()
     gallery_images = []
     for img in db_images:
-        gallery_images.append({
-            "image_url": img.image_url,
-            "caption": img.caption,
-        })
+        gallery_images.append(
+            {
+                "image_url": img.image_url,
+                "caption": img.caption,
+            }
+        )
 
     if not gallery_images:
         gallery_images = [
-            {"image_url": place.cover_image_url or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800&auto=format&fit=crop", "caption": "รูปภาพสถานที่"},
-            {"image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=800&auto=format&fit=crop", "caption": "เครื่องดื่มและของว่าง"},
-            {"image_url": "https://images.unsplash.com/photo-1497636577773-f1231844b336?q=80&w=800&auto=format&fit=crop", "caption": "บรรยากาศโดยรอบ"},
+            {
+                "image_url": place.cover_image_url
+                or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800&auto=format&fit=crop",
+                "caption": "รูปภาพสถานที่",
+            },
+            {
+                "image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=800&auto=format&fit=crop",
+                "caption": "เครื่องดื่มและของว่าง",
+            },
+            {
+                "image_url": "https://images.unsplash.com/photo-1497636577773-f1231844b336?q=80&w=800&auto=format&fit=crop",
+                "caption": "บรรยากาศโดยรอบ",
+            },
         ]
 
     return render(
@@ -930,10 +1043,20 @@ def place_detail(request, place_id=None, slug=None):
             "gallery_images": gallery_images,
             "is_wishlisted": place.id in wishlist_ids,
             "wishlist_ids": wishlist_ids,
-            "rating_breakdown": place.rating_breakdown if hasattr(place, "rating_breakdown") else [],
-            "maps_navigation_url": place.maps_navigation_url if hasattr(place, "maps_navigation_url") else "",
-            "maps_search_url": place.maps_search_url if hasattr(place, "maps_search_url") else "",
-            "maps_embed_url": place.maps_embed_url if hasattr(place, "maps_embed_url") else "",
+            "rating_breakdown": (
+                place.rating_breakdown if hasattr(place, "rating_breakdown") else []
+            ),
+            "maps_navigation_url": (
+                place.maps_navigation_url
+                if hasattr(place, "maps_navigation_url")
+                else ""
+            ),
+            "maps_search_url": (
+                place.maps_search_url if hasattr(place, "maps_search_url") else ""
+            ),
+            "maps_embed_url": (
+                place.maps_embed_url if hasattr(place, "maps_embed_url") else ""
+            ),
         },
     )
 
