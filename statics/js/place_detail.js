@@ -85,6 +85,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (reviewForm) {
         reviewForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            if (typeof window.IS_AUTHENTICATED !== 'undefined' && !window.IS_AUTHENTICATED) {
+                showDetailToast('กรุณาเข้าสู่ระบบก่อนเขียนรีวิว ✍️');
+                setTimeout(() => {
+                    window.location.href = `/signin/?next=${encodeURIComponent(window.location.pathname + window.location.hash)}`;
+                }, 800);
+                return;
+            }
             const text = reviewTextarea ? reviewTextarea.value.trim() : '';
             const rating = selectedRatingInput ? parseInt(selectedRatingInput.value, 10) : 5;
 
@@ -160,6 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnLike) {
         let isLiked = false;
         btnLike.addEventListener('click', () => {
+            if (typeof window.IS_AUTHENTICATED !== 'undefined' && !window.IS_AUTHENTICATED) {
+                showDetailToast('กรุณาเข้าสู่ระบบเพื่อกดถูกใจสถานที่นี้ ❤️');
+                return;
+            }
             isLiked = !isLiked;
             btnLike.classList.toggle('active', isLiked);
             if (likeCountSpan) {
@@ -174,6 +185,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnWishlist) {
         let isWishlisted = false;
         btnWishlist.addEventListener('click', () => {
+            if (typeof window.IS_AUTHENTICATED !== 'undefined' && !window.IS_AUTHENTICATED) {
+                showDetailToast('กรุณาเข้าสู่ระบบเพื่อบันทึกรายการโปรด 🔖');
+                return;
+            }
             isWishlisted = !isWishlisted;
             btnWishlist.classList.toggle('active', isWishlisted);
             showDetailToast(isWishlisted ? 'บันทึกในรายการโปรดเรียบร้อยแล้ว 🔖' : 'นำออกจากรายการโปรดแล้ว');

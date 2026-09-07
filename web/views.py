@@ -10,8 +10,27 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from .models import Comment, Place, PlaceLike, Review, UserProfile, Wishlist
-from .services import upload_image
+import secrets
+from django.urls import reverse
+from .models import (
+    Comment,
+    Notification,
+    Place,
+    PlaceLike,
+    Review,
+    UserProfile,
+    Wishlist,
+)
+from .services import (
+    exchange_code_for_user_info,
+    generate_oauth_state,
+    get_authorization_url,
+    get_consent_disclosures,
+    get_social_provider_config,
+    is_provider_configured,
+    sync_social_user,
+    upload_image,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,29 +42,16 @@ def profile_settings_view(request):
     - Username & Nickname / Display Name
     - Bio description
     """
-    user = request.user
+    if not request.user.is_authenticated:
+        messages.info(request, "กรุณาเข้าสู่ระบบเพื่อจัดการข้อมูลส่วนตัว")
+        return redirect(f"/signin/?next={request.path}")
 
-    # Get or create active user/profile for demo or authenticated user
-    if user.is_authenticated:
-        profile, _ = UserProfile.objects.get_or_create(user=user)
-        username = user.username
-        nickname = profile.nickname or user.first_name or user.username
-        bio = profile.bio
-        avatar_url = profile.avatar_url
-    else:
-        # Fallback / demo profile for previewing without requiring login
-        demo_user, _ = User.objects.get_or_create(
-            username="zonein_user",
-            defaults={
-                "first_name": "คุณภัทรพล วงศ์สว่าง",
-                "email": "patraphon.w@zonein.app",
-            },
-        )
-        profile, _ = UserProfile.objects.get_or_create(user=demo_user)
-        username = demo_user.username
-        nickname = profile.nickname or demo_user.first_name
-        bio = profile.bio or "✨ ผู้หลงใหลในการเดินทางและค้นหาคาเฟ่ลับ | สมาชิก Zone In"
-        avatar_url = profile.avatar_url
+    user = request.user
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    username = user.username
+    nickname = profile.nickname or user.first_name or user.username
+    bio = profile.bio or ""
+    avatar_url = profile.avatar_url
 
     if request.method == "POST":
         new_nickname = request.POST.get("nickname", "").strip()
@@ -105,17 +111,13 @@ def update_profile_api(request):
             {"success": False, "error": "POST method required"}, status=405
         )
 
-    user = request.user
-    target_user = (
-        user
-        if user.is_authenticated
-        else User.objects.filter(username="zonein_user").first()
-    )
-    if not target_user:
-        target_user, _ = User.objects.get_or_create(
-            username="zonein_user", defaults={"first_name": "User"}
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"success": False, "error": "กรุณาเข้าสู่ระบบก่อนแก้ไขโปรไฟล์"},
+            status=401,
         )
 
+    target_user = request.user
     profile, _ = UserProfile.objects.get_or_create(user=target_user)
 
     new_nickname = request.POST.get("nickname", "").strip()
@@ -168,58 +170,68 @@ def update_profile_api(request):
     )
 
 
-def profile_view(request):
+def profile_view(request, username=None):
     """
-    Personal profile page (My Profile) showing user avatar, name,
-    review history, and personal wishlist places.
+    Profile page handler:
+    1. Own Profile (/profile/):
+       - If authenticated: shows personal profile with reviews & wishlist, allows editing.
+       - If unauthenticated: redirects to sign in with message "กรุณาเข้าสู่ระบบเพื่อดูโปรไฟล์ของคุณ".
+    2. Other User's Profile (/profile/<username>/):
+       - Viewable by both guests and authenticated users.
+       - Shows target user's public info & reviews.
+       - Wishlist is private (hidden/empty for non-owners).
+       - Editing and camera buttons are hidden.
     """
-    user = request.user
+    current_user = request.user
 
-    if user.is_authenticated:
-        profile, _ = UserProfile.objects.get_or_create(user=user)
-        nickname = profile.nickname or user.first_name or user.username
-        display_name = profile.get_display_name() or user.first_name or user.username
-        bio = profile.bio or ""
-        avatar_url = profile.avatar_url or ""
-        username = user.username
-        email = user.email if user.email else f"{username}@zonein.app"
-        join_date = (
-            user.date_joined.strftime("%b %Y")
-            if hasattr(user, "date_joined") and user.date_joined
-            else "ก.ย. 2026"
+    if username is None:
+        if not current_user.is_authenticated:
+            messages.info(request, "กรุณาเข้าสู่ระบบเพื่อดูโปรไฟล์ของคุณ")
+            return redirect(f"/signin/?next={request.path}")
+        target_user = current_user
+        is_own_profile = True
+    else:
+        target_user = get_object_or_404(User, username=username)
+        is_own_profile = bool(
+            current_user.is_authenticated and current_user.username == target_user.username
         )
 
+    profile, _ = UserProfile.objects.get_or_create(user=target_user)
+    nickname = profile.nickname or target_user.first_name or target_user.username
+    display_name = profile.get_display_name() or target_user.first_name or target_user.username
+    bio = profile.bio or ""
+    avatar_url = profile.avatar_url or ""
+    user_username = target_user.username
+    email = target_user.email if target_user.email else f"{user_username}@zonein.app"
+    join_date = (
+        target_user.date_joined.strftime("%b %Y")
+        if hasattr(target_user, "date_joined") and target_user.date_joined
+        else "ก.ย. 2026"
+    )
+
+    reviews = list(
+        Review.objects.filter(user=target_user)
+        .select_related("place")
+        .order_by("-created_at")
+    )
+    likes_count = PlaceLike.objects.filter(user=target_user).count()
+
+    if is_own_profile:
         wishlist_qs = (
-            Wishlist.objects.filter(user=user)
+            Wishlist.objects.filter(user=target_user)
             .select_related("place")
             .order_by("-created_at")
         )
         wishlist = [w.place for w in wishlist_qs if w.place]
         wishlist_ids = set(p.id for p in wishlist)
-        reviews = list(
-            Review.objects.filter(user=user)
-            .select_related("place")
-            .order_by("-created_at")
-        )
-        likes_count = PlaceLike.objects.filter(user=user).count()
     else:
-        nickname = "User Profile"
-        display_name = "User Profile"
-        bio = ""
-        avatar_url = ""
-        username = "user"
-        email = "user@zonein.app"
-        join_date = "ก.ย. 2026"
-
-        wishlist_ids = set(request.session.get("wishlist", []))
-        wishlist = list(Place.objects.filter(id__in=wishlist_ids))
-        reviews = []
-        likes_count = 0
+        wishlist = []
+        wishlist_ids = set()
 
     context = {
         "display_name": display_name,
         "nickname": nickname,
-        "username": username,
+        "username": user_username,
         "bio": bio,
         "avatar_url": avatar_url,
         "email": email,
@@ -230,6 +242,7 @@ def profile_view(request):
         "wishlist_count": len(wishlist),
         "likes_count": likes_count,
         "wishlist_ids": wishlist_ids,
+        "is_own_profile": is_own_profile,
     }
 
     return render(request, "profile.html", context)
@@ -340,7 +353,7 @@ def get_user_wishlist_place_ids(request):
                 "place_id", flat=True
             )
         )
-    return set(request.session.get("wishlist", []))
+    return set()
 
 
 def home_view(request, active_tab="home"):
@@ -420,6 +433,14 @@ def home_view(request, active_tab="home"):
         {"city": "ศรีสะเกษ", "zone": "อ.ราษีไศล (เขื่อนราษีไศล)", "slug": "ssk-rasi-salai"},
     ]
 
+    user_notifications = []
+    if request.user.is_authenticated:
+        user_notifications = list(
+            Notification.objects.filter(recipient=request.user)
+            .select_related("actor", "post")
+            .order_by("-created_at")[:20]
+        )
+
     context = {
         "places": places,
         "explore_items": explore_items,
@@ -429,6 +450,7 @@ def home_view(request, active_tab="home"):
         "total_count": places.count(),
         "all_places_count": places.count(),
         "wishlist_ids": wishlist_ids,
+        "notifications": user_notifications,
         "filters": {
             "q": request.GET.get("q", ""),
             "category": request.GET.get("category", "all"),
@@ -517,6 +539,19 @@ def signup_view(request):
         email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
         confirm_password = request.POST.get("confirm_password", "")
+        consent_pdpa = request.POST.get("consent_pdpa")
+
+        # PDPA & Terms Consent verification
+        if not consent_pdpa:
+            messages.error(
+                request,
+                "กรุณายินยอมให้จัดเก็บข้อมูลส่วนบุคคลและยอมรับเงื่อนไขการใช้งาน (PDPA) ก่อนลงทะเบียน",
+            )
+            return render(
+                request,
+                "signup.html",
+                {"full_name": full_name, "username": username, "email": email},
+            )
 
         if not username or not email or not password:
             messages.error(request, "กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง")
@@ -560,6 +595,11 @@ def signup_view(request):
             password=password,
             first_name=full_name if full_name else username,
         )
+        profile, _ = UserProfile.objects.get_or_create(user=new_user)
+        if full_name:
+            profile.nickname = full_name
+            profile.save()
+
         login(request, new_user)
         messages.success(
             request, f"สมัครสมาชิกสำเร็จ! ยินดีต้อนรับสู่ Zone In, {new_user.first_name}"
@@ -569,44 +609,170 @@ def signup_view(request):
     return render(request, "signup.html")
 
 
-def social_login_view(request, provider):
-    """Social Login endpoint for Google and Facebook."""
+def social_login_consent_view(request, provider):
+    """
+    Dedicated screen presenting the PDPA consent and data collection disclosure
+    before proceeding to Google or Facebook authentication.
+    """
     provider = provider.lower()
-
-    if provider == "google":
-        username = "google_user"
-        email = "user.google@zonein.app"
-        display_name = "Google User"
-        provider_name = "Google"
-    elif provider == "facebook":
-        username = "facebook_user"
-        email = "user.facebook@zonein.app"
-        display_name = "Facebook User"
-        provider_name = "Facebook"
-    else:
+    if provider not in ("google", "facebook"):
         messages.error(request, "ผู้ให้บริการไม่ถูกต้อง")
         return redirect("web:signin")
 
-    user, created = User.objects.get_or_create(
-        username=username,
-        defaults={
-            "email": email,
-            "first_name": display_name,
+    disclosures = get_consent_disclosures(provider)
+    prov_config = get_social_provider_config(provider)
+    context = {
+        "provider": provider,
+        "disclosures": disclosures,
+        "prov_config": prov_config,
+        "next_url": request.GET.get("next", ""),
+    }
+    return render(request, "social_consent.html", context)
+
+
+def social_login_view(request, provider):
+    """
+    Initiates Social Login (Google or Facebook).
+    Checks user consent, then either redirects to OAuth 2.0 or opens Sandbox/Simulator.
+    """
+    provider = provider.lower()
+    if provider not in ("google", "facebook"):
+        messages.error(request, "ผู้ให้บริการไม่ถูกต้อง")
+        return redirect("web:signin")
+
+    has_consent = request.GET.get("consent") == "1" or request.POST.get("consent") == "1"
+
+    # If consent not yet granted, direct to consent screen
+    if not has_consent:
+        return redirect(f"/social-login/{provider}/consent/")
+
+    # Mark consent in session
+    request.session[f"{provider}_consent"] = True
+
+    # 1. Real OAuth: If client ID & secret configured in .env / settings
+    if is_provider_configured(provider):
+        state = generate_oauth_state()
+        request.session[f"{provider}_oauth_state"] = state
+        redirect_uri = request.build_absolute_uri(
+            reverse("web:social_login_callback", kwargs={"provider": provider})
+        )
+        auth_url = get_authorization_url(provider, redirect_uri, state)
+        return redirect(auth_url)
+
+    # 2. Development / Sandbox Mode (When .env credentials are not yet entered)
+    # Allows full testing of the flow, PDPA consent, Neon DB storage, and profile setup
+    if request.method == "POST" and request.POST.get("simulate_login") == "1":
+        sim_name = (
+            request.POST.get("sim_name", "").strip()
+            or ("Google Traveler" if provider == "google" else "Facebook Traveler")
+        )
+        sim_email = (
+            request.POST.get("sim_email", "").strip().lower()
+            or f"{provider}_user@zonein.app"
+        )
+        sim_picture = request.POST.get("sim_picture", "").strip()
+
+        default_pic = (
+            "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80"
+            if provider == "google"
+            else "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80"
+        )
+
+        user_info = {
+            "id": f"sim_{provider}_{secrets.token_hex(4)}",
+            "email": sim_email,
+            "name": sim_name,
+            "picture": sim_picture or default_pic,
+        }
+        user, profile, created = sync_social_user(provider, user_info)
+        login(request, user)
+        action_word = "ลงทะเบียนและเข้าสู่ระบบ" if created else "เข้าสู่ระบบ"
+        messages.success(
+            request,
+            f"{action_word}ด้วย {provider.capitalize()} สำเร็จ! ยินดีต้อนรับ, {profile.get_display_name()}",
+        )
+        return redirect("web:index")
+
+    # Render Sandbox authorization screen
+    disclosures = get_consent_disclosures(provider)
+    prov_config = get_social_provider_config(provider)
+    return render(
+        request,
+        "social_sandbox.html",
+        {
+            "provider": provider,
+            "disclosures": disclosures,
+            "prov_config": prov_config,
         },
     )
 
-    if created:
-        user.set_unusable_password()
-        user.save()
 
+def social_login_callback_view(request, provider):
+    """
+    OAuth 2.0 Redirect Callback from Google or Facebook.
+    Exchanges code for access token and provisions user in Neon DB.
+    """
+    provider = provider.lower()
+    if provider not in ("google", "facebook"):
+        messages.error(request, "ผู้ให้บริการไม่ถูกต้อง")
+        return redirect("web:signin")
+
+    # Check for errors returned by provider
+    error = request.GET.get("error")
+    if error:
+        error_desc = request.GET.get("error_description", error)
+        messages.error(
+            request, f"การเข้าสู่ระบบผ่าน {provider.capitalize()} ถูกปฏิเสธ: {error_desc}"
+        )
+        return redirect("web:signin")
+
+    code = request.GET.get("code")
+    state = request.GET.get("state")
+    saved_state = request.session.get(f"{provider}_oauth_state")
+
+    # Verify CSRF state token
+    if not code:
+        messages.error(request, "ไม่พบรหัสยืนยันการเข้าสู่ระบบจากผู้ให้บริการ")
+        return redirect("web:signin")
+
+    if saved_state and state != saved_state:
+        messages.error(request, "การยืนยันตัวตนไม่ปลอดภัย (State token mismatch)")
+        return redirect("web:signin")
+
+    redirect_uri = request.build_absolute_uri(
+        reverse("web:social_login_callback", kwargs={"provider": provider})
+    )
+
+    # Exchange code for user identity
+    result = exchange_code_for_user_info(provider, code, redirect_uri)
+    if not result.get("success"):
+        messages.error(
+            request,
+            result.get("error", "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"),
+        )
+        return redirect("web:signin")
+
+    # Provision user and profile in Neon PostgreSQL
+    user, profile, created = sync_social_user(provider, result)
     login(request, user)
-    # Clear any residual messages so none leak to future users
-    from django.contrib.messages import get_messages
 
-    storage = get_messages(request)
-    for _ in storage:
-        pass
+    action_word = "ลงทะเบียนและเข้าสู่ระบบ" if created else "เข้าสู่ระบบ"
+    messages.success(
+        request,
+        f"{action_word}ด้วย {provider.capitalize()} สำเร็จ! ยินดีต้อนรับ, {profile.get_display_name()}",
+    )
     return redirect("web:index")
+
+
+def privacy_policy_view(request):
+    """Display comprehensive PDPA Privacy Policy and Data Collection Notice."""
+    return render(request, "privacy_policy.html")
+
+
+def terms_view(request):
+    """Display Terms of Service and Platform Usage Conditions."""
+    return render(request, "terms.html")
+
 
 
 def logout_view(request):
@@ -756,18 +922,21 @@ def api_add_comment(request, review_id):
     except json.JSONDecodeError:
         data = request.POST
 
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "unauthorized",
+                "message": "กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น",
+            },
+            status=401,
+        )
+
     content = data.get("content", "").strip()
     if not content:
         return JsonResponse({"error": "Content cannot be empty"}, status=400)
 
-    username = data.get("username", "").strip()
-    if request.user.is_authenticated and not username:
-        author = request.user
-    else:
-        username = username or "traveler"
-        author, _ = User.objects.get_or_create(
-            username=username, defaults={"email": f"{username}@example.com"}
-        )
+    author = request.user
 
     comment = Comment.objects.create(review=review, author=author, content=content)
     return JsonResponse(
@@ -897,7 +1066,7 @@ def api_places_view(request):
             Q(name__icontains=q)
             | Q(description__icontains=q)
             | Q(address__icontains=q)
-            | Q(tags__icontains=q)
+            | Q(category__icontains=q)
         )
     if category and category != "all":
         qs = qs.filter(category=category)
@@ -980,6 +1149,7 @@ def place_detail(request, place_id=None, slug=None):
                     if hasattr(r.user, "profile")
                     else r.user.username
                 ),
+                "username": r.user.username,
                 "user_avatar": avatar,
                 "rating": r.rating,
                 "created_at": r.created_at.strftime("%d %b %Y"),
@@ -992,6 +1162,7 @@ def place_detail(request, place_id=None, slug=None):
         reviews = [
             {
                 "user_name": "แพรวา พาเที่ยว",
+                "username": "ploy_wanderer",
                 "user_avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop",
                 "rating": 5,
                 "created_at": "3 วันที่แล้ว",
@@ -999,6 +1170,7 @@ def place_detail(request, place_id=None, slug=None):
             },
             {
                 "user_name": "ธนภัทร นักสำรวจ",
+                "username": "somchai_explorer",
                 "user_avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop",
                 "rating": 5,
                 "created_at": "1 สัปดาห์ที่แล้ว",
@@ -1070,7 +1242,10 @@ def place_detail_view(request, slug):
 # Wishlist Views
 # ==============================================================================
 def wishlist_page_view(request):
-    """Wishlist page view -> Redirect to profile wishlist tab."""
+    """Wishlist page view -> Redirect to profile wishlist tab (requires login)."""
+    if not request.user.is_authenticated:
+        messages.info(request, "กรุณาเข้าสู่ระบบเพื่อดูรายการโปรดของคุณ")
+        return redirect("/signin/?next=/wishlist/")
     return redirect("/profile/#wishlist")
 
 
@@ -1079,6 +1254,17 @@ def api_wishlist_toggle_view(request):
     if request.method not in ["POST", "GET"]:
         return JsonResponse(
             {"status": "error", "message": "Method not allowed"}, status=405
+        )
+
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {
+                "status": "error",
+                "success": False,
+                "error": "unauthorized",
+                "message": "กรุณาเข้าสู่ระบบเพื่อบันทึกรายการโปรด",
+            },
+            status=401,
         )
 
     place_id = None
@@ -1103,27 +1289,14 @@ def api_wishlist_toggle_view(request):
             {"status": "error", "message": "Place not found"}, status=404
         )
 
-    if request.user.is_authenticated:
-        wishlist_item = Wishlist.objects.filter(user=request.user, place=place).first()
-        if wishlist_item:
-            wishlist_item.delete()
-            action = "removed"
-        else:
-            Wishlist.objects.create(user=request.user, place=place)
-            action = "added"
-        total_count = Wishlist.objects.filter(user=request.user).count()
+    wishlist_item = Wishlist.objects.filter(user=request.user, place=place).first()
+    if wishlist_item:
+        wishlist_item.delete()
+        action = "removed"
     else:
-        wishlist = request.session.get("wishlist", [])
-        pid = int(place_id)
-        if pid in wishlist:
-            wishlist.remove(pid)
-            action = "removed"
-        else:
-            wishlist.append(pid)
-            action = "added"
-        request.session["wishlist"] = wishlist
-        request.session.modified = True
-        total_count = len(wishlist)
+        Wishlist.objects.create(user=request.user, place=place)
+        action = "added"
+    total_count = Wishlist.objects.filter(user=request.user).count()
 
     return JsonResponse(
         {
@@ -1140,12 +1313,19 @@ def api_wishlist_toggle_view(request):
 
 
 def api_wishlist_list_view(request):
-    if request.user.is_authenticated:
-        wishlist_qs = Wishlist.objects.filter(user=request.user).select_related("place")
-        places = [item.place for item in wishlist_qs]
-    else:
-        wishlist_ids = request.session.get("wishlist", [])
-        places = list(Place.objects.filter(id__in=wishlist_ids))
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {
+                "status": "error",
+                "success": False,
+                "error": "unauthorized",
+                "message": "กรุณาเข้าสู่ระบบเพื่อดูรายการโปรด",
+                "places": [],
+            },
+            status=401,
+        )
+    wishlist_qs = Wishlist.objects.filter(user=request.user).select_related("place")
+    places = [item.place for item in wishlist_qs]
 
     place_ids = [p.id for p in places]
     data = []

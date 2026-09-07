@@ -14,12 +14,13 @@ def wishlist_list(request):
     if request.method != "GET":
         return JsonResponse({"success": False, "error": "GET method required"}, status=405)
 
-    user = request.user if request.user.is_authenticated else None
-    if not user:
-        user = User.objects.first()
-        if not user:
-            return JsonResponse({"success": True, "count": 0, "wishlist": []})
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"success": False, "error": "unauthorized", "message": "กรุณาเข้าสู่ระบบเพื่อดูรายการโปรด"},
+            status=401,
+        )
 
+    user = request.user
     items = Wishlist.objects.filter(user=user).select_related("place").order_by("-created_at")
     data = []
     for item in items:
@@ -51,6 +52,12 @@ def wishlist_toggle(request):
     if request.method != "POST":
         return JsonResponse({"success": False, "error": "POST method required"}, status=405)
 
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"success": False, "error": "unauthorized", "message": "กรุณาเข้าสู่ระบบเพื่อบันทึกรายการโปรด"},
+            status=401,
+        )
+
     payload = parse_json_body(request)
     if payload is None:
         payload = request.POST.dict()
@@ -64,12 +71,7 @@ def wishlist_toggle(request):
     except Place.DoesNotExist:
         return JsonResponse({"success": False, "error": "ไม่พบสถานที่นี้"}, status=404)
 
-    user = request.user if request.user.is_authenticated else None
-    if not user:
-        user, _ = User.objects.get_or_create(
-            username="zonein_user",
-            defaults={"first_name": "Zone In User"}
-        )
+    user = request.user
 
     existing = Wishlist.objects.filter(user=user, place=place).first()
     if existing:

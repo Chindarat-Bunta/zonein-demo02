@@ -10,6 +10,27 @@
     </defs>
 </svg>
 
+<script>
+    window.IS_AUTHENTICATED = {{ user.is_authenticated|yesno:"true,false" }};
+    if (typeof window.showToast !== 'function') {
+        window.showToast = function(msg) {
+            let toast = document.getElementById("toast");
+            if (!toast) {
+                toast = document.createElement("div");
+                toast.id = "toast";
+                toast.className = "toast";
+                document.body.appendChild(toast);
+            }
+            toast.innerText = msg;
+            toast.style.display = "block";
+            if (window._toastTimeout) clearTimeout(window._toastTimeout);
+            window._toastTimeout = setTimeout(() => {
+                toast.style.display = "none";
+            }, 3500);
+        };
+    }
+</script>
+
 <!-- Subtle Ambient Grid Background (if not already on page) -->
 <div class="ambient-grid"></div>
 

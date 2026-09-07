@@ -12,13 +12,13 @@ def profile_detail_update(request):
     - GET: Retrieve current user's profile information
     - POST: Update user profile (nickname, bio, avatar_url)
     """
-    user = request.user if request.user.is_authenticated else None
-    if not user:
-        user, _ = User.objects.get_or_create(
-            username="zonein_user",
-            defaults={"first_name": "Zone In User", "email": "user@zonein.app"}
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"success": False, "error": "unauthorized", "message": "กรุณาเข้าสู่ระบบเพื่อเข้าถึงโปรไฟล์ของคุณ"},
+            status=401,
         )
 
+    user = request.user
     profile, _ = UserProfile.objects.get_or_create(user=user)
 
     if request.method == "GET":
@@ -46,6 +46,15 @@ def profile_detail_update(request):
         bio = payload.get("bio")
         avatar_url = payload.get("avatar_url")
         avatar_public_id = payload.get("avatar_public_id")
+
+        # Handle file upload via multipart/form-data to Cloudinary
+        avatar_file = request.FILES.get("avatar") or request.FILES.get("profile_picture")
+        if avatar_file:
+            from web.services import upload_image
+            upload_res = upload_image(avatar_file, folder="zonein/avatars")
+            if upload_res.get("success"):
+                profile.avatar_url = upload_res.get("url")
+                profile.avatar_public_id = upload_res.get("public_id", "")
 
         if nickname is not None:
             profile.nickname = nickname.strip()

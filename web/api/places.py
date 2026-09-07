@@ -66,6 +66,15 @@ def places_list_create(request):
         cover_image_url = payload.get("cover_image_url", "").strip()
         cover_image_public_id = payload.get("cover_image_public_id", "").strip()
 
+        # Handle direct file upload to Cloudinary (from Create Post modal)
+        image_file = request.FILES.get("cover_image") or request.FILES.get("image")
+        if image_file:
+            from web.services import upload_image
+            upload_res = upload_image(image_file, folder="zonein/places")
+            if upload_res.get("success"):
+                cover_image_url = upload_res.get("url")
+                cover_image_public_id = upload_res.get("public_id", "")
+
         # Parse coordinates safely
         lat = None
         lng = None
@@ -77,14 +86,13 @@ def places_list_create(request):
         except (InvalidOperation, ValueError):
             return JsonResponse({"success": False, "error": "พิกัด latitude / longitude ไม่ถูกต้อง"}, status=400)
 
-        # Author resolution
-        user = request.user if request.user.is_authenticated else None
-        if not user:
-            # Get or create a default demo user for API requests
-            user, _ = User.objects.get_or_create(
-                username="zonein_explorer",
-                defaults={"first_name": "Zone In Explorer", "email": "explorer@zonein.app"}
+        if not request.user.is_authenticated:
+            return JsonResponse(
+                {"success": False, "error": "unauthorized", "message": "กรุณาเข้าสู่ระบบก่อนสร้างโพสต์สถานที่ใหม่"},
+                status=401,
             )
+
+        user = request.user
 
         place = Place.objects.create(
             author=user,
@@ -94,9 +102,26 @@ def places_list_create(request):
             address=address,
             latitude=lat,
             longitude=lng,
-            cover_image_url=cover_image_url,
-            cover_image_public_id=cover_image_public_id
+            cover_image_url=cover_image_url or "",
+            cover_image_public_id=cover_image_public_id or "",
         )
+
+        # Create initial review in Neon if rating or description was provided
+        rating_val = payload.get("rating")
+        if rating_val:
+            try:
+                rating_int = int(rating_val)
+                if 1 <= rating_int <= 5:
+                    from web.models import Review
+                    Review.objects.create(
+                        place=place,
+                        user=user,
+                        rating=rating_int,
+                        comment=description or f"แชร์สถานที่ {place.name}",
+                        image_url=cover_image_url or "",
+                    )
+            except (ValueError, TypeError):
+                pass
 
         return JsonResponse({
             "success": True,
@@ -109,6 +134,7 @@ def places_list_create(request):
                 "latitude": float(place.latitude) if place.latitude else None,
                 "longitude": float(place.longitude) if place.longitude else None,
                 "cover_image_url": place.cover_image_url,
+                "detail_url": f"/places/{place.id}/",
                 "created_at": place.created_at.isoformat(),
             }
         }, status=201)

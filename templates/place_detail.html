@@ -240,38 +240,51 @@
                         <!-- Write a Review Box (ฟอร์มเขียนรีวิวใหม่) -->
                         <div class="write-review-card">
                             <h4>✍️ เขียนรีวิวและให้คะแนนสถานที่นี้</h4>
-                            <form id="reviewForm">
-                                <!-- Interactive Star Picker -->
-                                <div class="star-picker-row">
-                                    <div id="starPicker">
-                                        <span class="star-picker-star selected" data-value="1">★</span>
-                                        <span class="star-picker-star selected" data-value="2">★</span>
-                                        <span class="star-picker-star selected" data-value="3">★</span>
-                                        <span class="star-picker-star selected" data-value="4">★</span>
-                                        <span class="star-picker-star selected" data-value="5">★</span>
+                            {% if not user.is_authenticated %}
+                                <div style="background: rgba(255, 247, 243, 0.7); border: 1.5px dashed rgba(255, 197, 170, 0.7); border-radius: var(--radius-sm); padding: 32px 20px; text-align: center; margin-top: 14px;">
+                                    <div style="font-size: 2rem; margin-bottom: 8px;">🔒</div>
+                                    <h5 style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">กรุณาเข้าสู่ระบบเพื่อเขียนรีวิว</h5>
+                                    <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 380px; margin: 0 auto 16px;">
+                                        ร่วมแบ่งปันประสบการณ์การท่องเที่ยวและให้คะแนนสถานที่นี้กับเพื่อนๆ นักเดินทาง
+                                    </p>
+                                    <a href="/signin/?next={{ request.path }}" style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 22px; border-radius: var(--radius-pill); background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #fff; font-weight: 700; text-decoration: none; font-size: 0.88rem; box-shadow: 0 4px 12px rgba(255, 157, 157, 0.35);">
+                                        เข้าสู่ระบบเพื่อเขียนรีวิว
+                                    </a>
+                                </div>
+                            {% else %}
+                                <form id="reviewForm">
+                                    <!-- Interactive Star Picker -->
+                                    <div class="star-picker-row">
+                                        <div id="starPicker">
+                                            <span class="star-picker-star selected" data-value="1">★</span>
+                                            <span class="star-picker-star selected" data-value="2">★</span>
+                                            <span class="star-picker-star selected" data-value="3">★</span>
+                                            <span class="star-picker-star selected" data-value="4">★</span>
+                                            <span class="star-picker-star selected" data-value="5">★</span>
+                                        </div>
+                                        <input type="hidden" id="selectedRatingInput" name="rating" value="5">
+                                        <span class="star-picker-hint" id="starPickerHint">5 ดาว — ยอดเยี่ยม ประทับใจมาก</span>
                                     </div>
-                                    <input type="hidden" id="selectedRatingInput" name="rating" value="5">
-                                    <span class="star-picker-hint" id="starPickerHint">5 ดาว — ยอดเยี่ยม ประทับใจมาก</span>
-                                </div>
-                                <textarea id="reviewTextarea"
-                                          class="review-textarea"
-                                          placeholder="บอกเล่าความประทับใจ บรรยากาศ รสชาติเครื่องดื่ม หรือคำแนะนำสำหรับนักเดินทางคนอื่นๆ..."
-                                          required></textarea>
-                                <div class="review-form-actions">
-                                    <button type="submit" class="btn-submit-review" id="btnSubmitReview">
-                                        <svg width="18"
-                                             height="18"
-                                             viewBox="0 0 24 24"
-                                             fill="none"
-                                             stroke="currentColor"
-                                             stroke-width="2">
-                                            <line x1="22" y1="2" x2="11" y2="13"></line>
-                                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                        </svg>
-                                        <span>ส่งรีวิวของคุณ</span>
-                                    </button>
-                                </div>
-                            </form>
+                                    <textarea id="reviewTextarea"
+                                              class="review-textarea"
+                                              placeholder="บอกเล่าความประทับใจ บรรยากาศ รสชาติเครื่องดื่ม หรือคำแนะนำสำหรับนักเดินทางคนอื่นๆ..."
+                                              required></textarea>
+                                    <div class="review-form-actions">
+                                        <button type="submit" class="btn-submit-review" id="btnSubmitReview">
+                                            <svg width="18"
+                                                 height="18"
+                                                 viewBox="0 0 24 24"
+                                                 fill="none"
+                                                 stroke="currentColor"
+                                                 stroke-width="2">
+                                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                            </svg>
+                                            <span>ส่งรีวิวของคุณ</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            {% endif %}
                         </div>
                         <!-- Review Filter Bar -->
                         <div class="reviews-filter-bar">
@@ -285,13 +298,15 @@
                                 <div class="review-item-card">
                                     <div class="review-author-row">
                                         <div class="author-profile-box">
-                                            <img src="{{ r.user_avatar|default:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' }}"
-                                                 class="author-avatar"
-                                                 alt="{{ r.user_name }}">
-                                            <div class="author-meta">
-                                                <span class="author-name">{{ r.user_name }}</span>
-                                                <span class="author-date">{{ r.created_at }}</span>
-                                            </div>
+                                            <a href="{% if r.username %}/profile/{{ r.username }}/{% else %}#{% endif %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
+                                                <img src="{{ r.user_avatar|default:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' }}"
+                                                     class="author-avatar"
+                                                     alt="{{ r.user_name }}">
+                                                <div class="author-meta">
+                                                    <span class="author-name" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">{{ r.user_name }}</span>
+                                                    <span class="author-date">{{ r.created_at }}</span>
+                                                </div>
+                                            </a>
                                         </div>
                                         <div class="review-stars-score" title="{{ r.rating }} ดาว">
                                             {% for i in "12345" %}

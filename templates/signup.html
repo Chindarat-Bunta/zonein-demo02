@@ -340,6 +340,299 @@
         .switch-link:hover {
             text-decoration: underline;
         }
+
+        /* PDPA Notice Card in Registration Form */
+        .pdpa-notice-card {
+            background: rgba(255, 247, 243, 0.9);
+            border: 1.5px solid rgba(255, 197, 170, 0.55);
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-top: 4px;
+        }
+
+        .pdpa-notice-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .pdpa-badge {
+            background: rgba(255, 157, 157, 0.2);
+            color: #d9534f;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 157, 157, 0.4);
+            letter-spacing: 0.04em;
+        }
+
+        .pdpa-notice-title {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .pdpa-notice-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .pdpa-notice-desc strong {
+            color: var(--text-main);
+        }
+
+        .pdpa-agreement-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            cursor: pointer;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 197, 170, 0.35);
+        }
+
+        .pdpa-checkbox {
+            width: 17px;
+            height: 17px;
+            accent-color: #FF9D9D;
+            margin-top: 2px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .pdpa-agreement-text {
+            font-size: 0.82rem;
+            color: var(--text-main);
+            line-height: 1.45;
+        }
+
+        .pdpa-agreement-text a {
+            color: #e56d6d;
+            font-weight: 700;
+            text-decoration: underline;
+        }
+
+        /* Social Consent Modal Overlay */
+        .social-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+            animation: fadeInModal 0.25s ease forwards;
+        }
+
+        .social-modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .social-modal-card {
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(255, 197, 170, 0.5);
+            border-radius: 26px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3);
+            padding: 28px 26px;
+            transform: scale(0.95);
+            animation: popInModal 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes popInModal {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-provider-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .modal-provider-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 4px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close-btn:hover {
+            color: var(--text-main);
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .modal-consent-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .modal-consent-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+
+        .modal-data-box {
+            background: rgba(250, 249, 246, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.07);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+
+        .modal-data-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+        }
+
+        .modal-data-row:not(:last-child) {
+            border-bottom: 1px dashed rgba(0, 0, 0, 0.07);
+        }
+
+        .modal-data-icon {
+            font-size: 1.1rem;
+            line-height: 1;
+            margin-top: 1px;
+        }
+
+        .modal-data-label {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 1px;
+        }
+
+        .modal-data-sub {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            line-height: 1.35;
+        }
+
+        .modal-safety-tag {
+            background: rgba(240, 253, 244, 0.95);
+            border: 1px solid rgba(74, 222, 128, 0.4);
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 0.78rem;
+            color: #15803d;
+            line-height: 1.45;
+            margin-bottom: 18px;
+        }
+
+        .modal-consent-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            padding: 10px 12px;
+            background: rgba(255, 247, 243, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 197, 170, 0.4);
+        }
+
+        .modal-consent-check input {
+            width: 17px;
+            height: 17px;
+            accent-color: #FF9D9D;
+            margin-top: 2px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .modal-consent-check-text {
+            font-size: 0.82rem;
+            color: var(--text-main);
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-modal-agree {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px 20px;
+            border-radius: 9999px;
+            border: none;
+            background: linear-gradient(135deg, #FF9D9D 0%, #FF8080 100%);
+            color: #ffffff;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 6px 18px rgba(255, 157, 157, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .btn-modal-agree:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-modal-cancel {
+            width: 100%;
+            padding: 10px 20px;
+            border-radius: 9999px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            color: var(--text-muted);
+            font-size: 0.86rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-modal-cancel:hover {
+            background: #f8fafc;
+            color: var(--text-main);
+        }
         </style>
     </head>
     <body>
@@ -382,10 +675,11 @@
                 <!-- Quick Social Registration Buttons -->
                 <div class="social-buttons">
                     <!-- Google Register Button -->
-                    <a href="{% url 'social_login' provider='google' %}"
+                    <button type="button"
                        class="social-btn social-btn-google"
                        id="btnGoogleSignUp"
-                       title="สมัครด้วย Google">
+                       onclick="openSocialConsentModal('google')"
+                       title="สมัครด้วย Google (ขออนุญาตตาม PDPA)">
                         <svg width="20" height="20" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -393,17 +687,18 @@
                             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                         </svg>
                         <span>สมัครด้วย Google</span>
-                    </a>
+                    </button>
                     <!-- Facebook Register Button -->
-                    <a href="{% url 'social_login' provider='facebook' %}"
+                    <button type="button"
                        class="social-btn social-btn-facebook"
                        id="btnFacebookSignUp"
-                       title="สมัครด้วย Facebook">
+                       onclick="openSocialConsentModal('facebook')"
+                       title="สมัครด้วย Facebook (ขออนุญาตตาม PDPA)">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                         </svg>
                         <span>สมัครด้วย Facebook</span>
-                    </a>
+                    </button>
                 </div>
                 <!-- Divider -->
                 <div class="auth-divider">
@@ -548,6 +843,26 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- PDPA Notice & Consent Section -->
+                    <div class="pdpa-notice-card">
+                        <div class="pdpa-notice-header">
+                            <span class="pdpa-badge">🛡️ PDPA Notice</span>
+                            <span class="pdpa-notice-title">การแจ้งจัดเก็บข้อมูลส่วนบุคคล</span>
+                        </div>
+                        <p class="pdpa-notice-desc">
+                            Zone In มีความจำเป็นต้องเก็บรวบรวม <strong>ชื่อ-นามสกุล, ชื่อผู้ใช้, อีเมล</strong> เพื่อสร้างบัญชีและแสดงตัวตนผู้ใช้ และ <strong>รหัสผ่านที่เข้ารหัสความปลอดภัยสูง (Hash)</strong> เพื่อความปลอดภัยของบัญชี โดยท่านสามารถแก้ไขหรือขอลบข้อมูลได้ตลอดเวลา
+                        </p>
+                        <label class="pdpa-agreement-label">
+                            <input type="checkbox" name="consent_pdpa" id="consentPdpa" value="1" required class="pdpa-checkbox">
+                            <span class="pdpa-agreement-text">
+                                ข้าพเจ้ายินยอมให้ Zone In เก็บรวบรวมและใช้ข้อมูลส่วนบุคคลข้างต้นตาม 
+                                <a href="{% url 'privacy_policy' %}" target="_blank">นโยบายความเป็นส่วนตัว (PDPA)</a> และยอมรับ 
+                                <a href="{% url 'terms' %}" target="_blank">ข้อกำหนดและเงื่อนไขการใช้งาน</a> *
+                            </span>
+                        </label>
+                    </div>
+
                     <button type="submit" class="submit-btn" id="btnSubmitSignUp">
                         <span>ยืนยันการสมัครสมาชิก</span>
                         <svg width="18"
@@ -587,6 +902,137 @@
                         <circle cx="12" cy="12" r="3"></circle>
                     </svg>
                 `;
+            }
+        }
+        </script>
+
+        <!-- Social Login Consent Modal (PDPA) -->
+        <div class="social-modal-overlay" id="socialConsentModal" onclick="handleSocialModalBackdrop(event)">
+            <div class="social-modal-card" role="dialog" aria-modal="true" aria-labelledby="modalConsentTitle">
+                <div class="modal-provider-header">
+                    <div class="modal-provider-badge" id="modalProviderBadge">
+                        <!-- Filled by JS -->
+                    </div>
+                    <button type="button" class="modal-close-btn" onclick="closeSocialConsentModal()" aria-label="ปิดหน้าต่าง">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+
+                <h3 class="modal-consent-title" id="modalConsentTitle">ขออนุญาตเข้าถึงและจัดเก็บข้อมูล</h3>
+                <p class="modal-consent-desc" id="modalConsentDesc">
+                    Zone In ขออนุญาตเชื่อมต่อกับบัญชีของคุณเพื่อใช้ในการสมัครสมาชิกและเข้าสู่ระบบ โดยมีการจัดเก็บข้อมูลตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล (PDPA) ดังนี้:
+                </p>
+
+                <div class="modal-data-box">
+                    <div class="modal-data-row">
+                        <span class="modal-data-icon">👤</span>
+                        <div>
+                            <div class="modal-data-label">ชื่อและนามสกุล (Public Profile)</div>
+                            <div class="modal-data-sub">นำมาใช้แสดงเป็นชื่อในโปรไฟล์และโพสต์แนะนำสถานที่ของคุณ</div>
+                        </div>
+                    </div>
+                    <div class="modal-data-row">
+                        <span class="modal-data-icon">📧</span>
+                        <div>
+                            <div class="modal-data-label">ที่อยู่อีเมล (Email Address)</div>
+                            <div class="modal-data-sub">ใช้เป็นอีเมลประจำบัญชีและรับการแจ้งเตือนความเคลื่อนไหว</div>
+                        </div>
+                    </div>
+                    <div class="modal-data-row">
+                        <span class="modal-data-icon">🖼️</span>
+                        <div>
+                            <div class="modal-data-label">รูปภาพโปรไฟล์ (Profile Picture)</div>
+                            <div class="modal-data-sub">ใช้เป็นรูปอวตารเริ่มต้นในระบบ (สามารถเปลี่ยนหรือลบได้ตลอดเวลา)</div>
+                        </div>
+                    </div>
+                    <div class="modal-data-row">
+                        <span class="modal-data-icon">🆔</span>
+                        <div>
+                            <div class="modal-data-label">รหัสระบุตัวตน (Social Account ID)</div>
+                            <div class="modal-data-sub">ใช้ยืนยันตัวตนความปลอดภัยในการล็อกอินครั้งต่อไป</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-safety-tag">
+                    🛡️ <strong>ความปลอดภัย:</strong> ระบบจะไม่เข้าถึงรหัสผ่านของคุณ ไม่เข้าถึงแชทหรือรายชื่อเพื่อน และจะไม่มีการโพสต์สิ่งใดบนบัญชีโซเชียลของคุณโดยเด็ดขาด
+                </div>
+
+                <label class="modal-consent-check">
+                    <input type="checkbox" id="modalConsentCheck" onchange="toggleModalAgreeBtn(this.checked)">
+                    <span class="modal-consent-check-text">
+                        ข้าพเจ้ายินยอมให้ Zone In เข้าถึงและจัดเก็บข้อมูลข้างต้นตาม <a href="{% url 'privacy_policy' %}" target="_blank" style="color: #f08383; font-weight: 700;">นโยบายความเป็นส่วนตัว (PDPA)</a>
+                    </span>
+                </label>
+
+                <div class="modal-actions">
+                    <a href="#" class="btn-modal-agree" id="btnModalAgree" style="pointer-events: none; opacity: 0.55;">
+                        <span>ยินยอมและดำเนินการต่อ</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </a>
+                    <button type="button" class="btn-modal-cancel" onclick="closeSocialConsentModal()">ยกเลิก</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        let currentSocialProvider = '';
+
+        function openSocialConsentModal(provider) {
+            currentSocialProvider = provider;
+            const modal = document.getElementById('socialConsentModal');
+            const badge = document.getElementById('modalProviderBadge');
+            const agreeBtn = document.getElementById('btnModalAgree');
+            const chk = document.getElementById('modalConsentCheck');
+
+            if (chk) chk.checked = false;
+            toggleModalAgreeBtn(false);
+
+            if (provider === 'google') {
+                badge.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    <span>เชื่อมต่อด้วย Google Account</span>
+                `;
+                agreeBtn.href = '/social-login/google/?consent=1';
+            } else {
+                badge.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    <span>เชื่อมต่อด้วย Facebook Account</span>
+                `;
+                agreeBtn.href = '/social-login/facebook/?consent=1';
+            }
+
+            if (modal) modal.classList.add('active');
+        }
+
+        function closeSocialConsentModal() {
+            const modal = document.getElementById('socialConsentModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function handleSocialModalBackdrop(e) {
+            if (e.target.id === 'socialConsentModal') {
+                closeSocialConsentModal();
+            }
+        }
+
+        function toggleModalAgreeBtn(isChecked) {
+            const btn = document.getElementById('btnModalAgree');
+            if (btn) {
+                if (isChecked) {
+                    btn.style.pointerEvents = 'auto';
+                    btn.style.opacity = '1';
+                } else {
+                    btn.style.pointerEvents = 'none';
+                    btn.style.opacity = '0.55';
+                }
             }
         }
         </script>

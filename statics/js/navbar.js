@@ -221,10 +221,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================================
     window.handlePostClick = function (e) {
         if (e) e.preventDefault();
+        if (typeof window.IS_AUTHENTICATED !== 'undefined' && !window.IS_AUTHENTICATED) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('กรุณาเข้าสู่ระบบก่อนสร้างโพสต์ใหม่ ✍️');
+            } else {
+                alert('กรุณาเข้าสู่ระบบก่อนสร้างโพสต์ใหม่ ✍️');
+            }
+            setTimeout(() => {
+                window.location.href = '/signin/?next=/';
+            }, 800);
+            return;
+        }
         window.openCreatePostModal();
     };
 
     window.openCreatePostModal = function () {
+        if (typeof window.IS_AUTHENTICATED !== 'undefined' && !window.IS_AUTHENTICATED) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('กรุณาเข้าสู่ระบบก่อนสร้างโพสต์ใหม่ ✍️');
+            } else {
+                alert('กรุณาเข้าสู่ระบบก่อนสร้างโพสต์ใหม่ ✍️');
+            }
+            setTimeout(() => {
+                window.location.href = '/signin/?next=/';
+            }, 800);
+            return;
+        }
         const modal = document.getElementById('createPostModal');
         if (!modal) return;
         modal.classList.add('active');

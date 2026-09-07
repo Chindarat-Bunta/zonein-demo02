@@ -18,12 +18,13 @@ def like_toggle(request, place_id):
     except Place.DoesNotExist:
         return JsonResponse({"success": False, "error": "ไม่พบสถานที่นี้"}, status=404)
 
-    user = request.user if request.user.is_authenticated else None
-    if not user:
-        user, _ = User.objects.get_or_create(
-            username="zonein_user",
-            defaults={"first_name": "Zone In User"}
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"success": False, "error": "unauthorized", "message": "กรุณาเข้าสู่ระบบเพื่อกดถูกใจ"},
+            status=401,
         )
+
+    user = request.user
 
     like = PlaceLike.objects.filter(user=user, place=place).first()
     if like:

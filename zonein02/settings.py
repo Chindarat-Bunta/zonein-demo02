@@ -207,3 +207,9 @@ else:
         api_secret=CLOUDINARY_API_SECRET or "demo_secret",
         secure=True,
     )
+
+# Social Authentication (Google & Facebook OAuth 2.0)
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
+FACEBOOK_CLIENT_ID = os.environ.get("FACEBOOK_CLIENT_ID", "").strip() or os.environ.get("FACEBOOK_APP_ID", "").strip()
+FACEBOOK_CLIENT_SECRET = os.environ.get("FACEBOOK_CLIENT_SECRET", "").strip() or os.environ.get("FACEBOOK_APP_SECRET", "").strip()

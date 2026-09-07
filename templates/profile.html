@@ -1029,8 +1029,8 @@
             <div class="profile-header-layout">
                 <!-- จุดรูปโปรไฟล์ (Profile Avatar Point) -->
                 <div class="avatar-wrapper">
-                    {% if user.is_authenticated and user.profile.avatar_url %}
-                    <img src="{{ user.profile.avatar_url }}" alt="{{ display_name }}" class="avatar-circle" style="object-fit: cover; border: 2.5px solid #FF9D9D;">
+                    {% if avatar_url %}
+                    <img src="{{ avatar_url }}" alt="{{ display_name }}" class="avatar-circle" style="object-fit: cover; border: 2.5px solid #FF9D9D;">
                     {% else %}
                     <div class="avatar-circle" title="รูปโปรไฟล์ {{ display_name }}">
                         {{ display_name|slice:":1"|upper }}
@@ -1038,13 +1038,16 @@
                     {% endif %}
                     <!-- Online indicator dot -->
                     <div class="avatar-online-dot" title="สถานะ: กำลังออนไลน์"></div>
-                    <!-- Edit camera button (Opens Modal) -->
+                    
+                    {% if is_own_profile %}
+                    <!-- Edit camera button (Opens Modal) - เฉพาะเจ้าของโปรไฟล์ -->
                     <button type="button" class="avatar-camera-btn" onclick="openEditModal()" title="เปลี่ยนรูปโปรไฟล์ / แก้ไขข้อมูล">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                             <circle cx="12" cy="13" r="4"></circle>
                         </svg>
                     </button>
+                    {% endif %}
                 </div>
 
                 <!-- ชื่อของ User & ข้อมูลโปรไฟล์ -->
@@ -1059,6 +1062,7 @@
                                 สมาชิก Zone In
                             </span>
                         </h1>
+                        {% if is_own_profile %}
                         <button type="button" class="btn-edit-profile" id="btnEditProfile" onclick="openEditModal()" title="แก้ไขโปรไฟล์">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -1066,12 +1070,15 @@
                             </svg>
                             <span>แก้ไขโปรไฟล์</span>
                         </button>
+                        {% endif %}
                     </div>
                     
                     <div class="user-handle">
                         <span>@{{ username }}</span>
+                        {% if is_own_profile %}
                         <span>•</span>
                         <span>{{ email }}</span>
+                        {% endif %}
                     </div>
 
                     <div class="user-meta-chips">
@@ -1089,15 +1096,17 @@
             </div>
 
             <!-- Stats Bar -->
-            <div class="profile-stats-row">
+            <div class="profile-stats-row" {% if not is_own_profile %}style="grid-template-columns: repeat(2, 1fr);"{% endif %}>
                 <div class="stat-item" onclick="switchProfileTab('reviews')" style="cursor: pointer;" title="คลิกเพื่อดูประวัติการรีวิว">
                     <div class="stat-value reviews-count-val">{{ reviews_count }}</div>
                     <div class="stat-label">📝 รีวิวทั้งหมด</div>
                 </div>
+                {% if is_own_profile %}
                 <div class="stat-item" onclick="switchProfileTab('wishlist')" style="cursor: pointer;" title="คลิกเพื่อดูรายการโปรด (Wishlist)">
                     <div class="stat-value wishlist-count-val">{{ wishlist_count }}</div>
                     <div class="stat-label">❤️ รายการโปรด</div>
                 </div>
+                {% endif %}
                 <div class="stat-item" title="การกดไลก์">
                     <div class="stat-value">{{ likes_count }}</div>
                     <div class="stat-label">👍 การกดไลก์</div>
@@ -1106,9 +1115,9 @@
         </section>
 
         <!-- Navigation Tabs: Reviews & Wishlist -->
-        <nav class="profile-tabs-nav" id="profileTabsNav" aria-label="Profile Tabs">
+        <nav class="profile-tabs-nav" id="profileTabsNav" aria-label="Profile Tabs" {% if not is_own_profile %}style="max-width: 320px; margin: 0 auto 24px;"{% endif %}>
             <!-- Animated Sliding Glider Pill -->
-            <div class="profile-tab-glider" id="profileTabGlider"></div>
+            <div class="profile-tab-glider" id="profileTabGlider" {% if not is_own_profile %}style="width: calc(100% - 12px); left: 6px;"{% endif %}></div>
 
             <button type="button" class="tab-btn active" id="btnTabReviews" onclick="switchProfileTab('reviews')" data-tab="reviews">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1118,10 +1127,11 @@
                     <line x1="16" y1="17" x2="8" y2="17"></line>
                     <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
-                <span>ประวัติการรีวิว (My Reviews)</span>
+                <span>{% if is_own_profile %}ประวัติการรีวิว (My Reviews){% else %}รีวิวทั้งหมด (Reviews){% endif %}</span>
                 <span class="tab-count-badge reviews-count-val">{{ reviews_count }}</span>
             </button>
 
+            {% if is_own_profile %}
             <button type="button" class="tab-btn" id="btnTabWishlist" onclick="switchProfileTab('wishlist')" data-tab="wishlist">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -1129,6 +1139,7 @@
                 <span>รายการโปรด (Wishlist)</span>
                 <span class="tab-count-badge wishlist-count-val">{{ wishlist_count }}</span>
             </button>
+            {% endif %}
         </nav>
 
         <!-- ==========================================================================
@@ -1178,8 +1189,9 @@
         </section>
 
         <!-- ==========================================================================
-             PANEL 2: Wishlist ของตัวเอง (Wishlist)
+             PANEL 2: Wishlist ของตัวเอง (Wishlist) - เฉพาะเจ้าของโปรไฟล์
              ========================================================================== -->
+        {% if is_own_profile %}
         <section class="tab-panel" id="panel-wishlist">
             {% if wishlist %}
                 <div class="wishlist-grid" id="profileWishlistGrid">
@@ -1250,10 +1262,12 @@
                 </div>
             {% endif %}
         </section>
+        {% endif %}
 
         <!-- ==========================================================================
-             POPUP / MODAL สำหรับ "แก้ไขข้อมูลส่วนตัว"
+             POPUP / MODAL สำหรับ "แก้ไขข้อมูลส่วนตัว" - เฉพาะเจ้าของโปรไฟล์
              ========================================================================== -->
+        {% if is_own_profile %}
         <div class="modal-overlay" id="editProfileModal" onclick="handleBackdropClick(event)">
             <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
                 
@@ -1344,6 +1358,7 @@
 
             </div>
         </div>
+        {% endif %}
 
     </main>
 
@@ -1443,22 +1458,20 @@
             const panelReviews = document.getElementById('panel-reviews');
             const panelWishlist = document.getElementById('panel-wishlist');
 
-            if (!btnReviews || !btnWishlist || !panelReviews || !panelWishlist) return;
-
-            if (tabName === 'reviews') {
+            if (tabName === 'reviews' && btnReviews && panelReviews) {
                 btnReviews.classList.add('active');
-                btnWishlist.classList.remove('active');
+                if (btnWishlist) btnWishlist.classList.remove('active');
                 panelReviews.classList.add('active');
-                panelWishlist.classList.remove('active');
+                if (panelWishlist) panelWishlist.classList.remove('active');
                 moveProfileGlider(btnReviews);
                 if (window.history && window.history.replaceState) {
                     history.replaceState(null, null, '#reviews');
                 }
-            } else if (tabName === 'wishlist') {
+            } else if (tabName === 'wishlist' && btnWishlist && panelWishlist) {
                 btnWishlist.classList.add('active');
-                btnReviews.classList.remove('active');
+                if (btnReviews) btnReviews.classList.remove('active');
                 panelWishlist.classList.add('active');
-                panelReviews.classList.remove('active');
+                if (panelReviews) panelReviews.classList.remove('active');
                 moveProfileGlider(btnWishlist);
                 if (window.history && window.history.replaceState) {
                     history.replaceState(null, null, '#wishlist');
