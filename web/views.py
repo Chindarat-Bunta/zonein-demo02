@@ -1131,6 +1131,10 @@ def place_detail(request, place_id=None, slug=None):
         return redirect("web:index")
 
     wishlist_ids = get_user_wishlist_place_ids(request)
+    is_liked = False
+    if request.user.is_authenticated:
+        is_liked = PlaceLike.objects.filter(user=request.user, place=place).exists()
+
     related_places = Place.objects.filter(category=place.category).exclude(id=place.id)[
         :3
     ]
@@ -1214,6 +1218,7 @@ def place_detail(request, place_id=None, slug=None):
             "reviews": reviews,
             "gallery_images": gallery_images,
             "is_wishlisted": place.id in wishlist_ids,
+            "is_liked": is_liked,
             "wishlist_ids": wishlist_ids,
             "rating_breakdown": (
                 place.rating_breakdown if hasattr(place, "rating_breakdown") else []

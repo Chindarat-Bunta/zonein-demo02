@@ -480,6 +480,11 @@ class ModelsSchemaTests(TestCase):
 class WishlistTestCase(TestCase):
     def setUp(self):
         self.client = Client()
+        self.user = User.objects.create_user(
+            username="wishlist_tester",
+            email="tester@example.com",
+            password="testpassword123",
+        )
         self.place = Place.objects.create(
             name="Nana Coffee Roasters",
             slug="nana-coffee-roasters",
@@ -488,13 +493,24 @@ class WishlistTestCase(TestCase):
             description="คาเฟ่สวย กาแฟดี",
         )
 
-    def test_wishlist_page_renders_empty_state(self):
-        response = self.client.get(reverse("web:wishlist"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "รายการสถานที่โปรด (My Wishlist)")
-        self.assertContains(response, "ยังไม่มีสถานที่ในรายการโปรด")
+    def test_wishlist_unauthenticated_restrictions(self):
+        """Unauthenticated user cannot view wishlist directly and receives 401 on toggle."""
+        res_page = self.client.get(reverse("web:wishlist"))
+        self.assertEqual(res_page.status_code, 302)
+        self.assertIn("/signin/?next=/wishlist/", res_page.url)
 
-    def test_api_wishlist_toggle_add_and_remove(self):
+        res_api = self.client.post(
+            reverse("web:api_wishlist_toggle"),
+            data=json.dumps({"place_id": self.place.id}),
+            content_type="application/json",
+        )
+        self.assertEqual(res_api.status_code, 401)
+
+    def test_api_wishlist_toggle_and_profile_integration(self):
+        """Authenticated user toggles wishlist, and it properly reflects in profile."""
+        self.client.login(username="wishlist_tester", password="testpassword123")
+
+        # 1. Add to wishlist
         response = self.client.post(
             reverse("web:api_wishlist_toggle"),
             data=json.dumps({"place_id": self.place.id}),
@@ -507,7 +523,13 @@ class WishlistTestCase(TestCase):
         self.assertTrue(data["is_wishlisted"])
         self.assertEqual(data["total_count"], 1)
 
-        # 2. Remove from wishlist
+        # 2. Check profile page contains the wishlisted place
+        res_profile = self.client.get(reverse("web:profile"))
+        self.assertEqual(res_profile.status_code, 200)
+        self.assertContains(res_profile, "Nana Coffee Roasters")
+        self.assertContains(res_profile, "wishlist-count-val")
+
+        # 3. Remove from wishlist
         response2 = self.client.post(
             reverse("web:api_wishlist_toggle"),
             data=json.dumps({"place_id": self.place.id}),

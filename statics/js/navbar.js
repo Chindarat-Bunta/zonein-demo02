@@ -831,3 +831,66 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Global Wishlist Quick Toggle function for cards across all pages
+window.quickToggleWishlist = async function (event, placeId, btn) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    if (typeof window.IS_AUTHENTICATED !== 'undefined' && !window.IS_AUTHENTICATED) {
+        if (typeof showToast === 'function') {
+            showToast('กรุณาเข้าสู่ระบบเพื่อบันทึกรายการโปรด 🔖');
+        } else if (typeof showDetailToast === 'function') {
+            showDetailToast('กรุณาเข้าสู่ระบบเพื่อบันทึกรายการโปรด 🔖');
+        } else {
+            alert('กรุณาเข้าสู่ระบบเพื่อบันทึกรายการโปรด');
+        }
+        return;
+    }
+    if (!placeId) return;
+
+    if (btn) btn.disabled = true;
+    try {
+        const res = await fetch('/api/wishlist/toggle/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ place_id: placeId })
+        });
+        const data = await res.json();
+        if (data.status === 'success' || data.success) {
+            const isSaved = (typeof data.is_wishlisted !== 'undefined') ? data.is_wishlisted : data.is_saved;
+            // Synchronize all buttons targeting this place_id on the active page
+            document.querySelectorAll(`[data-wishlist-place-id="${placeId}"]`).forEach(b => {
+                b.classList.toggle('active', isSaved);
+                b.setAttribute('title', isSaved ? 'นำออกจากรายการโปรด' : 'บันทึกในรายการโปรด');
+                const svg = b.querySelector('svg');
+                if (svg) svg.setAttribute('fill', isSaved ? '#e05d5d' : 'none');
+            });
+            if (btn) {
+                btn.classList.toggle('active', isSaved);
+                btn.setAttribute('title', isSaved ? 'นำออกจากรายการโปรด' : 'บันทึกในรายการโปรด');
+                const svg = btn.querySelector('svg');
+                if (svg) svg.setAttribute('fill', isSaved ? '#e05d5d' : 'none');
+            }
+
+            const msg = isSaved ? 'บันทึกในรายการโปรดเรียบร้อยแล้ว ❤️' : 'นำออกจากรายการโปรดแล้ว';
+            if (typeof showToast === 'function') {
+                showToast(msg);
+            } else if (typeof showDetailToast === 'function') {
+                showDetailToast(msg);
+            }
+        } else {
+            const err = data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+            if (typeof showToast === 'function') showToast(err);
+            else if (typeof showDetailToast === 'function') showDetailToast(err);
+        }
+    } catch (err) {
+        console.error('quickToggleWishlist error:', err);
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+};

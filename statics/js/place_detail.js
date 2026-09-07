@@ -165,33 +165,88 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnLike = document.getElementById('btnPlaceLike');
     const likeCountSpan = document.getElementById('likeCount');
     if (btnLike) {
-        let isLiked = false;
-        btnLike.addEventListener('click', () => {
+        btnLike.addEventListener('click', async () => {
             if (typeof window.IS_AUTHENTICATED !== 'undefined' && !window.IS_AUTHENTICATED) {
                 showDetailToast('กรุณาเข้าสู่ระบบเพื่อกดถูกใจสถานที่นี้ ❤️');
                 return;
             }
-            isLiked = !isLiked;
-            btnLike.classList.toggle('active', isLiked);
-            if (likeCountSpan) {
-                let current = parseInt(likeCountSpan.textContent, 10) || 0;
-                likeCountSpan.textContent = isLiked ? current + 1 : Math.max(0, current - 1);
+            const placeId = btnLike.getAttribute('data-place-id');
+            if (!placeId) return;
+
+            btnLike.disabled = true;
+            try {
+                const res = await fetch(`/api/places/${placeId}/like/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    btnLike.classList.toggle('active', data.is_liked);
+                    const svg = btnLike.querySelector('svg');
+                    if (svg) {
+                        svg.setAttribute('fill', data.is_liked ? '#ef4444' : 'none');
+                    }
+                    if (likeCountSpan && typeof data.total_likes !== 'undefined') {
+                        likeCountSpan.textContent = data.total_likes;
+                    }
+                    showDetailToast(data.is_liked ? 'ถูกใจสถานที่นี้แล้ว ❤️' : 'ยกเลิกการถูกใจแล้ว');
+                } else {
+                    showDetailToast(data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+                }
+            } catch (err) {
+                console.error('Like error:', err);
+                showDetailToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            } finally {
+                btnLike.disabled = false;
             }
-            showDetailToast(isLiked ? 'ถูกใจสถานที่นี้แล้ว ❤️' : 'ยกเลิกการถูกใจแล้ว');
         });
     }
 
     const btnWishlist = document.getElementById('btnPlaceWishlist');
+    const wishlistBtnText = document.getElementById('wishlistBtnText');
     if (btnWishlist) {
-        let isWishlisted = false;
-        btnWishlist.addEventListener('click', () => {
+        btnWishlist.addEventListener('click', async () => {
             if (typeof window.IS_AUTHENTICATED !== 'undefined' && !window.IS_AUTHENTICATED) {
                 showDetailToast('กรุณาเข้าสู่ระบบเพื่อบันทึกรายการโปรด 🔖');
                 return;
             }
-            isWishlisted = !isWishlisted;
-            btnWishlist.classList.toggle('active', isWishlisted);
-            showDetailToast(isWishlisted ? 'บันทึกในรายการโปรดเรียบร้อยแล้ว 🔖' : 'นำออกจากรายการโปรดแล้ว');
+            const placeId = btnWishlist.getAttribute('data-place-id');
+            if (!placeId) return;
+
+            btnWishlist.disabled = true;
+            try {
+                const res = await fetch('/api/wishlist/toggle/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ place_id: placeId })
+                });
+                const data = await res.json();
+                if (data.status === 'success' || data.success) {
+                    const isSaved = (typeof data.is_wishlisted !== 'undefined') ? data.is_wishlisted : data.is_saved;
+                    btnWishlist.classList.toggle('active', isSaved);
+                    if (wishlistBtnText) {
+                        wishlistBtnText.textContent = isSaved ? 'บันทึกแล้วในรายการโปรด' : 'บันทึกสถานที่';
+                    }
+                    const svg = btnWishlist.querySelector('svg');
+                    if (svg) {
+                        svg.setAttribute('fill', isSaved ? '#e05d5d' : 'none');
+                    }
+                    btnWishlist.setAttribute('title', isSaved ? 'นำออกจากรายการโปรด' : 'บันทึกในรายการโปรด');
+                    showDetailToast(isSaved ? 'บันทึกในรายการโปรดเรียบร้อยแล้ว ❤️' : 'นำออกจากรายการโปรดแล้ว');
+                } else {
+                    showDetailToast(data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+                }
+            } catch (err) {
+                console.error('Wishlist error:', err);
+                showDetailToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            } finally {
+                btnWishlist.disabled = false;
+            }
         });
     }
 

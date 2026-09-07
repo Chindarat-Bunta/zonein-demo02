@@ -777,7 +777,7 @@
     .popular-place-rating-badge {
         position: absolute;
         top: 10px;
-        right: 10px;
+        right: 48px;
         background: rgba(254, 243, 199, 0.95);
         color: #b45309;
         padding: 3px 8px;
@@ -788,6 +788,53 @@
         display: flex;
         align-items: center;
         gap: 3px;
+    }
+
+    /* Floating Wishlist Button on Place Cards */
+    .card-wishlist-float-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 197, 170, 0.5);
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 5;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .card-wishlist-float-btn:hover {
+        transform: scale(1.12);
+        background: #ffffff;
+        color: #e05d5d;
+        border-color: #FF9D9D;
+        box-shadow: 0 6px 14px rgba(255, 157, 157, 0.35);
+    }
+
+    .card-wishlist-float-btn.active {
+        background: #ffffff;
+        color: #e05d5d;
+        border-color: #FF9D9D;
+    }
+
+    .card-wishlist-float-btn.active svg {
+        fill: #e05d5d;
+        stroke: #e05d5d;
+    }
+
+    .explore-card-wrapper .card-wishlist-float-btn {
+        top: 10px;
+        left: 10px;
+        right: auto;
     }
 
     .popular-place-body {
@@ -847,23 +894,35 @@
             </div>
             <div class="popular-places-grid">
                 {% for p in places|slice:":4" %}
-                <a href="/places/{{ p.id }}/" class="popular-place-card" title="ดูรายละเอียดและแผนที่ของ {{ p.name }}">
-                    <div class="popular-place-image-wrap">
-                        <img src="{{ p.cover_image_url|default:p.image_url }}" alt="{{ p.name }}" class="popular-place-img" loading="lazy">
-                        <span class="popular-place-cat-badge">{{ p.get_category_display|default:'สถานที่ยอดนิยม' }}</span>
-                        <span class="popular-place-rating-badge">★ {{ p.average_rating|default:'4.8' }}</span>
-                    </div>
-                    <div class="popular-place-body">
-                        <h3 class="popular-place-name">{{ p.name }}</h3>
-                        <p class="popular-place-loc">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
-                            <span>{{ p.address|default:p.location|default:'ทั่วไทย' }}</span>
-                        </p>
-                    </div>
-                </a>
+                <div class="popular-place-card-wrapper" style="position: relative;">
+                    <a href="/places/{{ p.id }}/" class="popular-place-card" title="ดูรายละเอียดและแผนที่ของ {{ p.name }}">
+                        <div class="popular-place-image-wrap">
+                            <img src="{{ p.cover_image_url|default:p.image_url }}" alt="{{ p.name }}" class="popular-place-img" loading="lazy">
+                            <span class="popular-place-cat-badge">{{ p.get_category_display|default:'สถานที่ยอดนิยม' }}</span>
+                            <span class="popular-place-rating-badge">★ {{ p.average_rating|default:'4.8' }}</span>
+                        </div>
+                        <div class="popular-place-body">
+                            <h3 class="popular-place-name">{{ p.name }}</h3>
+                            <p class="popular-place-loc">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span>{{ p.address|default:p.location|default:'ทั่วไทย' }}</span>
+                            </p>
+                        </div>
+                    </a>
+                    <button type="button"
+                            class="card-wishlist-float-btn {% if p.id in wishlist_ids %}active{% endif %}"
+                            data-wishlist-place-id="{{ p.id }}"
+                            onclick="quickToggleWishlist(event, {{ p.id }}, this)"
+                            title="{% if p.id in wishlist_ids %}นำออกจากรายการโปรด{% else %}บันทึกในรายการโปรด{% endif %}"
+                            aria-label="บันทึกในรายการโปรด">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="{% if p.id in wishlist_ids %}#e05d5d{% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </button>
+                </div>
                 {% endfor %}
             </div>
         </section>
@@ -998,34 +1057,46 @@
             <!-- Explore Media Grid (เชื่อมต่อกับหน้า place-details โดยตรงผ่าน detail_url) -->
             <div class="explore-media-grid" id="exploreMediaGrid">
                 {% for item in explore_items %}
-                <a href="{{ item.detail_url }}" class="explore-card" data-category="{{ item.category }}" data-location="{{ item.location }}" data-rating="{{ item.rating }}" data-title="{{ item.title }}" data-place-id="{{ item.id }}" title="คลิกดูแผนที่และรีวิวของ {{ item.title }}">
-                    <!-- Video Play Badge -->
-                    {% if item.is_video %}
-                    <div class="explore-card-video-badge" title="วิดีโอแนะนำ">
-                        <svg viewBox="0 0 24 24">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
-                    </div>
-                    {% endif %}
-
-                    <!-- Media Thumbnail -->
-                    <img src="{{ item.image_url }}" alt="{{ item.title }}" class="explore-card-media" loading="lazy">
-
-                    <!-- Hover Prompt -->
-                    <div class="explore-card-hover-prompt">
-                        <span>ดูแผนที่ & รีวิว</span>
-                        <span>➔</span>
-                    </div>
-
-                    <!-- Bottom Gradient & Information Overlay -->
-                    <div class="explore-card-overlay">
-                        <div class="explore-card-title">{{ item.title }}</div>
-                        <div class="explore-card-meta">
-                            <span class="explore-card-tag">{{ item.category_name }}</span>
-                            <span class="explore-card-rating">★ {{ item.rating }}</span>
+                <div class="explore-card-wrapper" style="position: relative;">
+                    <a href="{{ item.detail_url }}" class="explore-card" data-category="{{ item.category }}" data-location="{{ item.location }}" data-rating="{{ item.rating }}" data-title="{{ item.title }}" data-place-id="{{ item.id }}" title="คลิกดูแผนที่และรีวิวของ {{ item.title }}">
+                        <!-- Video Play Badge -->
+                        {% if item.is_video %}
+                        <div class="explore-card-video-badge" title="วิดีโอแนะนำ">
+                            <svg viewBox="0 0 24 24">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
                         </div>
-                    </div>
-                </a>
+                        {% endif %}
+
+                        <!-- Media Thumbnail -->
+                        <img src="{{ item.image_url }}" alt="{{ item.title }}" class="explore-card-media" loading="lazy">
+
+                        <!-- Hover Prompt -->
+                        <div class="explore-card-hover-prompt">
+                            <span>ดูแผนที่ & รีวิว</span>
+                            <span>➔</span>
+                        </div>
+
+                        <!-- Bottom Gradient & Information Overlay -->
+                        <div class="explore-card-overlay">
+                            <div class="explore-card-title">{{ item.title }}</div>
+                            <div class="explore-card-meta">
+                                <span class="explore-card-tag">{{ item.category_name }}</span>
+                                <span class="explore-card-rating">★ {{ item.rating }}</span>
+                            </div>
+                        </div>
+                    </a>
+                    <button type="button"
+                            class="card-wishlist-float-btn {% if item.is_wishlisted %}active{% endif %}"
+                            data-wishlist-place-id="{{ item.id }}"
+                            onclick="quickToggleWishlist(event, {{ item.id }}, this)"
+                            title="{% if item.is_wishlisted %}นำออกจากรายการโปรด{% else %}บันทึกในรายการโปรด{% endif %}"
+                            aria-label="บันทึกในรายการโปรด">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="{% if item.is_wishlisted %}#e05d5d{% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </button>
+                </div>
                 {% empty %}
                 <div class="explore-empty-state" id="emptyExploreState">
                     <div class="icon">📭</div>
