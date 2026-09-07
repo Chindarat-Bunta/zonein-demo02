@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="th">
     <head>
@@ -11,6 +12,8 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
               rel="stylesheet">
+        <!-- Design System Stylesheet -->
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
         <style>
         :root {
             --primary: #FF9D9D;
@@ -45,7 +48,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 30px 16px;
+            padding: 110px 16px 40px;
             font-family: var(--font-family);
             color: var(--text-main);
         }
@@ -407,6 +410,8 @@
         </style>
     </head>
     <body>
+        <!-- Unified Top Navbar -->
+        {% include 'components/navbar.html' %}
         <div class="auth-container">
             <div class="auth-card">
                 <!-- Brand Logo & Header -->
@@ -602,5 +607,7 @@
             }
         }
         </script>
+        <script src="{% static 'js/navbar.js' %}"></script>
     </body>
 </html>
+

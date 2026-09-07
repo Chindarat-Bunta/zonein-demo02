@@ -43,11 +43,16 @@ class ProfileSettingsTests(TestCase):
 
     def test_profile_settings_view_get(self):
         response = self.client.get("/profile/settings/")
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "profile_settings.html")
-        self.assertContains(response, "แก้ไขข้อมูลส่วนตัว")
-        self.assertContains(response, "ชื่อเล่น / ชื่อที่แสดง")
-        self.assertContains(response, "ข้อความ Bio แนะนำตัว")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/profile/?edit=1", response.url)
+
+        # Follow redirect to profile page
+        profile_response = self.client.get("/profile/?edit=1")
+        self.assertEqual(profile_response.status_code, 200)
+        self.assertTemplateUsed(profile_response, "profile.html")
+        self.assertContains(profile_response, "แก้ไขข้อมูลส่วนตัว")
+        self.assertContains(profile_response, "ชื่อเล่น / ชื่อที่แสดง")
+        self.assertContains(profile_response, "ข้อความ Bio แนะนำตัว")
 
     @patch("web.services.cloudinary_service.cloudinary.uploader.upload")
     def test_profile_settings_post_with_avatar(self, mock_upload):

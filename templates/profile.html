@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -10,6 +11,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Design System Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
     <style>
         :root {
@@ -49,74 +53,301 @@
             padding-bottom: 60px;
         }
 
-        /* App Bar */
-        .app-bar {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(255, 197, 170, 0.35);
-            padding: 14px 24px;
+        /* Flash Messages */
+        .alert-messages {
+            margin-bottom: 22px;
         }
 
-        .app-bar-inner {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .brand-link {
+        .alert-item {
             display: flex;
             align-items: center;
             gap: 10px;
-            text-decoration: none;
-            color: var(--text-main);
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 0.92rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
         }
 
-        .brand-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(255, 157, 157, 0.4);
+        .alert-success {
+            background: rgba(240, 253, 244, 0.95);
+            border: 1px solid rgba(74, 222, 128, 0.4);
+            color: #15803d;
         }
 
-        .brand-text {
-            font-size: 1.35rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-        }
-
-        .brand-text span {
-            color: #FF9D9D;
-        }
-
-        .profile-badge-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            background: var(--primary-light);
-            border: 1px solid rgba(255, 157, 157, 0.4);
-            border-radius: var(--radius-pill);
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: #e56d6d;
+        .alert-error {
+            background: rgba(254, 242, 242, 0.95);
+            border: 1px solid rgba(248, 113, 113, 0.4);
+            color: #b91c1c;
         }
 
         /* Container */
         .page-container {
             max-width: 1000px;
-            margin: 32px auto 0 auto;
-            padding: 0 20px;
+            margin: 0 auto;
+            padding: 105px 20px 60px;
+        }
+
+        /* ==========================================================================
+           POPUP / MODAL (แก้ไขข้อมูลส่วนตัว)
+           ========================================================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(45, 55, 72, 0.45);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: var(--radius-card);
+            border: 1px solid rgba(255, 197, 170, 0.5);
+            box-shadow: 0 24px 60px -12px rgba(255, 157, 157, 0.35), 0 12px 32px rgba(0, 0, 0, 0.12);
+            width: 100%;
+            max-width: 540px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.92) translateY(10px);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 28px 16px 28px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .modal-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-close-modal {
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-close-modal:hover {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 24px 28px 30px 28px;
+        }
+
+        /* Avatar Picker Section */
+        .avatar-upload-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .avatar-preview-box {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .avatar-preview-img, .avatar-preview-fallback {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 8px 24px rgba(255, 157, 157, 0.35);
+            border: 3.5px solid #ffffff;
+            outline: 2px solid #FF9D9D;
+            transition: all 0.25s ease;
+        }
+
+        .avatar-preview-fallback {
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 2.6rem;
+            font-weight: 800;
+        }
+
+        .avatar-preview-box:hover .avatar-preview-img,
+        .avatar-preview-box:hover .avatar-preview-fallback {
+            transform: scale(1.03);
+            outline-color: #f08383;
+        }
+
+        .avatar-camera-overlay {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 34px;
+            height: 34px;
+            background: #ffffff;
+            border: 1.5px solid #FF9D9D;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e56d6d;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+        }
+
+        .cloudinary-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.76rem;
+            color: #4A5568;
+            background: rgba(0, 0, 0, 0.04);
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+            margin-top: 4px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            font-family: inherit;
+            font-size: 0.94rem;
+            color: var(--text-main);
+            background: #FAF9F6;
+            border: 1.5px solid rgba(255, 197, 170, 0.55);
+            border-radius: var(--radius-sm);
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            background: #ffffff;
+            border-color: #FF9D9D;
+            box-shadow: 0 0 0 4px rgba(255, 157, 157, 0.22);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 90px;
+            line-height: 1.5;
+        }
+
+        .char-counter {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .btn-cancel {
+            padding: 11px 20px;
+            border-radius: var(--radius-pill);
+            background: #f1f5f9;
+            border: none;
+            font-family: inherit;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cancel:hover {
+            background: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .btn-submit-save {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 24px;
+            border-radius: var(--radius-pill);
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 20px -4px rgba(255, 157, 157, 0.55);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-submit-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px -4px rgba(255, 157, 157, 0.7);
+        }
+
+        .hidden-file-input {
+            display: none;
         }
 
         /* Profile Hero Card */
@@ -233,8 +464,11 @@
             padding: 9px 18px;
             background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
             color: #ffffff;
+            font-family: inherit;
             font-size: 0.88rem;
             font-weight: 700;
+            border: none;
+            cursor: pointer;
             border-radius: var(--radius-pill);
             text-decoration: none;
             box-shadow: 0 4px 14px rgba(255, 157, 157, 0.4);
@@ -342,20 +576,39 @@
             margin-top: 4px;
         }
 
-        /* Tab Navigation */
+        /* Tab Navigation with Sliding Glider */
         .profile-tabs-nav {
+            position: relative;
             display: flex;
-            gap: 12px;
+            gap: 8px;
             margin-bottom: 24px;
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             padding: 6px;
             border-radius: var(--radius-pill);
-            border: 1px solid rgba(255, 197, 170, 0.4);
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(255, 197, 170, 0.45);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            width: 100%;
+        }
+
+        .profile-tab-glider {
+            position: absolute;
+            top: 6px;
+            bottom: 6px;
+            left: 0;
+            width: 50%;
+            border-radius: var(--radius-pill);
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            box-shadow: 0 8px 20px -4px rgba(255, 157, 157, 0.55);
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 1;
+            pointer-events: none;
         }
 
         .tab-btn {
+            position: relative;
+            z-index: 2;
             flex: 1;
             display: flex;
             align-items: center;
@@ -370,13 +623,13 @@
             font-weight: 700;
             color: var(--text-muted);
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: color 0.25s ease;
         }
 
         .tab-btn.active {
-            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
             color: #ffffff;
-            box-shadow: 0 8px 20px -4px rgba(255, 157, 157, 0.55);
+            background: transparent;
+            box-shadow: none;
         }
 
         .tab-count-badge {
@@ -386,6 +639,7 @@
             font-weight: 800;
             background: rgba(0, 0, 0, 0.06);
             color: inherit;
+            transition: all 0.25s ease;
         }
 
         .tab-btn.active .tab-count-badge {
@@ -393,14 +647,20 @@
             color: #ffffff;
         }
 
-        /* Tab Content Panels */
+        /* Tab Content Panels - Override style.css 780px limit to fill full 100% of container */
         .tab-panel {
             display: none;
+            width: 100% !important;
+            max-width: 100% !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
             animation: fadeIn 0.3s ease;
         }
 
         .tab-panel.active {
-            display: block;
+            display: block !important;
         }
 
         @keyframes fadeIn {
@@ -408,14 +668,15 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Clean Empty State Box */
+        /* Clean Empty State Box - Full width aligned with profile card */
         .empty-state-box {
+            width: 100%;
             background: var(--card-bg);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1.5px dashed rgba(255, 197, 170, 0.55);
             border-radius: var(--radius-card);
-            padding: 64px 24px;
+            padding: 64px 32px;
             text-align: center;
             box-shadow: var(--shadow-card);
             display: flex;
@@ -731,40 +992,35 @@
                 border-radius: var(--radius-card);
                 padding: 8px;
             }
+            .profile-tab-glider {
+                display: none;
+            }
+            .tab-btn.active {
+                background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%) !important;
+                color: #ffffff !important;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header / App Bar -->
-    <header class="app-bar">
-        <div class="app-bar-inner">
-            <a href="{% url 'web:index' %}" class="brand-link" title="กลับสู่หน้าแรก">
-                <div class="brand-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
-                    </svg>
-                </div>
-                <div class="brand-text">Zone<span>In</span></div>
-            </a>
-            
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <a href="{% url 'web:index' %}" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; padding: 6px 12px; border-radius: var(--radius-pill); transition: all 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='var(--text-muted)'">
-                    <span>🏠 หน้าแรก</span>
-                </a>
-                <a href="/#search" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; padding: 6px 12px; border-radius: var(--radius-pill); transition: all 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='var(--text-muted)'">
-                    <span>🔍 ค้นหา</span>
-                </a>
-                <a href="{% url 'web:profile_settings' %}" class="profile-badge-pill" style="text-decoration: none;">
-                    <span>⚙️ ตั้งค่า</span>
-                </a>
-            </div>
-        </div>
-    </header>
+    <!-- Unified Top Navbar -->
+    {% include 'components/navbar.html' %}
 
     <!-- Main Container -->
     <main class="page-container">
+
+        <!-- Flash Messages -->
+        {% if messages %}
+        <div class="alert-messages">
+            {% for message in messages %}
+            <div class="alert-item alert-{{ message.tags }}">
+                <span>{% if message.tags == 'success' %}✓{% else %}⚠️{% endif %}</span>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
         <!-- User Profile Hero Card -->
         <section class="profile-card">
@@ -782,13 +1038,13 @@
                     {% endif %}
                     <!-- Online indicator dot -->
                     <div class="avatar-online-dot" title="สถานะ: กำลังออนไลน์"></div>
-                    <!-- Edit camera button -->
-                    <a href="/profile/settings/" class="avatar-camera-btn" title="เปลี่ยนรูปโปรไฟล์ / แก้ไขข้อมูล">
+                    <!-- Edit camera button (Opens Modal) -->
+                    <button type="button" class="avatar-camera-btn" onclick="openEditModal()" title="เปลี่ยนรูปโปรไฟล์ / แก้ไขข้อมูล">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                             <circle cx="12" cy="13" r="4"></circle>
                         </svg>
-                    </a>
+                    </button>
                 </div>
 
                 <!-- ชื่อของ User & ข้อมูลโปรไฟล์ -->
@@ -803,13 +1059,13 @@
                                 สมาชิก Zone In
                             </span>
                         </h1>
-                        <a href="/profile/settings/" class="btn-edit-profile" id="btnEditProfile" title="ไปยังหน้าแก้ไขข้อมูลส่วนตัว">
+                        <button type="button" class="btn-edit-profile" id="btnEditProfile" onclick="openEditModal()" title="แก้ไขโปรไฟล์">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                             </svg>
                             <span>แก้ไขโปรไฟล์</span>
-                        </a>
+                        </button>
                     </div>
                     
                     <div class="user-handle">
@@ -834,11 +1090,11 @@
 
             <!-- Stats Bar -->
             <div class="profile-stats-row">
-                <div class="stat-item" onclick="switchTab('reviews')" style="cursor: pointer;" title="คลิกเพื่อดูประวัติการรีวิว">
+                <div class="stat-item" onclick="switchProfileTab('reviews')" style="cursor: pointer;" title="คลิกเพื่อดูประวัติการรีวิว">
                     <div class="stat-value reviews-count-val">{{ reviews_count }}</div>
                     <div class="stat-label">📝 รีวิวทั้งหมด</div>
                 </div>
-                <div class="stat-item" onclick="switchTab('wishlist')" style="cursor: pointer;" title="คลิกเพื่อดูรายการโปรด (Wishlist)">
+                <div class="stat-item" onclick="switchProfileTab('wishlist')" style="cursor: pointer;" title="คลิกเพื่อดูรายการโปรด (Wishlist)">
                     <div class="stat-value wishlist-count-val">{{ wishlist_count }}</div>
                     <div class="stat-label">❤️ รายการโปรด</div>
                 </div>
@@ -850,8 +1106,11 @@
         </section>
 
         <!-- Navigation Tabs: Reviews & Wishlist -->
-        <nav class="profile-tabs-nav" aria-label="Profile Tabs">
-            <button class="tab-btn active" id="btnTabReviews" onclick="switchTab('reviews')">
+        <nav class="profile-tabs-nav" id="profileTabsNav" aria-label="Profile Tabs">
+            <!-- Animated Sliding Glider Pill -->
+            <div class="profile-tab-glider" id="profileTabGlider"></div>
+
+            <button type="button" class="tab-btn active" id="btnTabReviews" onclick="switchProfileTab('reviews')" data-tab="reviews">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
@@ -863,7 +1122,7 @@
                 <span class="tab-count-badge reviews-count-val">{{ reviews_count }}</span>
             </button>
 
-            <button class="tab-btn" id="btnTabWishlist" onclick="switchTab('wishlist')">
+            <button type="button" class="tab-btn" id="btnTabWishlist" onclick="switchProfileTab('wishlist')" data-tab="wishlist">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                 </svg>
@@ -992,11 +1251,193 @@
             {% endif %}
         </section>
 
+        <!-- ==========================================================================
+             POPUP / MODAL สำหรับ "แก้ไขข้อมูลส่วนตัว"
+             ========================================================================== -->
+        <div class="modal-overlay" id="editProfileModal" onclick="handleBackdropClick(event)">
+            <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+                
+                <div class="modal-header">
+                    <h2 class="modal-title" id="modalTitle">
+                        <span>✏️</span>
+                        <span>แก้ไขข้อมูลส่วนตัว</span>
+                    </h2>
+                    <button type="button" class="btn-close-modal" onclick="closeEditModal()" aria-label="ปิด">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <form action="{% url 'web:profile_settings' %}" method="POST" enctype="multipart/form-data" id="formEditProfile">
+                        {% csrf_token %}
+
+                        <!-- 1. ฟังก์ชันเปลี่ยนรูปโปรไฟล์ (Cloudinary Upload) -->
+                        <div class="avatar-upload-section">
+                            <div class="avatar-preview-box" onclick="triggerFileInput()" title="คลิกเพื่อเปลี่ยนรูปภาพ">
+                                {% if avatar_url %}
+                                    <img src="{{ avatar_url }}" alt="Preview" class="avatar-preview-img" id="avatarPreviewImg">
+                                {% elif user.profile.avatar_url %}
+                                    <img src="{{ user.profile.avatar_url }}" alt="Preview" class="avatar-preview-img" id="avatarPreviewImg">
+                                {% else %}
+                                    <div class="avatar-preview-fallback" id="avatarPreviewFallback">
+                                        {{ nickname|default:display_name|slice:":1"|upper }}
+                                    </div>
+                                {% endif %}
+                                <div class="avatar-camera-overlay">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                        <circle cx="12" cy="13" r="4"></circle>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <input type="file" name="avatar" id="avatarInput" class="hidden-file-input" accept="image/*" onchange="previewSelectedImage(event)">
+                            
+                            <button type="button" class="btn-cancel" style="padding: 6px 14px; font-size: 0.8rem; margin-top: 4px;" onclick="triggerFileInput()">
+                                เลือกรูปภาพใหม่
+                            </button>
+                            <div class="cloudinary-tag">
+                                <span>☁️ ซิงค์ Cloudinary อัตโนมัติ</span>
+                            </div>
+                        </div>
+
+                        <!-- 2. ฟอร์มแก้ไขชื่อผู้ใช้ / ชื่อเล่น -->
+                        <div class="form-group">
+                            <label for="inputNickname" class="form-label">
+                                <span>ชื่อเล่น / ชื่อที่แสดง (Nickname)</span>
+                            </label>
+                            <input type="text" id="inputNickname" name="nickname" class="form-input" value="{{ nickname|default:display_name }}" placeholder="กรอกชื่อเล่นหรือชื่อที่ต้องการแสดง" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="inputUsername" class="form-label">
+                                <span>ชื่อผู้ใช้ (Username)</span>
+                            </label>
+                            <input type="text" id="inputUsername" name="username" class="form-input" value="{{ username }}" placeholder="username" required>
+                        </div>
+
+                        <!-- 3. ฟอร์มกรอกข้อความ Bio แนะนำตัว -->
+                        <div class="form-group">
+                            <label for="inputBio" class="form-label">
+                                <span>ข้อความ Bio แนะนำตัว</span>
+                                <span class="char-counter" id="bioCharCounter">0/500</span>
+                            </label>
+                            <textarea id="inputBio" name="bio" class="form-textarea" placeholder="เขียนแนะนำตัวสั้นๆ เช่น สถานที่โปรด สไตล์การท่องเที่ยว..." maxlength="500" oninput="updateCharCount(this)">{{ bio }}</textarea>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn-cancel" onclick="closeEditModal()">ยกเลิก</button>
+                            <button type="submit" class="btn-submit-save" id="btnSaveProfile">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>บันทึกการเปลี่ยนแปลง</span>
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
     </main>
 
-    <!-- JavaScript for Tab Switching & Wishlist Management -->
+    <!-- JavaScript for Tab Switching, Wishlist Management & Edit Profile Modal -->
     <script>
-        function switchTab(tabName) {
+        function openEditModal() {
+            const modal = document.getElementById('editProfileModal');
+            if (!modal) return;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            const bioTextarea = document.getElementById('inputBio');
+            if (bioTextarea) updateCharCount(bioTextarea);
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editProfileModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            if (window.history && window.history.replaceState && window.location.search.includes('edit=')) {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('edit');
+                window.history.replaceState(null, null, url.pathname + (url.hash || ''));
+            }
+        }
+
+        function handleBackdropClick(event) {
+            if (event.target.id === 'editProfileModal') {
+                closeEditModal();
+            }
+        }
+
+        function triggerFileInput() {
+            const input = document.getElementById('avatarInput');
+            if (input) input.click();
+        }
+
+        function previewSelectedImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewImg = document.getElementById('avatarPreviewImg');
+                const fallback = document.getElementById('avatarPreviewFallback');
+                
+                if (previewImg) {
+                    previewImg.src = e.target.result;
+                } else if (fallback) {
+                    const newImg = document.createElement('img');
+                    newImg.src = e.target.result;
+                    newImg.alt = 'Preview';
+                    newImg.className = 'avatar-preview-img';
+                    newImg.id = 'avatarPreviewImg';
+                    fallback.parentNode.replaceChild(newImg, fallback);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateCharCount(textarea) {
+            const counter = document.getElementById('bioCharCounter');
+            if (!counter || !textarea) return;
+            const count = textarea.value.length;
+            counter.textContent = `${count}/500`;
+            if (count >= 480) {
+                counter.style.color = '#ef4444';
+            } else {
+                counter.style.color = 'var(--text-muted)';
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeEditModal();
+            }
+        });
+
+        function moveProfileGlider(targetBtn) {
+            const glider = document.getElementById('profileTabGlider');
+            const nav = document.getElementById('profileTabsNav');
+            if (!glider || !nav || !targetBtn) return;
+
+            const navRect = nav.getBoundingClientRect();
+            const btnRect = targetBtn.getBoundingClientRect();
+
+            const offsetLeft = btnRect.left - navRect.left;
+            const width = btnRect.width;
+
+            glider.style.width = `${width}px`;
+            glider.style.transform = `translateX(${offsetLeft}px)`;
+        }
+
+        function switchProfileTab(tabName) {
             const btnReviews = document.getElementById('btnTabReviews');
             const btnWishlist = document.getElementById('btnTabWishlist');
             const panelReviews = document.getElementById('panel-reviews');
@@ -1009,6 +1450,7 @@
                 btnWishlist.classList.remove('active');
                 panelReviews.classList.add('active');
                 panelWishlist.classList.remove('active');
+                moveProfileGlider(btnReviews);
                 if (window.history && window.history.replaceState) {
                     history.replaceState(null, null, '#reviews');
                 }
@@ -1017,20 +1459,37 @@
                 btnReviews.classList.remove('active');
                 panelWishlist.classList.add('active');
                 panelReviews.classList.remove('active');
+                moveProfileGlider(btnWishlist);
                 if (window.history && window.history.replaceState) {
                     history.replaceState(null, null, '#wishlist');
                 }
             }
         }
 
+        window.switchProfileTab = switchProfileTab;
+
+        window.addEventListener('resize', () => {
+            const activeBtn = document.querySelector('.profile-tabs-nav .tab-btn.active');
+            if (activeBtn) moveProfileGlider(activeBtn);
+        });
+
         // Handle URL Hash or Query Param on Load
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
-            if (window.location.hash === '#wishlist' || params.get('tab') === 'wishlist') {
-                switchTab('wishlist');
-            } else {
-                switchTab('reviews');
+            if (params.get('edit') === '1' || window.location.hash === '#edit') {
+                openEditModal();
             }
+
+            if (window.location.hash === '#wishlist' || params.get('tab') === 'wishlist') {
+                switchProfileTab('wishlist');
+            } else {
+                switchProfileTab('reviews');
+            }
+
+            setTimeout(() => {
+                const activeBtn = document.querySelector('.profile-tabs-nav .tab-btn.active');
+                if (activeBtn) moveProfileGlider(activeBtn);
+            }, 60);
         });
 
         // Interactive Removal from Wishlist
@@ -1078,5 +1537,8 @@
             }
         }
     </script>
+    <!-- JavaScript from Dev -->
+    <script src="{% static 'js/navbar.js' %}"></script>
 </body>
 </html>
+

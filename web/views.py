@@ -81,15 +81,10 @@ def profile_settings_view(request):
         if upload_success:
             messages.success(request, "บันทึกและอัปเดตข้อมูลส่วนตัวเรียบร้อยแล้ว!")
 
-        return redirect("web:profile_settings")
+        return redirect("web:profile")
 
-    context = {
-        "username": username,
-        "nickname": nickname,
-        "bio": bio,
-        "avatar_url": avatar_url,
-    }
-    return render(request, "profile_settings.html", context)
+    # Removed standalone settings page: redirect directly to profile page
+    return redirect("/profile/?edit=1")
 
 
 def update_profile_api(request):
@@ -151,10 +146,11 @@ def profile_view(request):
     user = request.user
 
     if user.is_authenticated:
-        if hasattr(user, "profile") and user.profile.get_display_name():
-            display_name = user.profile.get_display_name()
-        else:
-            display_name = user.first_name if user.first_name else user.username
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        nickname = profile.nickname or user.first_name or user.username
+        display_name = profile.get_display_name() or user.first_name or user.username
+        bio = profile.bio or ""
+        avatar_url = profile.avatar_url or ""
         username = user.username
         email = user.email if user.email else f"{username}@zonein.app"
         join_date = user.date_joined.strftime("%b %Y") if hasattr(user, "date_joined") and user.date_joined else "ก.ย. 2026"
@@ -165,7 +161,10 @@ def profile_view(request):
         reviews = list(Review.objects.filter(user=user).select_related("place").order_by("-created_at"))
         likes_count = PlaceLike.objects.filter(user=user).count()
     else:
+        nickname = "User Profile"
         display_name = "User Profile"
+        bio = ""
+        avatar_url = ""
         username = "user"
         email = "user@zonein.app"
         join_date = "ก.ย. 2026"
@@ -177,7 +176,10 @@ def profile_view(request):
 
     context = {
         "display_name": display_name,
+        "nickname": nickname,
         "username": username,
+        "bio": bio,
+        "avatar_url": avatar_url,
         "email": email,
         "join_date": join_date,
         "reviews": reviews,

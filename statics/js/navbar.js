@@ -41,12 +41,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeTab = document.querySelector('.nav-tab-btn.active');
     if (activeTab) {
         setTimeout(() => moveGliderTo(activeTab, false), 80);
+    } else if (tabGlider) {
+        tabGlider.style.opacity = '0';
     }
 
     // Tab click & hover events
     tabButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             const targetTab = btn.getAttribute('data-tab');
+            const targetPanel = document.getElementById(`panel-${targetTab}`);
+            if (!targetPanel) {
+                // Not on home page or tab panel does not exist - navigate directly
+                e.preventDefault();
+                window.location.href = (targetTab === 'home' ? '/' : `/#${targetTab}`);
+                return;
+            }
             e.preventDefault();
             switchTab(targetTab);
         });
@@ -63,12 +72,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentActive = document.querySelector('.nav-tab-btn.active');
             if (currentActive) {
                 moveGliderTo(currentActive, true);
+            } else if (tabGlider) {
+                tabGlider.style.opacity = '0';
             }
         });
     }
 
     // Function: Switch active tab & content panel
     window.switchTab = function (tabId) {
+        if (typeof window.switchProfileTab === 'function' && (tabId === 'reviews' || tabId === 'wishlist')) {
+            window.switchProfileTab(tabId);
+            return;
+        }
+
+        const activePanel = document.getElementById(`panel-${tabId}`);
+        if (!activePanel) {
+            window.location.href = (tabId === 'home' ? '/' : `/#${tabId}`);
+            return;
+        }
+
         tabButtons.forEach(b => {
             if (b.getAttribute('data-tab') === tabId) {
                 b.classList.add('active');
@@ -91,10 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.tab-panel').forEach(panel => {
             panel.classList.remove('active');
         });
-        const activePanel = document.getElementById(`panel-${tabId}`);
-        if (activePanel) {
-            activePanel.classList.add('active');
-        }
+        activePanel.classList.add('active');
 
         // Keep URL hash in sync cleanly
         if (window.history && window.history.replaceState) {
@@ -142,25 +161,33 @@ document.addEventListener('DOMContentLoaded', () => {
     window.toggleDesktopProfileMenu = function(e) {
         if (e) {
             e.stopPropagation();
-            e.preventDefault();
+            if (e.preventDefault) e.preventDefault();
         }
         const menu = document.getElementById('desktopDropdownMenu');
         if (!menu) return;
-        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        const isHidden = (menu.style.display === 'none' || menu.style.display === '' || !menu.classList.contains('show'));
+        if (isHidden) {
+            menu.style.display = 'block';
+            menu.classList.add('show');
+        } else {
+            menu.style.display = 'none';
+            menu.classList.remove('show');
+        }
     };
 
     // Close dropdown on click outside
     document.addEventListener('click', (e) => {
+        const desktopMenu = document.getElementById('desktopDropdownMenu');
+        const desktopBtn = document.getElementById('desktopProfileBtn');
+        if (desktopMenu && (desktopMenu.style.display === 'block' || desktopMenu.classList.contains('show'))) {
+            if (!desktopMenu.contains(e.target) && (!desktopBtn || !desktopBtn.contains(e.target))) {
+                desktopMenu.style.display = 'none';
+                desktopMenu.classList.remove('show');
+            }
+        }
         if (mobileProfileDropdown && mobileProfileDropdown.classList.contains('open')) {
             if (!mobileProfileDropdown.contains(e.target) && !mobileProfileBtn.contains(e.target)) {
                 closeProfileDropdown();
-            }
-        }
-        const desktopMenu = document.getElementById('desktopDropdownMenu');
-        const desktopBtn = document.getElementById('desktopProfileBtn');
-        if (desktopMenu && desktopMenu.style.display === 'block') {
-            if (!desktopMenu.contains(e.target) && (!desktopBtn || !desktopBtn.contains(e.target))) {
-                desktopMenu.style.display = 'none';
             }
         }
     });
@@ -229,11 +256,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const exploreCards = document.querySelectorAll('.explore-card');
     const exploreGrid = document.getElementById('exploreMediaGrid');
 
-    // Auto-switch to search tab if URL has #search
+    // Auto-switch to search tab if URL has #search and panel exists on page
     function checkHashAndSwitch() {
         const hash = window.location.hash.replace('#', '').toLowerCase();
         if (hash === 'search' || hash === 'notifications' || hash === 'home') {
-            window.switchTab(hash);
+            const targetPanel = document.getElementById(`panel-${hash}`);
+            if (targetPanel) {
+                window.switchTab(hash);
+            }
         }
     }
     checkHashAndSwitch();

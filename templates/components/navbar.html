@@ -1,0 +1,234 @@
+{% load static %}
+<!-- SVG Definitions for Gradients -->
+<svg width="0" height="0" style="position: absolute; width: 0; height: 0; overflow: hidden;" aria-hidden="true">
+    <defs>
+        <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FF9D9D"/>
+            <stop offset="50%" stop-color="#FFC5AA"/>
+            <stop offset="100%" stop-color="#BBF1D2"/>
+        </linearGradient>
+    </defs>
+</svg>
+
+<!-- Subtle Ambient Grid Background (if not already on page) -->
+<div class="ambient-grid"></div>
+
+<!-- ==========================================================================
+     TOP FLOATING MODERN NAVBAR (IDENTICAL ACROSS ALL PAGES)
+     ========================================================================== -->
+<header class="navbar-wrapper">
+    <nav class="navbar" id="mainNavbar">
+        
+        <!-- 1. LEFT: LOGO (ZONE IN) -->
+        <a href="/" class="brand-link" id="brandLogo" title="Zone In หน้าแรก">
+            <div class="brand-icon">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <span class="word-zone">Zone</span>
+                <span class="word-in">In</span>
+                <span class="brand-pulse-dot"></span>
+            </div>
+        </a>
+
+        <!-- 2. CENTER: NAVIGATION TABS WITH SLIDING GLIDER PILL -->
+        <div class="nav-center-tabs" id="navTabsContainer">
+            <!-- Smooth sliding background indicator -->
+            <div class="tab-glider-pill" id="tabGlider"></div>
+
+            <!-- Tab 1: หน้าแรก -->
+            <a href="/#home" class="nav-tab-btn {% if active_tab == 'home' or not active_tab and request.path == '/' or not active_tab and request.path == '/home/' or not active_tab and request.path == '/feed/' %}active{% endif %}" data-tab="home" id="tabHome">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span>หน้าแรก</span>
+            </a>
+
+            <!-- Tab 2: ค้นหา -->
+            <a href="/#search" class="nav-tab-btn {% if active_tab == 'search' or request.path == '/search/' or request.path == '/explore/' %}active{% endif %}" data-tab="search" id="tabSearch">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <span>ค้นหา</span>
+            </a>
+
+            <!-- Tab 3: การแจ้งเตือน -->
+            <a href="/#notifications" class="nav-tab-btn {% if active_tab == 'notifications' %}active{% endif %}" data-tab="notifications" id="tabNotifications">
+                <svg viewBox="0 0 24 24">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span>การแจ้งเตือน</span>
+            </a>
+        </div>
+
+        <!-- 3. RIGHT: SIGN IN / SIGN UP OR USER PROFILE -->
+        <div class="nav-auth-group">
+            {% if user.is_authenticated %}
+            <div class="desktop-user-menu" style="position: relative;">
+                <button type="button" class="btn-profile-dropdown" id="desktopProfileBtn" onclick="toggleDesktopProfileMenu(event)" style="display: flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(255, 197, 170, 0.6); padding: 5px 14px 5px 6px; border-radius: 9999px; cursor: pointer; transition: all 0.2s ease;">
+                    {% if user.profile.avatar_url %}
+                        <img src="{{ user.profile.avatar_url }}" alt="{{ user.username }}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1.5px solid #FF9D9D;">
+                    {% else %}
+                        <div style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #FF9D9D, #FFC5AA); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.82rem;">
+                            {{ user.username|slice:":1"|upper }}
+                        </div>
+                    {% endif %}
+                    <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-primary);">{{ user.profile.get_display_name|default:user.username }}</span>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <!-- Desktop Dropdown Menu -->
+                <div class="desktop-dropdown-menu" id="desktopDropdownMenu" style="display: none; position: absolute; right: 0; top: calc(100% + 8px); min-width: 230px; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); border: 1px solid rgba(255, 197, 170, 0.5); border-radius: 18px; box-shadow: 0 16px 40px rgba(0,0,0,0.12); padding: 8px; z-index: 1100;">
+                    <div style="padding: 10px 14px; border-bottom: 1px solid rgba(0,0,0,0.06); margin-bottom: 4px;">
+                        <div style="font-weight: 800; font-size: 0.95rem; color: #1e242b;">{{ user.profile.get_display_name|default:user.username }}</div>
+                        {% if user.email %}
+                        <div style="font-size: 0.8rem; color: #718096; margin-top: 2px; word-break: break-all;">{{ user.email }}</div>
+                        {% else %}
+                        <div style="font-size: 0.78rem; color: #718096; margin-top: 2px;">@{{ user.username }}</div>
+                        {% endif %}
+                    </div>
+                    <a href="/profile/" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #2d3748; font-size: 0.88rem; font-weight: 600; transition: background 0.2s;" onmouseover="this.style.background='rgba(255, 157, 157, 0.12)'" onmouseout="this.style.background='transparent'">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        โปรไฟล์ของฉัน
+                    </a>
+                    <div style="border-top: 1px solid rgba(0,0,0,0.06); margin: 4px 0;"></div>
+                    <a href="/logout/" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #dc2626; font-size: 0.88rem; font-weight: 600; transition: background 0.2s;" onmouseover="this.style.background='rgba(220, 38, 38, 0.08)'" onmouseout="this.style.background='transparent'">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        ออกจากระบบ
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <a href="/signin/" class="btn-signin" id="btnSignIn">
+                Sign In
+            </a>
+            <a href="/signup/" class="btn-signup" id="btnSignUp">
+                <span>Sign Up</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- 4. MOBILE: 3 NAV ICONS -->
+        <div class="mobile-nav-icons" id="mobileNavIcons" aria-label="แถบนำทางมือถือ">
+            <button type="button" class="mobile-nav-icon-btn {% if active_tab == 'home' or not active_tab and request.path == '/' or not active_tab and request.path == '/home/' or not active_tab and request.path == '/feed/' %}active{% endif %}" data-tab="home" id="mobTabHome" aria-label="หน้าแรก" title="หน้าแรก" onclick="switchTab('home')">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </button>
+            <button type="button" class="mobile-nav-icon-btn {% if active_tab == 'search' or request.path == '/search/' or request.path == '/explore/' %}active{% endif %}" data-tab="search" id="mobTabSearch" aria-label="ค้นหา" title="ค้นหา" onclick="switchTab('search')">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+            <button type="button" class="mobile-nav-icon-btn {% if active_tab == 'notifications' %}active{% endif %}" data-tab="notifications" id="mobTabNotifications" aria-label="การแจ้งเตือน" title="การแจ้งเตือน" onclick="switchTab('notifications')">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- 5. MOBILE: PROFILE ICON WITH DROPDOWN -->
+        <div class="mobile-profile-wrapper" id="mobileProfileWrapper">
+            <button type="button" class="mobile-profile-btn" id="mobileProfileBtn" aria-label="เมนูโปรไฟล์และบัญชี" aria-haspopup="true" aria-expanded="false">
+                {% if user.is_authenticated and user.profile.avatar_url %}
+                    <img src="{{ user.profile.avatar_url }}" alt="{{ user.username }}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;">
+                {% elif user.is_authenticated %}
+                    <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #FF9D9D, #FFC5AA); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.78rem;">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                {% else %}
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                {% endif %}
+            </button>
+
+            <!-- Dropdown Menu for Sign In / Sign Up or Authenticated User -->
+            <div class="mobile-profile-dropdown" id="mobileProfileDropdown" role="menu">
+                <div class="dropdown-header">
+                    <div class="dropdown-avatar-circle">
+                        {% if user.is_authenticated and user.profile.avatar_url %}
+                        <img src="{{ user.profile.avatar_url }}" alt="{{ user.username }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                        {% elif user.is_authenticated %}
+                        <div style="width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, #FF9D9D, #FFC5AA); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem;">
+                            {{ user.username|slice:":1"|upper }}
+                        </div>
+                        {% else %}
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        {% endif %}
+                    </div>
+                    <div class="dropdown-user-info">
+                        {% if user.is_authenticated %}
+                        <span class="user-greeting">สวัสดี, {{ user.profile.get_display_name|default:user.username }}</span>
+                        {% if user.email %}
+                        <span class="user-status" style="word-break: break-all;">{{ user.email }}</span>
+                        {% endif %}
+                        <span class="user-status">@{{ user.username }}</span>
+                        {% else %}
+                        <span class="user-greeting">Zone In Account</span>
+                        <span class="user-status">เข้าสู่ระบบหรือสร้างบัญชีใหม่</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="dropdown-divider"></div>
+
+                <div class="dropdown-actions">
+                    {% if user.is_authenticated %}
+                    <a href="/profile/" class="dropdown-auth-btn" style="text-decoration: none; color: #2d3748; border-color: rgba(255, 197, 170, 0.4);">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span>โปรไฟล์ของฉัน</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="/logout/" class="dropdown-auth-btn signin-btn" style="color: #dc2626; border-color: rgba(248, 113, 113, 0.4);">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>ออกจากระบบ (Logout)</span>
+                    </a>
+                    {% else %}
+                    <a href="/signin/" class="dropdown-auth-btn signin-btn">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                            <polyline points="10 17 15 12 10 7"></polyline>
+                            <line x1="15" y1="12" x2="3" y2="12"></line>
+                        </svg>
+                        <span>Sign In / เข้าสู่ระบบ</span>
+                    </a>
+                    <a href="/signup/" class="dropdown-auth-btn signup-btn">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                            <line x1="20" y1="8" x2="20" y2="14"></line>
+                            <line x1="23" y1="11" x2="17" y2="11"></line>
+                        </svg>
+                        <span>Sign Up / สมัครสมาชิก</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>

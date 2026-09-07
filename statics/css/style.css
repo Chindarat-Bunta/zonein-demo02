@@ -383,6 +383,52 @@ body {
     transform: translateX(3px);
 }
 
+/* Desktop User Profile Menu & Dropdown */
+.desktop-user-menu {
+    position: relative;
+}
+
+.btn-profile-dropdown {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 197, 170, 0.6);
+    padding: 5px 14px 5px 6px;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: all 0.22s ease;
+    box-shadow: 0 2px 8px rgba(255, 157, 157, 0.15);
+}
+
+.btn-profile-dropdown:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: var(--color-coral);
+    box-shadow: 0 4px 14px rgba(255, 157, 157, 0.3);
+    transform: translateY(-1px);
+}
+
+.desktop-dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    min-width: 220px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 197, 170, 0.5);
+    border-radius: 18px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(255, 157, 157, 0.15);
+    padding: 8px;
+    z-index: 1100;
+    animation: desktopMenuFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes desktopMenuFade {
+    from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* ==========================================================================
    4. MOBILE SINGLE-BAR NAVIGATION & PROFILE DROPDOWN (DESKTOP: HIDDEN)
    ========================================================================== */
@@ -1004,3 +1050,38 @@ body {
         justify-content: center;
     }
 }
+
+/* Desktop User Dropdown Menu */
+.desktop-dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 230px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 197, 170, 0.5);
+    border-radius: 18px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+    padding: 8px;
+    z-index: 1100;
+    transform-origin: top right;
+    animation: fadeInDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.desktop-dropdown-menu.show {
+    display: block !important;
+}
+
+@keyframes fadeInDropdown {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
