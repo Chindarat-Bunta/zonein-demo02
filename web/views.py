@@ -374,9 +374,7 @@ def home_view(request, active_tab="home"):
                 "category_name": cat_name,
                 "location": p.location or p.address or "ศรีสะเกษ",
                 "rating": p.average_rating if p.average_rating else 4.8,
-                "image_url": p.image_url
-                or p.cover_image_url
-                or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1000&auto=format&fit=crop&q=80",
+                "image_url": p.image_url or p.cover_image_url or "",
                 "is_video": (p.id % 2 == 1),
                 "detail_url": f"/places/{p.id}/",
                 "is_wishlisted": p.id in wishlist_ids,
@@ -412,25 +410,31 @@ def home_view(request, active_tab="home"):
     ]
 
     locations = [
-        {"city": "ศรีสะเกษ", "zone": "อ.เมืองศรีสะเกษ", "slug": "ssk-muang"},
-        {
-            "city": "ศรีสะเกษ",
-            "zone": "อ.กันทรลักษ์ (ผามออีแดง - เขาพระวิหาร)",
-            "slug": "ssk-kantharalak",
-        },
-        {"city": "ศรีสะเกษ", "zone": "อ.ขุนหาญ (วัดล้านขวด - น้ำตก)", "slug": "ssk-khunhan"},
-        {
-            "city": "ศรีสะเกษ",
-            "zone": "อ.อุทุมพรพิสัย (ปราสาทสระกำแพงใหญ่)",
-            "slug": "ssk-uthumphon",
-        },
-        {
-            "city": "ศรีสะเกษ",
-            "zone": "อ.ห้วยทับทัน (ไก่ย่างไม้มะดัน)",
-            "slug": "ssk-huai-thap-than",
-        },
-        {"city": "ศรีสะเกษ", "zone": "อ.ปรางค์กู่ (ปราสาทปรางค์กู่)", "slug": "ssk-prang-ku"},
-        {"city": "ศรีสะเกษ", "zone": "อ.ราษีไศล (เขื่อนราษีไศล)", "slug": "ssk-rasi-salai"},
+        {"city": "ศรีสะเกษ", "zone": "ศรีสะเกษ (อ.เมือง / กันทรลักษ์ / ขุนหาญ)", "slug": "ศรีสะเกษ"},
+        {"city": "อุบลราชธานี", "zone": "อุบลราชธานี (ผาแต้ม / สามพันโบก)", "slug": "อุบลราชธานี"},
+        {"city": "เชียงใหม่", "zone": "เชียงใหม่ (แม่ริม / นิมมานฯ / ดอยอินทนนท์)", "slug": "เชียงใหม่"},
+        {"city": "เชียงราย", "zone": "เชียงราย (ภูชี้ดาว / แม่สาย / วัดร่องขุ่น)", "slug": "เชียงราย"},
+        {"city": "น่าน", "zone": "น่าน (ปัว / บ่อเกลือ)", "slug": "น่าน"},
+        {"city": "แม่ฮ่องสอน", "zone": "แม่ฮ่องสอน (ปาย / บ้านรักไทย)", "slug": "แม่ฮ่องสอน"},
+        {"city": "กรุงเทพมหานคร", "zone": "กรุงเทพมหานคร (สยาม / พระนคร)", "slug": "กรุงเทพ"},
+        {"city": "พระนครศรีอยุธยา", "zone": "พระนครศรีอยุธยา (เมืองเก่า)", "slug": "อยุธยา"},
+        {"city": "ชลบุรี", "zone": "ชลบุรี (พัทยา / บางแสน)", "slug": "ชลบุรี"},
+        {"city": "ระยอง", "zone": "ระยอง (เกาะเสม็ด)", "slug": "ระยอง"},
+        {"city": "ตราด", "zone": "ตราด (เกาะช้าง / เกาะกูด)", "slug": "ตราด"},
+        {"city": "ภูเก็ต", "zone": "ภูเก็ต (หาดป่าตอง / เมืองเก่า)", "slug": "ภูเก็ต"},
+        {"city": "กระบี่", "zone": "กระบี่ (หาดไร่เลย์ / อ่าวนาง)", "slug": "กระบี่"},
+        {"city": "สุราษฎร์ธานี", "zone": "สุราษฎร์ธานี (เกาะสมุย / เกาะพะงัน)", "slug": "สุราษฎร์ธานี"},
+        {"city": "พังงา", "zone": "พังงา (เสม็ดนางชี / สิมิลัน)", "slug": "พังงา"},
+        {"city": "สงขลา", "zone": "สงขลา (หาดใหญ่)", "slug": "สงขลา"},
+        {"city": "กาญจนบุรี", "zone": "กาญจนบุรี (สังขละบุรี / แม่น้ำแคว)", "slug": "กาญจนบุรี"},
+        {"city": "ประจวบคีรีขันธ์", "zone": "ประจวบคีรีขันธ์ (หัวหิน / ปราณบุรี)", "slug": "ประจวบคีรีขันธ์"},
+        {"city": "เพชรบุรี", "zone": "เพชรบุรี (ชะอำ / แก่งกระจาน)", "slug": "เพชรบุรี"},
+        {"city": "นครราชสีมา", "zone": "นครราชสีมา (โคราช / เขาใหญ่)", "slug": "นครราชสีมา"},
+        {"city": "ขอนแก่น", "zone": "ขอนแก่น (อ.เมืองขอนแก่น)", "slug": "ขอนแก่น"},
+        {"city": "อุดรธานี", "zone": "อุดรธานี (คำชะโนด)", "slug": "อุดรธานี"},
+        {"city": "เลย", "zone": "เลย (เชียงคาน / ภูกระดึง)", "slug": "เลย"},
+        {"city": "บุรีรัมย์", "zone": "บุรีรัมย์ (พนมรุ้ง)", "slug": "บุรีรัมย์"},
+        {"city": "เพชรบูรณ์", "zone": "เพชรบูรณ์ (เขาค้อ / ภูทับเบิก)", "slug": "เพชรบูรณ์"},
     ]
 
     user_notifications = []
@@ -1128,9 +1132,7 @@ def api_places_view(request):
                     "color": "#10b981",
                     "icon": "fa-location-dot",
                 },
-                "image_url": p.image_url
-                or p.cover_image_url
-                or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80",
+                "image_url": p.image_url or p.cover_image_url or "",
                 "rating": float(p.rating),
                 "review_count": p.review_count,
                 "price_display": p.price_display,

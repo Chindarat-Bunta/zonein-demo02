@@ -597,21 +597,25 @@
 
     .comment-input {
         flex: 1;
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid var(--border-color);
+        background: #ffffff;
+        border: 1px solid rgba(255, 197, 170, 0.8);
         border-radius: var(--radius-full);
         padding: 0.55rem 1rem;
-        color: #fff;
+        color: #1e242b;
         font-size: 0.88rem;
         outline: none;
         transition: var(--transition-smooth);
         font-family: inherit;
     }
 
+    .comment-input::placeholder {
+        color: #8c98a4;
+    }
+
     .comment-input:focus {
-        border-color: var(--primary);
-        background: rgba(255, 255, 255, 0.07);
-        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        border-color: #FF9D9D;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(255, 157, 157, 0.25);
     }
 
     .comment-submit-btn {
@@ -864,6 +868,91 @@
         align-items: center;
         gap: 4px;
     }
+
+    /* No Image Explore Card Styling */
+    .explore-card.no-image-explore-card {
+        background: linear-gradient(145deg, #ffffff 0%, #fff3ef 100%) !important;
+        border: 1px solid rgba(255, 197, 170, 0.6);
+    }
+
+    .explore-card-no-image-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+        padding: 1rem;
+        box-sizing: border-box;
+    }
+
+    .no-img-badge-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+        padding-left: 36px;
+    }
+
+    .explore-card-tag.light {
+        background: rgba(255, 157, 157, 0.2);
+        color: #d94646;
+        border: 1px solid rgba(255, 157, 157, 0.4);
+        padding: 3px 10px;
+        border-radius: var(--radius-full);
+        font-size: 0.74rem;
+        font-weight: 700;
+    }
+
+    .explore-card-rating.light {
+        background: rgba(254, 243, 199, 0.95);
+        color: #b45309;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        padding: 2px 8px;
+        border-radius: var(--radius-full);
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .no-img-center-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.4rem;
+        margin: auto 0;
+    }
+
+    .no-img-icon {
+        font-size: 2rem;
+        line-height: 1;
+    }
+
+    .no-img-title {
+        font-size: 1.02rem;
+        font-weight: 700;
+        color: #1e242b;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .no-img-location {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+
+    .no-img-bottom-prompt {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #e05d5d;
+        padding-top: 0.5rem;
+        border-top: 1px dashed rgba(255, 197, 170, 0.5);
+    }
     </style>
 {% endblock %}
 {% block content %}
@@ -894,46 +983,7 @@
             </div>
             <div class="popular-places-grid">
                 {% for p in places|slice:":4" %}
-                <div class="popular-place-card-wrapper" style="position: relative;">
-                    <a href="/places/{{ p.id }}/" class="popular-place-card" title="ดูรายละเอียดและแผนที่ของ {{ p.name }}">
-                        {% if p.cover_image_url or p.image_url %}
-                        <div class="popular-place-image-wrap">
-                            <img src="{{ p.cover_image_url|default:p.image_url }}" alt="{{ p.name }}" class="popular-place-img" loading="lazy">
-                            <span class="popular-place-cat-badge">{{ p.get_category_display|default:'สถานที่ยอดนิยม' }}</span>
-                            <span class="popular-place-rating-badge">★ {{ p.average_rating|default:'4.8' }}</span>
-                        </div>
-                        <div class="popular-place-body">
-                            <h3 class="popular-place-name">{{ p.name }}</h3>
-                            <p class="popular-place-loc">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                    <circle cx="12" cy="10" r="3"></circle>
-                                </svg>
-                                <span>{{ p.address|default:p.location|default:'ทั่วไทย' }}</span>
-                            </p>
-                        </div>
-                        {% else %}
-                        <div class="popular-place-body no-image-body" style="padding: 1.2rem 1.15rem 1.1rem; min-height: 145px; display: flex; flex-direction: column; justify-content: space-between;">
-                            <div>
-                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 0.65rem; padding-right: 34px;">
-                                    <span class="popular-place-cat-badge-inline" style="background: rgba(187, 241, 210, 0.95); color: #065f46; padding: 3px 10px; border-radius: 9999px; font-size: 0.74rem; font-weight: 700; border: 1px solid rgba(187, 241, 210, 0.8);">{{ p.get_category_display|default:'สถานที่ยอดนิยม' }}</span>
-                                    <span class="popular-place-rating-badge-inline" style="background: rgba(254, 243, 199, 0.95); color: #b45309; padding: 3px 8px; border-radius: 9999px; font-size: 0.78rem; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.4); flex-shrink: 0;">★ {{ p.average_rating|default:'4.8' }}</span>
-                                </div>
-                                <h3 class="popular-place-name" style="font-size: 1.02rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; line-height: 1.4;">{{ p.name }}</h3>
-                                {% if p.description %}
-                                <p class="popular-place-desc" style="font-size: 0.83rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 0.4rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">{{ p.description }}</p>
-                                {% endif %}
-                            </div>
-                            <p class="popular-place-loc" style="margin-top: 0.4rem;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                    <circle cx="12" cy="10" r="3"></circle>
-                                </svg>
-                                <span>{{ p.address|default:p.location|default:'ทั่วไทย' }}</span>
-                            </p>
-                        </div>
-                        {% endif %}
-                    </a>
+                <a href="/places/{{ p.id }}/" class="popular-place-card" style="position: relative;" title="ดูรายละเอียดและแผนที่ของ {{ p.name }}">
                     <button type="button"
                             class="card-wishlist-float-btn {% if p.id in wishlist_ids %}active{% endif %}"
                             data-wishlist-place-id="{{ p.id }}"
@@ -944,7 +994,44 @@
                             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                         </svg>
                     </button>
-                </div>
+                    {% if p.cover_image_url or p.image_url %}
+                    <div class="popular-place-image-wrap">
+                        <img src="{{ p.cover_image_url|default:p.image_url }}" alt="{{ p.name }}" class="popular-place-img" loading="lazy">
+                        <span class="popular-place-cat-badge">{{ p.get_category_display|default:'สถานที่ยอดนิยม' }}</span>
+                        <span class="popular-place-rating-badge">★ {{ p.average_rating|default:'4.8' }}</span>
+                    </div>
+                    <div class="popular-place-body">
+                        <h3 class="popular-place-name">{{ p.name }}</h3>
+                        <p class="popular-place-loc">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span>{{ p.address|default:p.location|default:'ทั่วไทย' }}</span>
+                        </p>
+                    </div>
+                    {% else %}
+                    <div class="popular-place-body no-image-body" style="padding: 1.2rem 1.15rem 1.1rem; min-height: 145px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 0.65rem; padding-right: 34px;">
+                                <span class="popular-place-cat-badge-inline" style="background: rgba(187, 241, 210, 0.95); color: #065f46; padding: 3px 10px; border-radius: 9999px; font-size: 0.74rem; font-weight: 700; border: 1px solid rgba(187, 241, 210, 0.8);">{{ p.get_category_display|default:'สถานที่ยอดนิยม' }}</span>
+                                <span class="popular-place-rating-badge-inline" style="background: rgba(254, 243, 199, 0.95); color: #b45309; padding: 3px 8px; border-radius: 9999px; font-size: 0.78rem; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.4); flex-shrink: 0;">★ {{ p.average_rating|default:'4.8' }}</span>
+                            </div>
+                            <h3 class="popular-place-name" style="font-size: 1.02rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; line-height: 1.4;">{{ p.name }}</h3>
+                            {% if p.description %}
+                            <p class="popular-place-desc" style="font-size: 0.83rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 0.4rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">{{ p.description }}</p>
+                            {% endif %}
+                        </div>
+                        <p class="popular-place-loc" style="margin-top: 0.4rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span>{{ p.address|default:p.location|default:'ทั่วไทย' }}</span>
+                        </p>
+                    </div>
+                    {% endif %}
+                </a>
                 {% endfor %}
             </div>
         </section>
@@ -1030,11 +1117,101 @@
                         <h4><span>📍</span> ทำเล / ย่าน</h4>
                         <select class="filter-panel-select" id="filterLocationSelect">
                             <option value="all">ทุกทำเล / ทั่วไทย</option>
-                            <option value="เชียงใหม่">เชียงใหม่ (แม่ริม / นิมมานฯ)</option>
-                            <option value="อยุธยา">พระนครศรีอยุธยา</option>
-                            <option value="เชียงราย">เชียงราย (ภูชี้ดาว / แม่สาย)</option>
-                            <option value="กระบี่">กระบี่ (หาดไร่เลย์ / อ่าวนาง)</option>
-                            <option value="กรุงเทพ">กรุงเทพมหานคร (สวนเบญจกิติ / สยาม)</option>
+
+                            <optgroup label="📍 ภาคตะวันออกเฉียงเหนือ (อีสาน)">
+                                <option value="ศรีสะเกษ">ศรีสะเกษ (อ.เมือง / กันทรลักษ์ / ขุนหาญ)</option>
+                                <option value="อุบลราชธานี">อุบลราชธานี (ผาแต้ม / สามพันโบก)</option>
+                                <option value="นครราชสีมา">นครราชสีมา (โคราช / ปากช่อง / เขาใหญ่)</option>
+                                <option value="ขอนแก่น">ขอนแก่น</option>
+                                <option value="อุดรธานี">อุดรธานี (คำชะโนด / ทะเลบัวแดง)</option>
+                                <option value="บุรีรัมย์">บุรีรัมย์ (ปราสาทพนมรุ้ง)</option>
+                                <option value="สุรินทร์">สุรินทร์</option>
+                                <option value="ร้อยเอ็ด">ร้อยเอ็ด</option>
+                                <option value="เลย">เลย (เชียงคาน / ภูกระดึง)</option>
+                                <option value="สกลนคร">สกลนคร</option>
+                                <option value="นครพนม">นครพนม (พระธาตุพนม)</option>
+                                <option value="หนองคาย">หนองคาย</option>
+                                <option value="ชัยภูมิ">ชัยภูมิ</option>
+                                <option value="มหาสารคาม">มหาสารคาม</option>
+                                <option value="กาฬสินธุ์">กาฬสินธุ์</option>
+                                <option value="ยโสธร">ยโสธร</option>
+                                <option value="มุกดาหาร">มุกดาหาร</option>
+                                <option value="อำนาจเจริญ">อำนาจเจริญ</option>
+                                <option value="บึงกาฬ">บึงกาฬ (หินสามวาฬ)</option>
+                                <option value="หนองบัวลำภู">หนองบัวลำภู</option>
+                            </optgroup>
+
+                            <optgroup label="📍 ภาคเหนือ">
+                                <option value="เชียงใหม่">เชียงใหม่ (แม่ริม / นิมมานฯ / ดอยอินทนนท์)</option>
+                                <option value="เชียงราย">เชียงราย (ภูชี้ดาว / แม่สาย / วัดร่องขุ่น)</option>
+                                <option value="น่าน">น่าน (ปัว / บ่อเกลือ)</option>
+                                <option value="แม่ฮ่องสอน">แม่ฮ่องสอน (ปาย / บ้านรักไทย)</option>
+                                <option value="ลำปาง">ลำปาง</option>
+                                <option value="ลำพูน">ลำพูน</option>
+                                <option value="พะเยา">พะเยา (กว๊านพะเยา)</option>
+                                <option value="แพร่">แพร่</option>
+                                <option value="สุโขทัย">สุโขทัย (อุทยานประวัติศาสตร์)</option>
+                                <option value="พิษณุโลก">พิษณุโลก</option>
+                                <option value="ตาก">ตาก (อุ้มผาง / แม่สอด)</option>
+                                <option value="เพชรบูรณ์">เพชรบูรณ์ (เขาค้อ / ภูทับเบิก)</option>
+                                <option value="อุตรดิตถ์">อุตรดิตถ์</option>
+                                <option value="พิจิตร">พิจิตร</option>
+                                <option value="กำแพงเพชร">กำแพงเพชร</option>
+                                <option value="นครสวรรค์">นครสวรรค์</option>
+                                <option value="อุทัยธานี">อุทัยธานี</option>
+                            </optgroup>
+
+                            <optgroup label="📍 ภาคกลาง & กรุงเทพมหานคร">
+                                <option value="กรุงเทพ">กรุงเทพมหานคร (สยาม / พระนคร / สวนเบญจกิติ)</option>
+                                <option value="อยุธยา">พระนครศรีอยุธยา (วัดมหาธาตุ / เรือนริมน้ำ)</option>
+                                <option value="นนทบุรี">นนทบุรี</option>
+                                <option value="ปทุมธานี">ปทุมธานี</option>
+                                <option value="สมุทรปราการ">สมุทรปราการ (บางปู)</option>
+                                <option value="สมุทรสาคร">สมุทรสาคร</option>
+                                <option value="สมุทรสงคราม">สมุทรสงคราม (ตลาดน้ำอัมพวา)</option>
+                                <option value="นครปฐม">นครปฐม</option>
+                                <option value="สุพรรณบุรี">สุพรรณบุรี</option>
+                                <option value="ลพบุรี">ลพบุรี</option>
+                                <option value="สระบุรี">สระบุรี</option>
+                                <option value="อ่างทอง">อ่างทอง</option>
+                                <option value="สิงห์บุรี">สิงห์บุรี</option>
+                                <option value="ชัยนาท">ชัยนาท</option>
+                                <option value="นครนายก">นครนายก (เขื่อนขุนด่าน)</option>
+                            </optgroup>
+
+                            <optgroup label="📍 ภาคใต้">
+                                <option value="ภูเก็ต">ภูเก็ต (หาดป่าตอง / ย่านเมืองเก่า)</option>
+                                <option value="กระบี่">กระบี่ (หาดไร่เลย์ / อ่าวนาง / เกาะพีพี)</option>
+                                <option value="สุราษฎร์ธานี">สุราษฎร์ธานี (เกาะสมุย / เกาะพะงัน / เขาสก)</option>
+                                <option value="พังงา">พังงา (เสม็ดนางชี / เกาะสิมิลัน)</option>
+                                <option value="สงขลา">สงขลา (หาดใหญ่)</option>
+                                <option value="ตรัง">ตรัง</option>
+                                <option value="นครศรีธรรมราช">นครศรีธรรมราช (คีรีวง)</option>
+                                <option value="ชุมพร">ชุมพร</option>
+                                <option value="ระนอง">ระนอง</option>
+                                <option value="พัทลุง">พัทลุง</option>
+                                <option value="สตูล">สตูล (เกาะหลีเป๊ะ)</option>
+                                <option value="ปัตตานี">ปัตตานี</option>
+                                <option value="ยะลา">ยะลา (เบตง)</option>
+                                <option value="นราธิวาส">นราธิวาส</option>
+                            </optgroup>
+
+                            <optgroup label="📍 ภาคตะวันออก">
+                                <option value="ชลบุรี">ชลบุรี (พัทยา / บางแสน / สัตหีบ)</option>
+                                <option value="ระยอง">ระยอง (เกาะเสม็ด)</option>
+                                <option value="ตราด">ตราด (เกาะช้าง / เกาะกูด)</option>
+                                <option value="จันทบุรี">จันทบุรี</option>
+                                <option value="ฉะเชิงเทรา">ฉะเชิงเทรา (วัดหลวงพ่อโสธร)</option>
+                                <option value="ปราจีนบุรี">ปราจีนบุรี</option>
+                                <option value="สระแก้ว">สระแก้ว</option>
+                            </optgroup>
+
+                            <optgroup label="📍 ภาคตะวันตก">
+                                <option value="กาญจนบุรี">กาญจนบุรี (สังขละบุรี / สะพานข้ามแม่น้ำแคว)</option>
+                                <option value="ประจวบคีรีขันธ์">ประจวบคีรีขันธ์ (หัวหิน / ปราณบุรี)</option>
+                                <option value="เพชรบุรี">เพชรบุรี (ชะอำ / แก่งกระจาน)</option>
+                                <option value="ราชบุรี">ราชบุรี (สวนผึ้ง)</option>
+                            </optgroup>
                         </select>
                     </div>
 
@@ -1079,35 +1256,7 @@
             <!-- Explore Media Grid (เชื่อมต่อกับหน้า place-details โดยตรงผ่าน detail_url) -->
             <div class="explore-media-grid" id="exploreMediaGrid">
                 {% for item in explore_items %}
-                <div class="explore-card-wrapper" style="position: relative;">
-                    <a href="{{ item.detail_url }}" class="explore-card" data-category="{{ item.category }}" data-location="{{ item.location }}" data-rating="{{ item.rating }}" data-title="{{ item.title }}" data-place-id="{{ item.id }}" title="คลิกดูแผนที่และรีวิวของ {{ item.title }}">
-                        <!-- Video Play Badge -->
-                        {% if item.is_video %}
-                        <div class="explore-card-video-badge" title="วิดีโอแนะนำ">
-                            <svg viewBox="0 0 24 24">
-                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                            </svg>
-                        </div>
-                        {% endif %}
-
-                        <!-- Media Thumbnail -->
-                        <img src="{{ item.image_url }}" alt="{{ item.title }}" class="explore-card-media" loading="lazy">
-
-                        <!-- Hover Prompt -->
-                        <div class="explore-card-hover-prompt">
-                            <span>ดูแผนที่ & รีวิว</span>
-                            <span>➔</span>
-                        </div>
-
-                        <!-- Bottom Gradient & Information Overlay -->
-                        <div class="explore-card-overlay">
-                            <div class="explore-card-title">{{ item.title }}</div>
-                            <div class="explore-card-meta">
-                                <span class="explore-card-tag">{{ item.category_name }}</span>
-                                <span class="explore-card-rating">★ {{ item.rating }}</span>
-                            </div>
-                        </div>
-                    </a>
+                <a href="{{ item.detail_url }}" class="explore-card {% if not item.image_url %}no-image-explore-card{% endif %}" data-category="{{ item.category }}" data-location="{{ item.location }}" data-rating="{{ item.rating }}" data-title="{{ item.title }}" data-place-id="{{ item.id }}" title="คลิกดูแผนที่และรีวิวของ {{ item.title }}">
                     <button type="button"
                             class="card-wishlist-float-btn {% if item.is_wishlisted %}active{% endif %}"
                             data-wishlist-place-id="{{ item.id }}"
@@ -1118,14 +1267,68 @@
                             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                         </svg>
                     </button>
-                </div>
-                {% empty %}
-                <div class="explore-empty-state" id="emptyExploreState">
-                    <div class="icon">📭</div>
-                    <h3>ยังไม่มีสถานที่ในระบบ</h3>
-                    <p>ขณะนี้ยังไม่มีสถานที่ในระบบ</p>
-                </div>
+                    {% if item.image_url %}
+                    <!-- Video Play Badge -->
+                    {% if item.is_video %}
+                    <div class="explore-card-video-badge" title="วิดีโอแนะนำ">
+                        <svg viewBox="0 0 24 24">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </div>
+                    {% endif %}
+
+                    <!-- Media Thumbnail -->
+                    <img src="{{ item.image_url }}" alt="{{ item.title }}" class="explore-card-media" loading="lazy">
+
+                    <!-- Hover Prompt -->
+                    <div class="explore-card-hover-prompt">
+                        <span>ดูแผนที่ & รีวิว</span>
+                        <span>➔</span>
+                    </div>
+
+                    <!-- Bottom Gradient & Information Overlay -->
+                    <div class="explore-card-overlay">
+                        <div class="explore-card-title">{{ item.title }}</div>
+                        <div class="explore-card-meta">
+                            <span class="explore-card-tag">{{ item.category_name }}</span>
+                            <span class="explore-card-rating">★ {{ item.rating }}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="explore-card-no-image-content">
+                        <div class="no-img-badge-row">
+                            <span class="explore-card-tag light">{{ item.category_name }}</span>
+                            <span class="explore-card-rating light">★ {{ item.rating }}</span>
+                        </div>
+                        <div class="no-img-center-info">
+                            <div class="no-img-icon">📍</div>
+                            <div class="no-img-title">{{ item.title }}</div>
+                            <div class="no-img-location">{{ item.location }}</div>
+                        </div>
+                        <div class="no-img-bottom-prompt">
+                            <span>ดูแผนที่ & รีวิว</span>
+                            <span>➔</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </a>
                 {% endfor %}
+
+                <!-- Dynamic Filter Empty State Notice -->
+                <div class="explore-empty-state" id="emptyExploreState" style="display: none; grid-column: 1 / -1; width: 100%;">
+                    <div style="background: rgba(255, 255, 255, 0.85); border: 1.5px dashed rgba(255, 197, 170, 0.8); border-radius: var(--radius-lg); padding: 42px 20px; text-align: center; box-shadow: var(--shadow-card); backdrop-filter: blur(12px); margin: 10px 0;">
+                        <div style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, rgba(255, 157, 157, 0.2), rgba(255, 197, 170, 0.3)); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.6rem;">
+                            🏝️
+                        </div>
+                        <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">ยังไม่มีรายการ หรือยังไม่มีโพสต์ในพื้นที่นี้</h3>
+                        <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 440px; margin: 0 auto 20px; line-height: 1.55;">
+                            ยังไม่มีสถานที่หรือโพสต์ในทำเลที่คุณเลือกขณะนี้ ลองเลือกทำเลอื่น หรือกดล้างตัวกรองเพื่อดูสถานที่ทั้งหมดได้เลยครับ
+                        </p>
+                        <button type="button" onclick="if(document.getElementById('btnResetFilters')) document.getElementById('btnResetFilters').click();" style="padding: 9px 24px; border-radius: 9999px; background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #ffffff; font-weight: 700; font-size: 0.88rem; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(255, 157, 157, 0.35); transition: transform 0.2s;">
+                            ล้างตัวกรอง
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1230,6 +1433,7 @@
     <script>
 const IS_AUTHENTICATED = {{ user.is_authenticated|yesno:"true,false" }};
 window.IS_AUTHENTICATED = IS_AUTHENTICATED;
+const CURRENT_USER_INITIAL = "{{ user.username|default:'U'|slice:':1'|upper }}";
 let currentReviewPage = 1;
 let hasNextReviewPage = false;
 let isLoadingReviews = false;
@@ -1524,7 +1728,7 @@ function renderReviewCardHtml(r) {
                     ${commentsListHtml}
                 </div>
                 <form class="comment-form" onsubmit="submitComment(event, ${r.id})">
-                    <div class="comment-avatar">${IS_AUTHENTICATED ? (authorInitial || 'U') : '🔒'}</div>
+                    <div class="comment-avatar">${IS_AUTHENTICATED ? CURRENT_USER_INITIAL : '🔒'}</div>
                     <input type="text" class="comment-input" id="comment_input_${r.id}" placeholder="${IS_AUTHENTICATED ? 'เขียนความคิดเห็นของคุณ...' : 'กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น...'}" ${IS_AUTHENTICATED ? 'required' : 'readonly style="cursor: pointer;" onclick="submitComment(event, ' + r.id + ')"'}>
                     <button type="submit" class="comment-submit-btn">${IS_AUTHENTICATED ? 'ส่ง' : 'เข้าสู่ระบบ'}</button>
                 </form>
@@ -1567,7 +1771,6 @@ async function submitComment(event, reviewId) {
     if (!input || !input.value.trim()) return;
 
     const content = input.value.trim();
-    input.value = "";
 
     try {
         const res = await fetch(`/api/reviews/${reviewId}/comments/`, {
@@ -1584,9 +1787,11 @@ async function submitComment(event, reviewId) {
             return;
         }
 
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error("Failed to post comment");
         const data = await res.json();
         const c = data.comment;
+
+        input.value = "";
 
         const newCommentHtml = `
             <div class="comment-item" id="comment_${c.id}">
@@ -1601,7 +1806,9 @@ async function submitComment(event, reviewId) {
             </div>
         `;
 
-        list.insertAdjacentHTML("beforeend", newCommentHtml);
+        if (list) {
+            list.insertAdjacentHTML("beforeend", newCommentHtml);
+        }
         if (countEl) {
             countEl.innerText = parseInt(countEl.innerText || 0) + 1;
         }
@@ -1612,7 +1819,7 @@ async function submitComment(event, reviewId) {
             cached.comments.push(c);
         }
 
-        showToast("เพิ่มความคิดเห็นเรียบร้อยแล้ว");
+        showToast("เพิ่มความคิดเห็นเรียบร้อยแล้ว 💬");
     } catch (err) {
         console.error(err);
         showToast("เกิดข้อผิดพลาดในการส่งความคิดเห็น");

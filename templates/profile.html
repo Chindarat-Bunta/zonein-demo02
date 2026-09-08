@@ -1197,8 +1197,9 @@
                 <div class="wishlist-grid" id="profileWishlistGrid">
                     {% for place in wishlist %}
                     <article class="profile-place-card" id="wishlist-card-{{ place.id }}">
+                        {% if place.cover_image_url or place.image_url %}
                         <div class="place-card-img-wrap">
-                            <img src="{{ place.cover_image_url|default:place.image_url|default:'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80' }}"
+                            <img src="{{ place.cover_image_url|default:place.image_url }}"
                                  alt="{{ place.name }}"
                                  loading="lazy">
                             <div class="place-card-badges">
@@ -1218,6 +1219,7 @@
                                 </svg>
                             </button>
                         </div>
+                        {% endif %}
                         <div class="place-card-body">
                             <h3 class="place-card-title">
                                 <a href="/places/{{ place.id }}/">{{ place.name }}</a>

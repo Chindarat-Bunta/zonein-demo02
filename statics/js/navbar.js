@@ -690,6 +690,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Show/Hide Empty State Notice
+        const emptyState = document.getElementById('emptyExploreState');
+        if (emptyState) {
+            if (visibleCount === 0) {
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+            }
+        }
+
         // Update active filter badge
         let activeFilterCount = 0;
         if (filterState.category !== 'all') activeFilterCount++;

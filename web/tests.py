@@ -42,6 +42,7 @@ class ProfileSettingsTests(TestCase):
         self.profile = UserProfile.objects.get(user=self.user)
 
     def test_profile_settings_view_get(self):
+        self.client.force_login(self.user)
         response = self.client.get("/profile/settings/")
         self.assertEqual(response.status_code, 302)
         self.assertIn("/profile/?edit=1", response.url)
@@ -237,10 +238,11 @@ class HomePageAPITests(TestCase):
 
     def test_api_add_comment(self):
         """Adding a comment to a review should succeed."""
+        self.client.force_login(self.user1)
         review = Review.objects.first()
         response = self.client.post(
             reverse("web:api_add_comment", args=[review.id]),
-            data=json.dumps({"content": "สวยมากครับ!", "username": "somchai"}),
+            data=json.dumps({"content": "สวยมากครับ!"}),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)

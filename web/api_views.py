@@ -168,7 +168,7 @@ def travel_posts_list_create_view(request):
         return JsonResponse({"error": "กรุณาเลือกระดับคะแนนดาว 1-5 ดาว"}, status=400)
 
     if not image_url:
-        image_url = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=60"
+        image_url = ""
 
     current_user = _get_current_or_default_user(request)
 
