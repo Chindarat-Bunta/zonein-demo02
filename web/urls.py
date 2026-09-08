@@ -79,6 +79,22 @@ urlpatterns = [
         views.api_review_like_toggle,
         name="api_review_like",
     ),
+    # User Follow APIs
+    path(
+        "api/users/<int:user_id>/follow/",
+        views.api_toggle_follow,
+        name="api_toggle_follow",
+    ),
+    path(
+        "api/users/<int:user_id>/followers/",
+        views.api_user_followers,
+        name="api_user_followers",
+    ),
+    path(
+        "api/users/<int:user_id>/following/",
+        views.api_user_following,
+        name="api_user_following",
+    ),
     # Place Details
     path("places/<int:place_id>/", views.place_detail, name="place_detail_id"),
     path("places/<slug:slug>/", views.place_detail, name="place_detail"),

@@ -1935,7 +1935,8 @@ let hasNextReviewPage = false;
 let isLoadingReviews = false;
 const likedReviewsMap = new Map();
 const reviewsDataMap = new Map();
-const followedAuthorsSet = new Set();
+const INITIAL_FOLLOWED_USER_IDS = {{ followed_user_ids|safe|default:"[]" }};
+const followedAuthorsSet = new Set(INITIAL_FOLLOWED_USER_IDS);
 
 document.addEventListener("DOMContentLoaded", () => {
     loadRecentReviews(1);
@@ -1948,7 +1949,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-function toggleFollowAuthor(event, authorId, username) {
+async function toggleFollowAuthor(event, authorId, username) {
     if (event) {
         event.stopPropagation();
         event.preventDefault();
@@ -1957,15 +1958,38 @@ function toggleFollowAuthor(event, authorId, username) {
         showToast("กรุณาเข้าสู่ระบบเพื่อติดตามนักเดินทาง 👥");
         return;
     }
-    const isFollowing = followedAuthorsSet.has(authorId);
-    if (isFollowing) {
-        followedAuthorsSet.delete(authorId);
-        showToast(`ยกเลิกการติดตาม ${username} แล้ว`);
-    } else {
+    const isCurrentlyFollowing = followedAuthorsSet.has(authorId);
+    const newFollowingState = !isCurrentlyFollowing;
+
+    if (newFollowingState) {
         followedAuthorsSet.add(authorId);
-        showToast(`ติดตาม ${username} เรียบร้อยแล้ว`);
+        showToast(`ติดตาม @${username} เรียบร้อยแล้ว 👥`);
+    } else {
+        followedAuthorsSet.delete(authorId);
+        showToast(`ยกเลิกการติดตาม @${username} แล้ว`);
     }
-    updateFollowButtons(authorId, !isFollowing);
+    updateFollowButtons(authorId, newFollowingState);
+
+    try {
+        const res = await fetch(`/api/users/${authorId}/follow/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await res.json();
+        if (!data.success) {
+            if (isCurrentlyFollowing) {
+                followedAuthorsSet.add(authorId);
+            } else {
+                followedAuthorsSet.delete(authorId);
+            }
+            updateFollowButtons(authorId, isCurrentlyFollowing);
+            showToast(data.message || 'เกิดข้อผิดพลาดในการติดตาม');
+        }
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 function updateFollowButtons(authorId, isFollowing) {
@@ -2051,6 +2075,9 @@ async function loadRecentReviews(page = 1, append = false) {
             reviewsDataMap.set(r.id, r);
             if (typeof r.is_liked !== 'undefined') {
                 likedReviewsMap.set(r.id, r.is_liked);
+            }
+            if (r.author && r.author.is_following) {
+                followedAuthorsSet.add(r.author.id);
             }
         });
 

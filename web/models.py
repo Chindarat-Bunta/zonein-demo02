@@ -561,7 +561,43 @@ class Notification(models.Model):
         return f"{actor_display} มีการเคลื่อนไหวใหม่บน {post_name}"
 
 
+# ==============================================================================
+# 9. UserFollow Model (ระบบการติดตามผู้ใช้)
+# ==============================================================================
+class UserFollow(models.Model):
+    """
+    ตาราง UserFollow เก็บความสัมพันธ์การติดตามระหว่างผู้ใช้:
+    - follower: ผู้ที่กดติดตาม (ใครเป็นคนติดตาม)
+    - following: ผู้ที่ถูกติดตาม (ติดตามใคร)
+    """
+
+    follower = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="following_relations",
+        verbose_name="ผู้ติดตาม (Follower)",
+    )
+    following = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="follower_relations",
+        verbose_name="กำลังติดตาม (Following)",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = "การติดตามผู้ใช้ (User Follow)"
+        verbose_name_plural = "การติดตามผู้ใช้ทั้งหมด (User Follows)"
+        unique_together = ("follower", "following")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"
+
+
 # Backward compatibility aliases
 TravelPost = Place
 PostLike = PlaceLike
 PostComment = Comment
+Follow = UserFollow
+

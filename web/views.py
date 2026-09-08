@@ -18,6 +18,7 @@ from .models import (
     Place,
     PlaceLike,
     Review,
+    UserFollow,
     UserProfile,
     Wishlist,
 )
@@ -216,6 +217,64 @@ def profile_view(request, username=None):
     )
     likes_count = PlaceLike.objects.filter(place__author=target_user).count()
 
+    followers_count = UserFollow.objects.filter(following=target_user).count()
+    following_count = UserFollow.objects.filter(follower=target_user).count()
+
+    my_following_ids = set()
+    is_following_target = False
+    if current_user.is_authenticated:
+        my_following_ids = set(
+            UserFollow.objects.filter(follower=current_user).values_list(
+                "following_id", flat=True
+            )
+        )
+        if not is_own_profile:
+            is_following_target = target_user.id in my_following_ids
+
+    followers_qs = (
+        UserFollow.objects.filter(following=target_user)
+        .select_related("follower", "follower__profile")
+        .order_by("-created_at")
+    )
+    followers_list = []
+    for f in followers_qs:
+        u = f.follower
+        prof = getattr(u, "profile", None)
+        followers_list.append(
+            {
+                "id": u.id,
+                "username": u.username,
+                "display_name": prof.get_display_name()
+                if prof
+                else (u.first_name or u.username),
+                "avatar_url": prof.avatar_url if prof else "",
+                "is_following": u.id in my_following_ids,
+                "is_self": current_user.is_authenticated and u.id == current_user.id,
+            }
+        )
+
+    following_qs = (
+        UserFollow.objects.filter(follower=target_user)
+        .select_related("following", "following__profile")
+        .order_by("-created_at")
+    )
+    following_list = []
+    for f in following_qs:
+        u = f.following
+        prof = getattr(u, "profile", None)
+        following_list.append(
+            {
+                "id": u.id,
+                "username": u.username,
+                "display_name": prof.get_display_name()
+                if prof
+                else (u.first_name or u.username),
+                "avatar_url": prof.avatar_url if prof else "",
+                "is_following": u.id in my_following_ids,
+                "is_self": current_user.is_authenticated and u.id == current_user.id,
+            }
+        )
+
     if is_own_profile:
         wishlist_qs = (
             Wishlist.objects.filter(user=target_user)
@@ -241,6 +300,12 @@ def profile_view(request, username=None):
         "reviews_count": len(reviews),
         "wishlist_count": len(wishlist),
         "likes_count": likes_count,
+        "followers_count": followers_count,
+        "following_count": following_count,
+        "is_following_target": is_following_target,
+        "followers_list": followers_list,
+        "following_list": following_list,
+        "target_user_id": target_user.id,
         "wishlist_ids": wishlist_ids,
         "is_own_profile": is_own_profile,
     }
@@ -353,6 +418,14 @@ def home_view(request, active_tab="home"):
             .order_by("-created_at")[:20]
         )
 
+    followed_user_ids = []
+    if request.user.is_authenticated:
+        followed_user_ids = list(
+            UserFollow.objects.filter(follower=request.user).values_list(
+                "following_id", flat=True
+            )
+        )
+
     context = {
         "places": places,
         "explore_items": explore_items,
@@ -363,6 +436,7 @@ def home_view(request, active_tab="home"):
         "all_places_count": places.count(),
         "wishlist_ids": wishlist_ids,
         "notifications": user_notifications,
+        "followed_user_ids": followed_user_ids,
         "filters": {
             "q": request.GET.get("q", ""),
             "category": request.GET.get("category", "all"),
@@ -769,9 +843,15 @@ def api_recent_reviews(request):
         page_obj = paginator.page(1)
 
     user_liked_places = set()
+    user_following_ids = set()
     if request.user.is_authenticated:
         user_liked_places = set(
             PlaceLike.objects.filter(user=request.user).values_list("place_id", flat=True)
+        )
+        user_following_ids = set(
+            UserFollow.objects.filter(follower=request.user).values_list(
+                "following_id", flat=True
+            )
         )
 
     place_ids = [r.place_id for r in page_obj if r.place_id]
@@ -819,6 +899,7 @@ def api_recent_reviews(request):
                         getattr(review.user, "profile", None), "nickname", ""
                     )
                     or review.user.username,
+                    "is_following": review.user.id in user_following_ids if review.user else False,
                 },
                 "place": {
                     "id": review.place.id,
@@ -1291,3 +1372,142 @@ def api_wishlist_list_view(request):
             "places": data,
         }
     )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_toggle_follow(request, user_id):
+    """Toggle follow/unfollow for a target user."""
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "unauthorized",
+                "message": "กรุณาเข้าสู่ระบบก่อนทำรายการ",
+            },
+            status=401,
+        )
+
+    target_user = get_object_or_404(User, id=user_id)
+    if target_user.id == request.user.id:
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "self_follow",
+                "message": "ไม่สามารถติดตามตนเองได้",
+            },
+            status=400,
+        )
+
+    follow_rel = UserFollow.objects.filter(
+        follower=request.user, following=target_user
+    ).first()
+
+    if follow_rel:
+        follow_rel.delete()
+        is_following = False
+        message = f"ยกเลิกการติดตาม @{target_user.username} แล้ว"
+    else:
+        UserFollow.objects.create(follower=request.user, following=target_user)
+        is_following = True
+        actor_name = request.user.first_name or request.user.username
+        if hasattr(request.user, "profile") and request.user.profile.get_display_name():
+            actor_name = request.user.profile.get_display_name()
+        Notification.objects.create(
+            actor=request.user,
+            recipient=target_user,
+            action_type="follow",
+            message=f"{actor_name} ได้เริ่มติดตามคุณ",
+        )
+        message = f"ติดตาม @{target_user.username} เรียบร้อยแล้ว"
+
+    target_followers_count = UserFollow.objects.filter(following=target_user).count()
+    target_following_count = UserFollow.objects.filter(follower=target_user).count()
+    my_following_count = UserFollow.objects.filter(follower=request.user).count()
+    my_followers_count = UserFollow.objects.filter(following=request.user).count()
+
+    return JsonResponse(
+        {
+            "success": True,
+            "is_following": is_following,
+            "message": message,
+            "target_user_id": target_user.id,
+            "target_followers_count": target_followers_count,
+            "target_following_count": target_following_count,
+            "my_following_count": my_following_count,
+            "my_followers_count": my_followers_count,
+        }
+    )
+
+
+@require_http_methods(["GET"])
+def api_user_followers(request, user_id):
+    """Return JSON list of followers for user_id."""
+    target_user = get_object_or_404(User, id=user_id)
+    followers_qs = (
+        UserFollow.objects.filter(following=target_user)
+        .select_related("follower", "follower__profile")
+        .order_by("-created_at")
+    )
+    my_following_ids = set()
+    if request.user.is_authenticated:
+        my_following_ids = set(
+            UserFollow.objects.filter(follower=request.user).values_list(
+                "following_id", flat=True
+            )
+        )
+
+    users_data = []
+    for f in followers_qs:
+        u = f.follower
+        prof = getattr(u, "profile", None)
+        users_data.append(
+            {
+                "id": u.id,
+                "username": u.username,
+                "display_name": prof.get_display_name()
+                if prof
+                else (u.first_name or u.username),
+                "avatar_url": prof.avatar_url if prof else "",
+                "is_following": u.id in my_following_ids,
+                "is_self": request.user.is_authenticated and u.id == request.user.id,
+            }
+        )
+    return JsonResponse({"success": True, "count": len(users_data), "users": users_data})
+
+
+@require_http_methods(["GET"])
+def api_user_following(request, user_id):
+    """Return JSON list of users that user_id is following."""
+    target_user = get_object_or_404(User, id=user_id)
+    following_qs = (
+        UserFollow.objects.filter(follower=target_user)
+        .select_related("following", "following__profile")
+        .order_by("-created_at")
+    )
+    my_following_ids = set()
+    if request.user.is_authenticated:
+        my_following_ids = set(
+            UserFollow.objects.filter(follower=request.user).values_list(
+                "following_id", flat=True
+            )
+        )
+
+    users_data = []
+    for f in following_qs:
+        u = f.following
+        prof = getattr(u, "profile", None)
+        users_data.append(
+            {
+                "id": u.id,
+                "username": u.username,
+                "display_name": prof.get_display_name()
+                if prof
+                else (u.first_name or u.username),
+                "avatar_url": prof.avatar_url if prof else "",
+                "is_following": u.id in my_following_ids,
+                "is_self": request.user.is_authenticated and u.id == request.user.id,
+            }
+        )
+    return JsonResponse({"success": True, "count": len(users_data), "users": users_data})
+

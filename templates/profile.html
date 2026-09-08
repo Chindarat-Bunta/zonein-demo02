@@ -442,6 +442,79 @@
             color: #ffffff;
         }
 
+        /* Avatar Column & Follow Status Under Avatar */
+        .avatar-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .avatar-follow-stats {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 197, 170, 0.45);
+            border-radius: var(--radius-pill);
+            box-shadow: 0 2px 8px rgba(255, 157, 157, 0.12);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .avatar-follow-stats:hover {
+            background: #ffffff;
+            border-color: #FF9D9D;
+            box-shadow: 0 4px 14px rgba(255, 157, 157, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .avatar-follow-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: transparent;
+            border: none;
+            padding: 1px 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-radius: 4px;
+            transition: all 0.18s ease;
+            text-decoration: none;
+            line-height: 1.2;
+        }
+
+        .avatar-follow-link:hover {
+            color: #e56d6d;
+        }
+
+        .avatar-follow-text {
+            font-weight: 500;
+        }
+
+        .avatar-follow-count {
+            font-weight: 700;
+            color: var(--text-main);
+            transition: color 0.18s ease;
+        }
+
+        .avatar-follow-link:hover .avatar-follow-count {
+            color: #e56d6d;
+        }
+
+        .avatar-follow-divider {
+            color: rgba(255, 157, 157, 0.6);
+            font-size: 0.75rem;
+            font-weight: 600;
+            user-select: none;
+        }
+
         /* User Info (ชื่อของ user) */
         .profile-info {
             flex: 1;
@@ -537,10 +610,10 @@
             gap: 6px;
         }
 
-        /* Stats Bar (เริ่มที่ 0) */
+        /* Stats Bar (รีวิวทั้งหมด, รายการโปรด, ไลก์) */
         .profile-stats-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 14px;
             margin-top: 26px;
             padding-top: 22px;
@@ -556,10 +629,16 @@
             transition: all 0.25s ease;
         }
 
+        .stat-item.stat-item-clickable {
+            cursor: pointer;
+            position: relative;
+        }
+
         .stat-item:hover {
             transform: translateY(-2px);
             background: #ffffff;
-            box-shadow: 0 6px 18px rgba(255, 157, 157, 0.18);
+            box-shadow: 0 6px 18px rgba(255, 157, 157, 0.2);
+            border-color: #FF9D9D;
         }
 
         .stat-value {
@@ -574,6 +653,304 @@
             color: var(--text-muted);
             font-weight: 600;
             margin-top: 4px;
+        }
+
+        /* Follow Button on Profile */
+        .btn-profile-follow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #FF9D9D, #FFB095);
+            color: #ffffff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: var(--radius-pill);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 14px rgba(255, 157, 157, 0.4);
+            font-family: inherit;
+        }
+
+        .btn-profile-follow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(255, 157, 157, 0.55);
+        }
+
+        .btn-profile-follow.following {
+            background: rgba(255, 157, 157, 0.15);
+            color: #e25c5c;
+            border: 1.5px solid rgba(255, 157, 157, 0.5);
+            box-shadow: none;
+        }
+
+        .btn-profile-follow.following:hover {
+            background: #fee2e2;
+            color: #ef4444;
+            border-color: #fca5a5;
+        }
+
+        /* ==========================================================================
+           Followers / Following Modal Styles
+           ========================================================================== */
+        .follow-modal-card {
+            max-width: 480px;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+        }
+
+        .follow-modal-header {
+            padding: 18px 22px 14px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .follow-modal-nav-tabs {
+            display: flex;
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: var(--radius-pill);
+            flex: 1;
+        }
+
+        .follow-tab-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: var(--radius-pill);
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+
+        .follow-tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .follow-tab-btn.active {
+            background: #ffffff;
+            color: #e25c5c;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .follow-tab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1px 7px;
+            font-size: 0.72rem;
+            border-radius: var(--radius-pill);
+            background: rgba(0, 0, 0, 0.06);
+            color: inherit;
+            min-width: 20px;
+        }
+
+        .follow-tab-btn.active .follow-tab-badge {
+            background: rgba(255, 157, 157, 0.2);
+            color: #e25c5c;
+        }
+
+        .follow-modal-body {
+            padding: 18px 22px 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .follow-search-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 9px 14px;
+            margin-bottom: 14px;
+            transition: all 0.2s ease;
+            color: #94a3b8;
+        }
+
+        .follow-search-box:focus-within {
+            background: #ffffff;
+            border-color: #FF9D9D;
+            box-shadow: 0 0 0 3px rgba(255, 157, 157, 0.15);
+            color: #FF9D9D;
+        }
+
+        .follow-search-input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-family: inherit;
+            font-size: 0.86rem;
+            color: var(--text-main);
+            width: 100%;
+        }
+
+        .follow-list-panel {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .follow-list-panel.active {
+            display: flex;
+        }
+
+        .follow-user-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+        }
+
+        .follow-user-item:hover {
+            background: #fafafa;
+            border-color: #e2e8f0;
+            transform: translateX(2px);
+        }
+
+        .follow-user-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            flex: 1;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .follow-user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, #FF9D9D, #FFB095);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .follow-user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .follow-user-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .follow-user-name {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+
+        .follow-user-handle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-follow-pill {
+            padding: 6px 14px;
+            border-radius: var(--radius-pill);
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: var(--text-main);
+            font-size: 0.78rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-follow-pill:hover {
+            border-color: #FF9D9D;
+            background: rgba(255, 157, 157, 0.1);
+            color: #e25c5c;
+        }
+
+        .btn-follow-pill.following {
+            background: rgba(255, 157, 157, 0.15);
+            border-color: rgba(255, 157, 157, 0.4);
+            color: #e25c5c;
+        }
+
+        .btn-follow-pill.following:hover {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #ef4444;
+        }
+
+        .badge-self {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-weight: 600;
+            padding: 4px 10px;
+            background: #f1f5f9;
+            border-radius: var(--radius-pill);
+        }
+
+        .follow-empty-state {
+            padding: 36px 16px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .follow-empty-icon {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+
+        .follow-empty-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .follow-empty-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0;
         }
 
         /* Tab Navigation with Sliding Glider */
@@ -1027,27 +1404,42 @@
             <div class="profile-card-glow"></div>
             
             <div class="profile-header-layout">
-                <!-- จุดรูปโปรไฟล์ (Profile Avatar Point) -->
-                <div class="avatar-wrapper">
-                    {% if avatar_url %}
-                    <img src="{{ avatar_url }}" alt="{{ display_name }}" class="avatar-circle" style="object-fit: cover; border: 2.5px solid #FF9D9D;">
-                    {% else %}
-                    <div class="avatar-circle" title="รูปโปรไฟล์ {{ display_name }}">
-                        {{ display_name|slice:":1"|upper }}
+                <!-- จุดรูปโปรไฟล์และสถานะผู้ติดตาม (Profile Avatar & Follow Status) -->
+                <div class="avatar-column">
+                    <div class="avatar-wrapper">
+                        {% if avatar_url %}
+                        <img src="{{ avatar_url }}" alt="{{ display_name }}" class="avatar-circle" style="object-fit: cover; border: 2.5px solid #FF9D9D;">
+                        {% else %}
+                        <div class="avatar-circle" title="รูปโปรไฟล์ {{ display_name }}">
+                            {{ display_name|slice:":1"|upper }}
+                        </div>
+                        {% endif %}
+                        <!-- Online indicator dot -->
+                        <div class="avatar-online-dot" title="สถานะ: กำลังออนไลน์"></div>
+                        
+                        {% if is_own_profile %}
+                        <!-- Edit camera button (Opens Modal) - เฉพาะเจ้าของโปรไฟล์ -->
+                        <button type="button" class="avatar-camera-btn" onclick="openEditModal()" title="เปลี่ยนรูปโปรไฟล์ / แก้ไขข้อมูล">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                        </button>
+                        {% endif %}
                     </div>
-                    {% endif %}
-                    <!-- Online indicator dot -->
-                    <div class="avatar-online-dot" title="สถานะ: กำลังออนไลน์"></div>
-                    
-                    {% if is_own_profile %}
-                    <!-- Edit camera button (Opens Modal) - เฉพาะเจ้าของโปรไฟล์ -->
-                    <button type="button" class="avatar-camera-btn" onclick="openEditModal()" title="เปลี่ยนรูปโปรไฟล์ / แก้ไขข้อมูล">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                            <circle cx="12" cy="13" r="4"></circle>
-                        </svg>
-                    </button>
-                    {% endif %}
+
+                    <!-- สถานะผู้ติดตาม | กำลังติดตาม ใต้รูปโปรไฟล์ (คลิกเพื่อเปิดป๊อปอัป) -->
+                    <div class="avatar-follow-stats">
+                        <button type="button" class="avatar-follow-link" onclick="openFollowModal('followers')" title="คลิกเพื่อดูผู้ติดตาม">
+                            <span class="avatar-follow-text">ผู้ติดตาม</span>
+                            <span class="avatar-follow-count followers-count-val" id="profileFollowersCount">{{ followers_count }}</span>
+                        </button>
+                        <span class="avatar-follow-divider">|</span>
+                        <button type="button" class="avatar-follow-link" onclick="openFollowModal('following')" title="คลิกเพื่อดูกำลังติดตาม">
+                            <span class="avatar-follow-text">กำลังติดตาม</span>
+                            <span class="avatar-follow-count following-count-val" id="profileFollowingCount">{{ following_count }}</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- ชื่อของ User & ข้อมูลโปรไฟล์ -->
@@ -1069,6 +1461,16 @@
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                             </svg>
                             <span>แก้ไขโปรไฟล์</span>
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn-profile-follow {% if is_following_target %}following{% endif %}" id="btnProfileFollow" onclick="handleProfileToggleFollow({{ target_user_id }})">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                            <span id="btnProfileFollowText">{% if is_following_target %}กำลังติดตาม{% else %}ติดตาม{% endif %}</span>
                         </button>
                         {% endif %}
                     </div>
@@ -1095,8 +1497,8 @@
                 </div>
             </div>
 
-            <!-- Stats Bar -->
-            <div class="profile-stats-row" {% if not is_own_profile %}style="grid-template-columns: repeat(2, 1fr);"{% endif %}>
+            <!-- Stats Bar (รีวิวทั้งหมด, รายการโปรด, ไลก์) -->
+            <div class="profile-stats-row">
                 <div class="stat-item" onclick="switchProfileTab('reviews')" style="cursor: pointer;" title="คลิกเพื่อดูประวัติการรีวิว">
                     <div class="stat-value reviews-count-val">{{ reviews_count }}</div>
                     <div class="stat-label">📝 รีวิวทั้งหมด</div>
@@ -1114,10 +1516,10 @@
             </div>
         </section>
 
-        <!-- Navigation Tabs: Reviews & Wishlist -->
-        <nav class="profile-tabs-nav" id="profileTabsNav" aria-label="Profile Tabs" {% if not is_own_profile %}style="max-width: 320px; margin: 0 auto 24px;"{% endif %}>
+        <!-- Navigation Tabs: Reviews, Wishlist -->
+        <nav class="profile-tabs-nav" id="profileTabsNav" aria-label="Profile Tabs">
             <!-- Animated Sliding Glider Pill -->
-            <div class="profile-tab-glider" id="profileTabGlider" {% if not is_own_profile %}style="width: calc(100% - 12px); left: 6px;"{% endif %}></div>
+            <div class="profile-tab-glider" id="profileTabGlider"></div>
 
             <button type="button" class="tab-btn active" id="btnTabReviews" onclick="switchProfileTab('reviews')" data-tab="reviews">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1362,10 +1764,135 @@
         </div>
         {% endif %}
 
+        <!-- ==========================================================================
+             POPUP / MODAL สำหรับ "ผู้ติดตาม" และ "กำลังติดตาม"
+             ========================================================================== -->
+        <div class="modal-overlay" id="followModal" onclick="handleFollowBackdropClick(event)">
+            <div class="modal-card follow-modal-card" role="dialog" aria-modal="true" aria-labelledby="followModalTitle">
+                <div class="modal-header follow-modal-header">
+                    <div class="follow-modal-nav-tabs">
+                        <button type="button" class="follow-tab-btn active" id="tabBtnFollowers" onclick="switchFollowModalTab('followers')">
+                            <span>👥 ผู้ติดตาม</span>
+                            <span class="follow-tab-badge" id="modalFollowersBadge">{{ followers_count }}</span>
+                        </button>
+                        <button type="button" class="follow-tab-btn" id="tabBtnFollowing" onclick="switchFollowModalTab('following')">
+                            <span>🚶 กำลังติดตาม</span>
+                            <span class="follow-tab-badge" id="modalFollowingBadge">{{ following_count }}</span>
+                        </button>
+                    </div>
+                    <button type="button" class="btn-close-modal" onclick="closeFollowModal()" aria-label="ปิด">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="modal-body follow-modal-body">
+                    <!-- Search box inside follow modal -->
+                    <div class="follow-search-box">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="followSearchInput" class="follow-search-input" placeholder="ค้นหาชื่อผู้ใช้หรือชื่อเล่น..." oninput="filterFollowList()">
+                    </div>
+
+                    <!-- Panel: ผู้ติดตาม (Followers) -->
+                    <div class="follow-list-panel active" id="followPanelFollowers">
+                        {% for u in followers_list %}
+                        <div class="follow-user-item" data-name="{{ u.display_name|lower }}" data-username="{{ u.username|lower }}" id="follower-item-{{ u.id }}">
+                            <a href="{% url 'web:profile_user' u.username %}" class="follow-user-left">
+                                <div class="follow-user-avatar">
+                                    {% if u.avatar_url %}
+                                        <img src="{{ u.avatar_url }}" alt="{{ u.display_name }}">
+                                    {% else %}
+                                        <span>{{ u.display_name|slice:":1"|upper }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="follow-user-info">
+                                    <div class="follow-user-name">{{ u.display_name }}</div>
+                                    <div class="follow-user-handle">@{{ u.username }}</div>
+                                </div>
+                            </a>
+                            {% if u.is_self %}
+                                <span class="badge-self">ตัวคุณ</span>
+                            {% else %}
+                                <button type="button" class="btn-follow-pill {% if u.is_following %}following{% endif %}" onclick="toggleFollowInModal(event, {{ u.id }}, this)">
+                                    {% if u.is_following %}กำลังติดตาม{% else %}ติดตาม{% endif %}
+                                </button>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <div class="follow-empty-state" id="emptyStateFollowers">
+                            <div class="follow-empty-icon">👥</div>
+                            <div class="follow-empty-title">ยังไม่มีผู้ติดตาม</div>
+                            <p class="follow-empty-desc">เมื่อมีคนเริ่มติดตาม ข้อมูลจะปรากฏที่นี่</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Panel: กำลังติดตาม (Following) -->
+                    <div class="follow-list-panel" id="followPanelFollowing">
+                        {% for u in following_list %}
+                        <div class="follow-user-item" data-name="{{ u.display_name|lower }}" data-username="{{ u.username|lower }}" id="following-item-{{ u.id }}">
+                            <a href="{% url 'web:profile_user' u.username %}" class="follow-user-left">
+                                <div class="follow-user-avatar">
+                                    {% if u.avatar_url %}
+                                        <img src="{{ u.avatar_url }}" alt="{{ u.display_name }}">
+                                    {% else %}
+                                        <span>{{ u.display_name|slice:":1"|upper }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="follow-user-info">
+                                    <div class="follow-user-name">{{ u.display_name }}</div>
+                                    <div class="follow-user-handle">@{{ u.username }}</div>
+                                </div>
+                            </a>
+                            {% if u.is_self %}
+                                <span class="badge-self">ตัวคุณ</span>
+                            {% else %}
+                                <button type="button" class="btn-follow-pill {% if u.is_following %}following{% endif %}" onclick="toggleFollowInModal(event, {{ u.id }}, this)">
+                                    {% if u.is_following %}กำลังติดตาม{% else %}ติดตาม{% endif %}
+                                </button>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <div class="follow-empty-state" id="emptyStateFollowing">
+                            <div class="follow-empty-icon">🚶</div>
+                            <div class="follow-empty-title">ยังไม่ได้ติดตามใคร</div>
+                            <p class="follow-empty-desc">เริ่มสำรวจสถานที่ท่องเที่ยวและติดตามเพื่อนๆ ได้เลย</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
-    <!-- JavaScript for Tab Switching, Wishlist Management & Edit Profile Modal -->
+    <!-- JavaScript for Tab Switching, Wishlist Management, Edit Profile & Follow Modals -->
     <script>
+        const IS_OWN_PROFILE = {{ is_own_profile|yesno:"true,false" }};
+        const TARGET_USER_ID = {{ target_user_id|default:0 }};
+
+        function getCsrfToken() {
+            const tokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (tokenInput) return tokenInput.value;
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith('csrftoken=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue || '';
+        }
+
         function openEditModal() {
             const modal = document.getElementById('editProfileModal');
             if (!modal) return;
@@ -1390,6 +1917,171 @@
         function handleBackdropClick(event) {
             if (event.target.id === 'editProfileModal') {
                 closeEditModal();
+            }
+        }
+
+        /* Follow Modal Controls */
+        function openFollowModal(tab = 'followers') {
+            const modal = document.getElementById('followModal');
+            if (!modal) return;
+            switchFollowModalTab(tab);
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            const searchInput = document.getElementById('followSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                filterFollowList();
+            }
+        }
+
+        function closeFollowModal() {
+            const modal = document.getElementById('followModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            if (window.location.hash === '#followers' || window.location.hash === '#following') {
+                window.history.replaceState(null, null, window.location.pathname + '#reviews');
+            }
+        }
+
+        function handleFollowBackdropClick(event) {
+            if (event.target.id === 'followModal') {
+                closeFollowModal();
+            }
+        }
+
+        function switchFollowModalTab(tabName) {
+            const btnFollowers = document.getElementById('tabBtnFollowers');
+            const btnFollowing = document.getElementById('tabBtnFollowing');
+            const panelFollowers = document.getElementById('followPanelFollowers');
+            const panelFollowing = document.getElementById('followPanelFollowing');
+
+            if (tabName === 'followers') {
+                if (btnFollowers) btnFollowers.classList.add('active');
+                if (btnFollowing) btnFollowing.classList.remove('active');
+                if (panelFollowers) panelFollowers.classList.add('active');
+                if (panelFollowing) panelFollowing.classList.remove('active');
+            } else {
+                if (btnFollowing) btnFollowing.classList.add('active');
+                if (btnFollowers) btnFollowers.classList.remove('active');
+                if (panelFollowing) panelFollowing.classList.add('active');
+                if (panelFollowers) panelFollowers.classList.remove('active');
+            }
+
+            const searchInput = document.getElementById('followSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                filterFollowList();
+            }
+        }
+
+        function filterFollowList() {
+            const query = (document.getElementById('followSearchInput')?.value || '').trim().toLowerCase();
+            const activePanel = document.querySelector('.follow-list-panel.active');
+            if (!activePanel) return;
+
+            const items = activePanel.querySelectorAll('.follow-user-item');
+            items.forEach(item => {
+                const name = item.getAttribute('data-name') || '';
+                const username = item.getAttribute('data-username') || '';
+                if (!query || name.includes(query) || username.includes(query)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        async function toggleFollowInModal(event, userId, btn) {
+            if (event) event.stopPropagation();
+            if (!btn) return;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/users/${userId}/follow/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const isFollowing = data.is_following;
+                    btn.classList.toggle('following', isFollowing);
+                    btn.innerText = isFollowing ? 'กำลังติดตาม' : 'ติดตาม';
+
+                    // Update following count on profile if owner
+                    if (IS_OWN_PROFILE) {
+                        const countElements = document.querySelectorAll('.following-count-val');
+                        countElements.forEach(el => el.textContent = data.my_following_count);
+                        const modalBadge = document.getElementById('modalFollowingBadge');
+                        if (modalBadge) modalBadge.textContent = data.my_following_count;
+                    }
+
+                    // Sync other buttons matching this user id
+                    document.querySelectorAll('.btn-follow-pill').forEach(otherBtn => {
+                        if (otherBtn !== btn && otherBtn.getAttribute('onclick')?.includes(userId.toString())) {
+                            otherBtn.classList.toggle('following', isFollowing);
+                            otherBtn.innerText = isFollowing ? 'กำลังติดตาม' : 'ติดตาม';
+                        }
+                    });
+
+                    // If user is target of current profile page
+                    if (userId === TARGET_USER_ID) {
+                        const mainBtn = document.getElementById('btnProfileFollow');
+                        const mainBtnText = document.getElementById('btnProfileFollowText');
+                        if (mainBtn && mainBtnText) {
+                            mainBtn.classList.toggle('following', isFollowing);
+                            mainBtnText.innerText = isFollowing ? 'กำลังติดตาม' : 'ติดตาม';
+                        }
+                        const followersCountEls = document.querySelectorAll('.followers-count-val');
+                        followersCountEls.forEach(el => el.textContent = data.target_followers_count);
+                        const modalFollowersBadge = document.getElementById('modalFollowersBadge');
+                        if (modalFollowersBadge) modalFollowersBadge.textContent = data.target_followers_count;
+                    }
+                } else {
+                    alert(data.message || 'เกิดข้อผิดพลาดในการติดตาม');
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function handleProfileToggleFollow(userId) {
+            const btn = document.getElementById('btnProfileFollow');
+            const btnText = document.getElementById('btnProfileFollowText');
+            if (!btn) return;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/users/${userId}/follow/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const isFollowing = data.is_following;
+                    btn.classList.toggle('following', isFollowing);
+                    if (btnText) btnText.innerText = isFollowing ? 'กำลังติดตาม' : 'ติดตาม';
+
+                    // Update followers count of target profile on screen
+                    const followersCountEls = document.querySelectorAll('.followers-count-val');
+                    followersCountEls.forEach(el => el.textContent = data.target_followers_count);
+                    const modalBadge = document.getElementById('modalFollowersBadge');
+                    if (modalBadge) modalBadge.textContent = data.target_followers_count;
+                } else {
+                    alert(data.message || 'เกิดข้อผิดพลาด');
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                btn.disabled = false;
             }
         }
 
@@ -1436,6 +2128,7 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeEditModal();
+                closeFollowModal();
             }
         });
 
@@ -1497,6 +2190,12 @@
 
             if (window.location.hash === '#wishlist' || params.get('tab') === 'wishlist') {
                 switchProfileTab('wishlist');
+            } else if (window.location.hash === '#followers') {
+                switchProfileTab('reviews');
+                openFollowModal('followers');
+            } else if (window.location.hash === '#following') {
+                switchProfileTab('reviews');
+                openFollowModal('following');
             } else {
                 switchProfileTab('reviews');
             }
