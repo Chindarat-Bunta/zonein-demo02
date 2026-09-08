@@ -1229,22 +1229,6 @@ def place_detail(request, place_id=None, slug=None):
             }
         )
 
-    if not gallery_images:
-        gallery_images = [
-            {
-                "image_url": place.cover_image_url
-                or "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800&auto=format&fit=crop",
-                "caption": "รูปภาพสถานที่",
-            },
-            {
-                "image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=800&auto=format&fit=crop",
-                "caption": "เครื่องดื่มและของว่าง",
-            },
-            {
-                "image_url": "https://images.unsplash.com/photo-1497636577773-f1231844b336?q=80&w=800&auto=format&fit=crop",
-                "caption": "บรรยากาศโดยรอบ",
-            },
-        ]
 
     return render(
         request,
