@@ -196,6 +196,7 @@
         display: flex;
         flex-direction: column;
         gap: 1.35rem;
+        text-align: left;
     }
 
     .review-card {
@@ -208,6 +209,23 @@
         position: relative;
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
+        text-align: left;
+    }
+
+    .post-title-block {
+        text-align: left;
+        margin-top: 0.4rem;
+        margin-bottom: 0.5rem;
+        width: 100%;
+    }
+
+    .post-title-text {
+        text-align: left;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #1e242b;
+        line-height: 1.4;
+        margin: 0;
     }
 
     .review-card:hover {
@@ -338,6 +356,7 @@
         margin-bottom: 1.15rem;
         word-break: break-word;
         white-space: pre-line;
+        text-align: left;
     }
 
     .review-image-wrap {
@@ -524,12 +543,14 @@
         display: flex;
         flex-direction: column;
         gap: 0.85rem;
+        text-align: left;
     }
 
     .comments-list {
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
+        text-align: left;
     }
 
     .comment-item {
@@ -540,6 +561,7 @@
         padding: 0.75rem 0.85rem;
         border-radius: var(--radius-md);
         border: 1px solid rgba(255, 197, 170, 0.4);
+        text-align: left;
     }
 
     .comment-avatar {
@@ -560,25 +582,30 @@
     .comment-body {
         flex: 1;
         min-width: 0;
+        text-align: left;
     }
 
     .comment-meta {
         display: flex;
         align-items: center;
+        justify-content: flex-start;
         gap: 0.5rem;
         margin-bottom: 0.2rem;
         flex-wrap: wrap;
+        text-align: left;
     }
 
     .comment-author {
         font-size: 0.88rem;
         font-weight: 700;
         color: var(--text-main);
+        text-align: left;
     }
 
     .comment-time {
         font-size: 0.76rem;
         color: var(--text-dim);
+        text-align: left;
     }
 
     .comment-text {
@@ -586,6 +613,7 @@
         color: var(--text-main);
         line-height: 1.45;
         word-break: break-word;
+        text-align: left;
     }
 
     .comment-form {
@@ -593,6 +621,7 @@
         gap: 0.65rem;
         margin-top: 0.35rem;
         align-items: center;
+        text-align: left;
     }
 
     .comment-input {
@@ -1032,6 +1061,12 @@
                     </div>
                     {% endif %}
                 </a>
+                {% empty %}
+                <div class="empty-popular-state" style="grid-column: 1 / -1; width: 100%; padding: 2.2rem 1.5rem; text-align: center; background: var(--bg-card); border: 1.5px dashed var(--border-color); border-radius: var(--radius-lg); backdrop-filter: blur(12px);">
+                    <div style="font-size: 2.2rem; margin-bottom: 0.4rem;">📍</div>
+                    <h3 style="font-size: 1.08rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">ยังไม่มีโพสต์ไว้ก่อน</h3>
+                    <p style="font-size: 0.86rem; color: var(--text-muted); margin: 0;">ยังไม่มีสถานที่ยอดนิยมในขณะนี้ เมื่อผู้ใช้สร้างโพสต์ใหม่ สถานที่จะแสดงที่นี่</p>
+                </div>
                 {% endfor %}
             </div>
         </section>
@@ -1560,9 +1595,10 @@ async function loadRecentReviews(page = 1, append = false) {
 
         if (!append && reviews.length === 0) {
             container.innerHTML = `
-                <div class="state-box">
-                    <h3 style="color: #fff; margin-bottom: 0.5rem;">ยังไม่มีรีวิวล่าสุด</h3>
-                    <p>ร่วมแชร์ประสบการณ์การท่องเที่ยวคนแรกได้เลย!</p>
+                <div class="state-box" style="padding: 2.5rem 1.5rem; text-align: center; background: var(--bg-card); border: 1.5px dashed var(--border-color); border-radius: var(--radius-lg); backdrop-filter: blur(12px);">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📝</div>
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">ยังไม่มีโพสต์ไว้ก่อน</h3>
+                    <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">ร่วมแชร์ประสบการณ์ท่องเที่ยวคนแรกได้เลย!</p>
                 </div>
             `;
             if (loadMoreBtn) loadMoreBtn.style.display = "none";
@@ -1631,12 +1667,12 @@ function renderReviewCardHtml(r) {
     const commentsListHtml = comments.map(c => `
         <div class="comment-item" id="comment_${c.id}">
             <div class="comment-avatar">${(c.author?.username || 'U')[0].toUpperCase()}</div>
-            <div class="comment-body">
-                <div class="comment-meta">
-                    <span class="comment-author">${c.author?.username || 'นักเดินทาง'}</span>
-                    <span class="comment-time">${formatDateTimeWithRelative(c.created_at)}</span>
+            <div class="comment-body" style="text-align: left;">
+                <div class="comment-meta" style="text-align: left; justify-content: flex-start;">
+                    <span class="comment-author" style="text-align: left;">${c.author?.username || 'นักเดินทาง'}</span>
+                    <span class="comment-time" style="text-align: left;">${formatDateTimeWithRelative(c.created_at)}</span>
                 </div>
-                <div class="comment-text">${c.content}</div>
+                <div class="comment-text" style="text-align: left;">${c.content}</div>
             </div>
         </div>
     `).join("");
@@ -1646,19 +1682,19 @@ function renderReviewCardHtml(r) {
     const isFollowing = followedAuthorsSet.has(authorId);
 
     return `
-        <article class="review-card" id="review_${r.id}">
-            <div class="review-header">
-                <div class="review-author">
-                    <a href="/profile/${authorUsername}/" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+        <article class="review-card" id="review_${r.id}" style="text-align: left;">
+            <div class="review-header" style="text-align: left;">
+                <div class="review-author" style="text-align: left;">
+                    <a href="/profile/${authorUsername}/" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; text-align: left;">
                         <div class="author-avatar">${authorInitial}</div>
-                        <div>
-                            <div class="author-name-row">
-                                <span class="author-name" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">${authorUsername}</span>
+                        <div style="text-align: left;">
+                            <div class="author-name-row" style="text-align: left; justify-content: flex-start;">
+                                <span class="author-name" style="cursor: pointer; transition: color 0.2s; text-align: left;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">${authorUsername}</span>
                                 <button type="button" class="btn-follow ${isFollowing ? 'following' : ''}" data-author-id="${authorId}" onclick="toggleFollowAuthor(event, ${authorId}, '${authorUsername}')">
                                     ${isFollowing ? 'กำลังติดตาม' : 'ติดตาม'}
                                 </button>
                             </div>
-                            <div class="review-time">${dateFormatted}</div>
+                            <div class="review-time" style="text-align: left;">${dateFormatted}</div>
                         </div>
                     </a>
                 </div>
@@ -1666,17 +1702,17 @@ function renderReviewCardHtml(r) {
             </div>
 
             ${r.place ? `
-                <div class="post-title-block" style="margin-top: 0.4rem; margin-bottom: 0.5rem;">
-                    <h3 class="post-title-text" style="font-size: 1.05rem; font-weight: 700; color: #1e242b; line-height: 1.4; margin: 0;">${r.place.name}</h3>
+                <div class="post-title-block" style="text-align: left; margin-top: 0.4rem; margin-bottom: 0.5rem; width: 100%;">
+                    <h3 class="post-title-text" style="text-align: left; font-size: 1.05rem; font-weight: 700; color: #1e242b; line-height: 1.4; margin: 0;">${r.place.name}</h3>
                 </div>
             ` : ''}
 
-            <p class="review-content" id="review_content_${r.id}">${r.content || ''}</p>
+            <p class="review-content" id="review_content_${r.id}" style="text-align: left; width: 100%;">${r.content || ''}</p>
 
             ${imgHtml}
 
             ${r.place ? `
-                <div class="post-map-link-row" style="margin-top: 0.75rem; margin-bottom: 0.35rem;">
+                <div class="post-map-link-row" style="text-align: left; display: flex; justify-content: flex-start; margin-top: 0.75rem; margin-bottom: 0.35rem; width: 100%;">
                     <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.place.name + ' ' + (r.place.location || ''))}"
                        target="_blank"
                        rel="noopener noreferrer"
@@ -1695,7 +1731,7 @@ function renderReviewCardHtml(r) {
                 </div>
             ` : ''}
 
-            <div class="review-actions">
+            <div class="review-actions" style="text-align: left; display: flex; justify-content: flex-start;">
                 <button type="button" class="action-btn ${isLiked ? 'liked' : ''}" id="like_btn_${r.id}" onclick="toggleLikeReview(${r.id}, ${r.place ? r.place.id : 0})">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="${isLiked ? '#FF9D9D' : 'none'}" stroke="${isLiked ? '#FF9D9D' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -1723,11 +1759,11 @@ function renderReviewCardHtml(r) {
             </div>
 
             <!-- Comments Section -->
-            <div class="comments-section" id="comments_section_${r.id}">
-                <div class="comments-list" id="comments_list_${r.id}">
+            <div class="comments-section" id="comments_section_${r.id}" style="text-align: left;">
+                <div class="comments-list" id="comments_list_${r.id}" style="text-align: left;">
                     ${commentsListHtml}
                 </div>
-                <form class="comment-form" onsubmit="submitComment(event, ${r.id})">
+                <form class="comment-form" onsubmit="submitComment(event, ${r.id})" style="text-align: left; display: flex; align-items: center;">
                     <div class="comment-avatar">${IS_AUTHENTICATED ? CURRENT_USER_INITIAL : '🔒'}</div>
                     <input type="text" class="comment-input" id="comment_input_${r.id}" placeholder="${IS_AUTHENTICATED ? 'เขียนความคิดเห็นของคุณ...' : 'กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น...'}" ${IS_AUTHENTICATED ? 'required' : 'readonly style="cursor: pointer;" onclick="submitComment(event, ' + r.id + ')"'}>
                     <button type="submit" class="comment-submit-btn">${IS_AUTHENTICATED ? 'ส่ง' : 'เข้าสู่ระบบ'}</button>

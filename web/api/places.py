@@ -106,22 +106,23 @@ def places_list_create(request):
             cover_image_public_id=cover_image_public_id or "",
         )
 
-        # Create initial review in Neon if rating or description was provided
+        # Always create initial review in Neon so it appears in recent reviews feed on home page
         rating_val = payload.get("rating")
+        rating_int = 5
         if rating_val:
             try:
-                rating_int = int(rating_val)
-                if 1 <= rating_int <= 5:
-                    from web.models import Review
-                    Review.objects.create(
-                        place=place,
-                        user=user,
-                        rating=rating_int,
-                        comment=description or f"แชร์สถานที่ {place.name}",
-                        image_url=cover_image_url or "",
-                    )
+                rating_int = max(1, min(5, int(rating_val)))
             except (ValueError, TypeError):
-                pass
+                rating_int = 5
+
+        from web.models import Review
+        Review.objects.create(
+            place=place,
+            user=user,
+            rating=rating_int,
+            comment=description or f"แชร์สถานที่ {place.name}",
+            image_url=cover_image_url or "",
+        )
 
         return JsonResponse({
             "success": True,

@@ -658,7 +658,7 @@ body {
     margin: 0 auto;
     padding-left: 24px;
     padding-right: 24px;
-    text-align: center;
+    text-align: left;
 }
 
 .palette-preview-badge {

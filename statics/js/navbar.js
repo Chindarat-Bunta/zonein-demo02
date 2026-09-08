@@ -540,16 +540,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.removePostImage();
                 window.closeCreatePostModal();
 
-                // If detail URL provided, navigate smoothly
-                if (data.place && data.place.detail_url) {
-                    setTimeout(() => {
-                        window.location.href = data.place.detail_url;
-                    }, 650);
-                } else {
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 800);
-                }
+                // Go to home page immediately so the user sees their post on the home page
+                setTimeout(() => {
+                    if (window.location.pathname === '/' || window.location.pathname === '/home/') {
+                        window.location.href = '/?t=' + Date.now();
+                    } else {
+                        window.location.href = '/';
+                    }
+                }, 600);
             } else {
                 const errMsg = data.error || (data.message ? data.message : "เกิดข้อผิดพลาดในการบันทึกโพสต์ กรุณาลองใหม่อีกครั้ง");
                 if (errorBox && errorText) {
