@@ -896,6 +896,7 @@
                 {% for p in places|slice:":4" %}
                 <div class="popular-place-card-wrapper" style="position: relative;">
                     <a href="/places/{{ p.id }}/" class="popular-place-card" title="ดูรายละเอียดและแผนที่ของ {{ p.name }}">
+                        {% if p.cover_image_url or p.image_url %}
                         <div class="popular-place-image-wrap">
                             <img src="{{ p.cover_image_url|default:p.image_url }}" alt="{{ p.name }}" class="popular-place-img" loading="lazy">
                             <span class="popular-place-cat-badge">{{ p.get_category_display|default:'สถานที่ยอดนิยม' }}</span>
@@ -911,6 +912,27 @@
                                 <span>{{ p.address|default:p.location|default:'ทั่วไทย' }}</span>
                             </p>
                         </div>
+                        {% else %}
+                        <div class="popular-place-body no-image-body" style="padding: 1.2rem 1.15rem 1.1rem; min-height: 145px; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 0.65rem; padding-right: 34px;">
+                                    <span class="popular-place-cat-badge-inline" style="background: rgba(187, 241, 210, 0.95); color: #065f46; padding: 3px 10px; border-radius: 9999px; font-size: 0.74rem; font-weight: 700; border: 1px solid rgba(187, 241, 210, 0.8);">{{ p.get_category_display|default:'สถานที่ยอดนิยม' }}</span>
+                                    <span class="popular-place-rating-badge-inline" style="background: rgba(254, 243, 199, 0.95); color: #b45309; padding: 3px 8px; border-radius: 9999px; font-size: 0.78rem; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.4); flex-shrink: 0;">★ {{ p.average_rating|default:'4.8' }}</span>
+                                </div>
+                                <h3 class="popular-place-name" style="font-size: 1.02rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; line-height: 1.4;">{{ p.name }}</h3>
+                                {% if p.description %}
+                                <p class="popular-place-desc" style="font-size: 0.83rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 0.4rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">{{ p.description }}</p>
+                                {% endif %}
+                            </div>
+                            <p class="popular-place-loc" style="margin-top: 0.4rem;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span>{{ p.address|default:p.location|default:'ทั่วไทย' }}</span>
+                            </p>
+                        </div>
+                        {% endif %}
                     </a>
                     <button type="button"
                             class="card-wishlist-float-btn {% if p.id in wishlist_ids %}active{% endif %}"
