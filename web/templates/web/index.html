@@ -497,6 +497,314 @@
     }
 
 
+    /* ===================================================
+       Modern Share Modal Styles
+       =================================================== */
+    .share-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.68);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 3000;
+        padding: 1.25rem;
+        opacity: 0;
+        transition: opacity 0.24s ease;
+    }
+
+    .share-modal-overlay.show {
+        display: flex;
+        opacity: 1;
+    }
+
+    .share-modal-card {
+        background: #1e2740;
+        width: 100%;
+        max-width: 440px;
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 157, 157, 0.18);
+        padding: 1.75rem 1.5rem;
+        transform: translateY(20px) scale(0.96);
+        transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .share-modal-overlay.show .share-modal-card {
+        transform: translateY(0) scale(1);
+    }
+
+    .share-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 1.15rem;
+    }
+
+    .share-modal-title-group {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .share-modal-badge {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(255, 157, 157, 0.25), rgba(255, 197, 170, 0.3));
+        color: #FF9D9D;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .share-modal-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #f1f5f9;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .share-modal-subtitle {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin: 0.1rem 0 0;
+    }
+
+    .share-modal-close {
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #94a3b8;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.25rem;
+        line-height: 1;
+        transition: all 0.2s ease;
+    }
+
+    .share-modal-close:hover {
+        background: rgba(239, 68, 68, 0.25);
+        border-color: rgba(239, 68, 68, 0.5);
+        color: #ef4444;
+        transform: rotate(90deg);
+    }
+
+    .share-preview-card {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.75rem 0.95rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px;
+        margin-bottom: 1.25rem;
+    }
+
+    .share-preview-img-wrap {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #FF9D9D, #FFC5AA);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 1.3rem;
+    }
+
+    .share-preview-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .share-preview-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .share-preview-info h4 {
+        margin: 0 0 0.15rem;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .share-preview-info p {
+        margin: 0 0 0.1rem;
+        font-size: 0.78rem;
+        color: #94a3b8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .share-preview-url {
+        display: inline-block;
+        font-size: 0.72rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .share-channels-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .share-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .share-grid-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.45rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px;
+        padding: 0.8rem 0.5rem 0.7rem;
+        cursor: pointer;
+        transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        font-family: inherit;
+    }
+
+    .share-grid-btn:hover {
+        transform: translateY(-3px);
+        background: rgba(255,255,255,0.09);
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+        border-color: rgba(255,255,255,0.15);
+    }
+
+    .share-grid-btn span {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #cbd5e1;
+    }
+
+    .share-icon-wrap {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+        transition: transform 0.2s ease;
+    }
+
+    .share-grid-btn:hover .share-icon-wrap {
+        transform: scale(1.08);
+    }
+
+    .fb-icon { background: #1877F2; }
+    .ig-icon { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
+    .line-icon { background: #06C755; }
+    .x-icon { background: #000000; }
+    .wa-icon { background: #25D366; }
+    .more-icon { background: linear-gradient(135deg, #475569, #334155); }
+
+    .share-copy-box {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 14px;
+        padding: 0.35rem 0.4rem 0.35rem 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .share-copy-box:focus-within {
+        border-color: rgba(255, 157, 157, 0.5);
+        background: rgba(255,255,255,0.07);
+        box-shadow: 0 0 0 3px rgba(255, 157, 157, 0.12);
+    }
+
+    .share-link-input-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .share-link-icon { color: #64748b; flex-shrink: 0; }
+
+    .share-url-input {
+        width: 100%;
+        border: none;
+        background: transparent;
+        font-size: 0.82rem;
+        color: #94a3b8;
+        outline: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-family: inherit;
+    }
+
+    .btn-copy-share {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: linear-gradient(135deg, #FF9D9D, #FF8080);
+        color: #ffffff;
+        border: none;
+        border-radius: 10px;
+        padding: 0.55rem 0.95rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        font-family: inherit;
+    }
+
+    .btn-copy-share:hover {
+        background: linear-gradient(135deg, #FF8080, #ff6b6b);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(255, 157, 157, 0.35);
+    }
+
+    .btn-copy-share.copied {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .share-modal-hint {
+        margin-top: 0.75rem;
+        font-size: 0.8rem;
+        color: #94a3b8;
+        display: none;
+        padding: 0.5rem 0.75rem;
+        background: rgba(255,255,255,0.04);
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+
     /* Modal */
     .modal-overlay {
         position: fixed;
@@ -801,6 +1109,127 @@
             </form>
         </div>
     </div>
+    <!-- Modern Share Modal -->
+    <div class="share-modal-overlay" id="shareModalOverlay" onclick="closeShareModal(event)">
+        <div class="share-modal-card" onclick="event.stopPropagation()">
+            <div class="share-modal-header">
+                <div class="share-modal-title-group">
+                    <div class="share-modal-badge">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="share-modal-title">แชร์โพสต์นี้</h3>
+                        <p class="share-modal-subtitle">เลือกช่องทางที่คุณต้องการแชร์</p>
+                    </div>
+                </div>
+                <button type="button" class="share-modal-close" onclick="closeShareModal()" title="ปิด">&times;</button>
+            </div>
+
+            <!-- Preview Card -->
+            <div class="share-preview-card" id="sharePreviewCard">
+                <div class="share-preview-img-wrap" id="sharePreviewImgWrap">
+                    <img id="sharePreviewImg" src="" alt="พรีวิว">
+                </div>
+                <div class="share-preview-info">
+                    <h4 id="sharePreviewTitle">ZoneIn Post</h4>
+                    <p id="sharePreviewDesc">ดูโพสต์สถานที่ท่องเที่ยวนี้บน ZoneIn</p>
+                    <span class="share-preview-url" id="sharePreviewUrlText">zonein.app</span>
+                </div>
+            </div>
+
+            <!-- Social Share Channels -->
+            <div class="share-channels-label">แชร์ไปยังโซเชียลมีเดีย</div>
+            <div class="share-grid">
+                <!-- Facebook -->
+                <button type="button" class="share-grid-btn" onclick="shareToPlatform('facebook')" title="แชร์ไปที่ Facebook">
+                    <div class="share-icon-wrap fb-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                    </div>
+                    <span>Facebook</span>
+                </button>
+
+                <!-- Instagram -->
+                <button type="button" class="share-grid-btn" onclick="shareToPlatform('instagram')" title="แชร์ไปที่ Instagram">
+                    <div class="share-icon-wrap ig-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
+                    </div>
+                    <span>Instagram</span>
+                </button>
+
+                <!-- LINE -->
+                <button type="button" class="share-grid-btn" onclick="shareToPlatform('line')" title="แชร์ไปที่ LINE">
+                    <div class="share-icon-wrap line-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738-6.616 0-12 4.369-12 9.738 0 4.814 4.269 8.846 10.019 9.607.391.084.922.258 1.057.592.121.303.079.778.039 1.085l-.171 1.028c-.053.303-.242 1.186 1.039.645 1.281-.54 6.911-4.069 9.428-6.967 1.739-1.909 2.589-3.844 2.589-5.99zm-13.882 3.018h-2.148c-.378 0-.685-.307-.685-.685v-4.666c0-.378.307-.685.685-.685.378 0 .685.307.685.685v3.981h1.463c.378 0 .685.307.685.685 0 .378-.307.685-.685.685zm2.871-.685c0 .378-.307.685-.685.685s-.685-.307-.685-.685v-4.666c0-.378.307-.685.685-.685s.685.307.685.685v4.666zm5.176 0c0 .378-.307.685-.685.685-.246 0-.472-.133-.59-.345l-2.023-2.9v2.56c0 .378-.307.685-.685.685s-.685-.307-.685-.685v-4.666c0-.378.307-.685.685-.685.245 0 .47.132.589.344l2.024 2.903v-2.562c0-.378.307-.685.685-.685s.685.307.685.685v4.666zm3.328-3.296h-1.464v1.148h1.464c.378 0 .685.307.685.685 0 .378-.307.685-.685.685h-2.149c-.378 0-.685-.307-.685-.685v-4.666c0-.378.307-.685.685-.685h2.149c.378 0 .685.307.685.685 0 .378-.307.685-.685.685h-1.464v1.178h1.464c.378 0 .685.307.685.685 0 .378-.307.685-.685.685z"/>
+                        </svg>
+                    </div>
+                    <span>LINE</span>
+                </button>
+
+                <!-- X (Twitter) -->
+                <button type="button" class="share-grid-btn" onclick="shareToPlatform('x')" title="แชร์ไปที่ X">
+                    <div class="share-icon-wrap x-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                    </div>
+                    <span>X</span>
+                </button>
+
+                <!-- WhatsApp -->
+                <button type="button" class="share-grid-btn" onclick="shareToPlatform('whatsapp')" title="แชร์ไปที่ WhatsApp">
+                    <div class="share-icon-wrap wa-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.071.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.164.576 4.195 1.583 5.952l-1.683 6.148 6.294-1.651c1.7 1.016 3.693 1.551 5.806 1.551 6.627 0 12-5.373 12-12s-5.373-12-12-12z"/>
+                        </svg>
+                    </div>
+                    <span>WhatsApp</span>
+                </button>
+
+                <!-- Native / More -->
+                <button type="button" class="share-grid-btn" onclick="shareToPlatform('native')" title="ตัวเลือกแชร์เพิ่มเติม">
+                    <div class="share-icon-wrap more-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="1.5"></circle>
+                            <circle cx="19" cy="12" r="1.5"></circle>
+                            <circle cx="5" cy="12" r="1.5"></circle>
+                        </svg>
+                    </div>
+                    <span>เพิ่มเติม</span>
+                </button>
+            </div>
+
+            <!-- Copy Link Section -->
+            <div class="share-copy-box">
+                <div class="share-link-input-wrap">
+                    <svg class="share-link-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    <input type="text" id="shareUrlInput" class="share-url-input" readonly value="">
+                </div>
+                <button type="button" class="btn-copy-share" id="btnCopyShareLink" onclick="copyShareLink()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="copyShareIcon">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span id="copyShareText">คัดลอกลิงก์</span>
+                </button>
+            </div>
+
+            <div class="share-modal-hint" id="shareModalHint"></div>
+        </div>
+    </div>
     <!-- Toast notification -->
     <div id="toast" class="toast"></div>
 {% endblock %}
@@ -1019,6 +1448,9 @@ function formatRelativeTime(dateString) {
     return `เมื่อ ${diffYears} ปีที่แล้ว`;
 }
 
+// Global post data cache for share functionality
+let postsData = [];
+
 // Load Travel Posts Feed
 async function loadTravelPosts() {
     const container = document.getElementById("postsFeedList");
@@ -1030,6 +1462,7 @@ async function loadTravelPosts() {
         }
         const data = await res.json();
         const posts = data.results || data.posts || [];
+        postsData = posts; // cache for share modal
 
         const totalLikesEl = document.getElementById("totalFeedLikesCount");
         if (totalLikesEl && typeof data.total_likes !== "undefined") {
@@ -1650,35 +2083,189 @@ async function handleDeleteComment(postId, commentId) {
     }
 }
 
-// Share Post (Copy Link / Native Share)
-async function handleSharePost(postId) {
-    const postUrl = `${window.location.origin}${window.location.pathname}#post_${postId}`;
+// ===================================================
+// Modern Multi-Platform Sharing System
+// ===================================================
+let currentSharePayload = {
+    title: 'ZoneIn - โพสต์สถานที่ท่องเที่ยว',
+    text: 'ดูโพสต์และสถานที่ท่องเที่ยวยอดนิยมบน ZoneIn!',
+    url: window.location.href,
+    imageUrl: '',
+    placeName: ''
+};
 
-    if (navigator.share) {
+function handleSharePost(postId) {
+    const post = postsData ? postsData.find(p => p.id === postId) : null;
+    let title = 'ZoneIn - โพสต์สถานที่ท่องเที่ยว';
+    let text = 'ดูโพสต์สถานที่ท่องเที่ยวนี้บน ZoneIn!';
+    let url = `${window.location.origin}${window.location.pathname}#post_${postId}`;
+    let imageUrl = '';
+    let placeName = 'ZoneIn โพสต์สถานที่ท่องเที่ยว';
+
+    if (post) {
+        if (post.place_name) {
+            placeName = post.place_name;
+            title = `${post.place_name} — โพสต์บน ZoneIn`;
+        }
+        if (post.content) {
+            text = post.content.length > 110 ? post.content.substring(0, 110) + '...' : post.content;
+        }
+        imageUrl = post.image_url || '';
+    }
+
+    currentSharePayload = { title, text, url, imageUrl, placeName };
+    openShareModal(currentSharePayload);
+}
+
+function openShareModal(data) {
+    const modal = document.getElementById('shareModalOverlay');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('sharePreviewTitle');
+    const descEl = document.getElementById('sharePreviewDesc');
+    const urlTextEl = document.getElementById('sharePreviewUrlText');
+    const imgWrap = document.getElementById('sharePreviewImgWrap');
+    const inputEl = document.getElementById('shareUrlInput');
+    const hintEl = document.getElementById('shareModalHint');
+
+    if (titleEl) titleEl.innerText = data.placeName || data.title;
+    if (descEl) descEl.innerText = data.text;
+    if (inputEl) inputEl.value = data.url;
+    if (urlTextEl) {
         try {
-            await navigator.share({
-                title: "ZoneIn - แนะนำสถานที่ท่องเที่ยว",
-                url: postUrl,
-            });
-            return;
-        } catch (err) {
-            // User cancelled share dialog or not supported
+            const parsedUrl = new URL(data.url);
+            urlTextEl.innerText = parsedUrl.host + (parsedUrl.pathname !== '/' ? parsedUrl.pathname : '');
+        } catch { urlTextEl.innerText = data.url; }
+    }
+    if (hintEl) { hintEl.style.display = 'none'; hintEl.innerText = ''; }
+
+    resetCopyShareButton();
+
+    if (imgWrap) {
+        if (data.imageUrl) {
+            imgWrap.innerHTML = `<img id="sharePreviewImg" src="${data.imageUrl}" alt="พรีวิว" style="width:100%;height:100%;object-fit:cover;">`;
+        } else {
+            imgWrap.innerHTML = '<span style="font-size: 1.4rem;">📍</span>';
         }
     }
 
-    try {
-        await navigator.clipboard.writeText(postUrl);
-        showToast("คัดลอกลิงก์โพสต์เรียบร้อยแล้ว!");
-    } catch (e) {
-        const tempInput = document.createElement("input");
-        tempInput.value = postUrl;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand("copy");
-        document.body.removeChild(tempInput);
-        showToast("คัดลอกลิงก์โพสต์เรียบร้อยแล้ว!");
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeShareModal(event) {
+    if (event && event.target && event.target.closest('.share-modal-card')) return;
+    const modal = document.getElementById('shareModalOverlay');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
     }
 }
+
+function resetCopyShareButton() {
+    const btn = document.getElementById('btnCopyShareLink');
+    const text = document.getElementById('copyShareText');
+    const icon = document.getElementById('copyShareIcon');
+    if (!btn || !text) return;
+    btn.classList.remove('copied');
+    text.innerText = 'คัดลอกลิงก์';
+    if (icon) {
+        icon.innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>';
+    }
+}
+
+function copyShareLink() {
+    const url = currentSharePayload.url || window.location.href;
+    const btn = document.getElementById('btnCopyShareLink');
+    const text = document.getElementById('copyShareText');
+    const icon = document.getElementById('copyShareIcon');
+
+    const markCopied = () => {
+        if (btn && text) {
+            btn.classList.add('copied');
+            text.innerText = 'คัดลอกแล้ว! ✓';
+            if (icon) { icon.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>'; }
+            setTimeout(() => resetCopyShareButton(), 2500);
+        }
+        showToast('คัดลอกลิงก์เรียบร้อยแล้ว 🔗');
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(markCopied).catch(() => { fallbackCopy(url); markCopied(); });
+    } else {
+        fallbackCopy(url);
+        markCopied();
+    }
+}
+
+function fallbackCopy(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    textArea.style.top = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try { document.execCommand('copy'); } catch (e) { console.error('Fallback copy failed', e); }
+    document.body.removeChild(textArea);
+}
+
+function shareToPlatform(platform) {
+    const { title, text, url, placeName } = currentSharePayload;
+    const encodedUrl = encodeURIComponent(url);
+    const shareHeading = placeName ? `${placeName} — ZoneIn` : title;
+    const encodedTitle = encodeURIComponent(`${shareHeading}: ${text}`);
+    const popupOpts = 'width=620,height=560,toolbar=no,menubar=no,location=no,status=no';
+
+    switch (platform) {
+        case 'facebook': {
+            const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedTitle}`;
+            window.open(fbUrl, '_blank', popupOpts);
+            break;
+        }
+        case 'instagram': {
+            copyShareLink();
+            const hintEl = document.getElementById('shareModalHint');
+            if (hintEl) {
+                hintEl.innerHTML = '📸 คัดลอกลิงก์เรียบร้อยแล้ว! กำลังเปิด Instagram เพื่อแชร์ในสตอรี่หรือแชท...';
+                hintEl.style.display = 'block';
+            }
+            showToast('คัดลอกลิงก์แล้ว! เปิด Instagram เพื่อแชร์ได้เลย 📸');
+            setTimeout(() => window.open('https://www.instagram.com/', '_blank'), 500);
+            break;
+        }
+        case 'line': {
+            const lineUrl = `https://social-plugins.line.me/lineit/share?url=${encodedUrl}&text=${encodedTitle}`;
+            window.open(lineUrl, '_blank', popupOpts);
+            break;
+        }
+        case 'x': {
+            const xUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+            window.open(xUrl, '_blank', popupOpts);
+            break;
+        }
+        case 'whatsapp': {
+            const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareHeading + '\n' + text + '\n' + url)}`;
+            window.open(waUrl, '_blank', popupOpts);
+            break;
+        }
+        case 'native': {
+            if (navigator.share) {
+                navigator.share({ title: shareHeading, text, url }).catch(() => {});
+            } else {
+                copyShareLink();
+            }
+            break;
+        }
+        default:
+            copyShareLink();
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeShareModal();
+});
 
     </script>
 {% endblock %}
