@@ -214,7 +214,7 @@ def profile_view(request, username=None):
         .select_related("place")
         .order_by("-created_at")
     )
-    likes_count = PlaceLike.objects.filter(user=target_user).count()
+    likes_count = PlaceLike.objects.filter(place__author=target_user).count()
 
     if is_own_profile:
         wishlist_qs = (
@@ -856,6 +856,20 @@ def api_recent_reviews(request):
     except (PageNotAnInteger, EmptyPage):
         page_obj = paginator.page(1)
 
+    user_liked_places = set()
+    if request.user.is_authenticated:
+        user_liked_places = set(
+            PlaceLike.objects.filter(user=request.user).values_list("place_id", flat=True)
+        )
+
+    place_ids = [r.place_id for r in page_obj if r.place_id]
+    place_likes_counts = dict(
+        PlaceLike.objects.filter(place_id__in=place_ids)
+        .values("place_id")
+        .annotate(cnt=Count("id"))
+        .values_list("place_id", "cnt")
+    )
+
     results = []
     for review in page_obj:
         comments_data = [
@@ -874,6 +888,10 @@ def api_recent_reviews(request):
             }
             for c in review.comments.all()
         ]
+        place_id = review.place_id if review.place else None
+        is_liked = (place_id in user_liked_places) if (place_id and request.user.is_authenticated) else False
+        likes_count = place_likes_counts.get(place_id, 0) if place_id else 0
+
         results.append(
             {
                 "id": review.id,
@@ -896,6 +914,8 @@ def api_recent_reviews(request):
                     "location": review.place.location,
                     "category": review.place.category,
                 },
+                "is_liked": is_liked,
+                "likes_count": likes_count,
                 "comments": comments_data,
                 "comments_count": len(comments_data),
             }
@@ -910,6 +930,23 @@ def api_recent_reviews(request):
             "has_next": page_obj.has_next(),
         }
     )
+
+
+@csrf_exempt
+def api_place_like_toggle(request, place_id):
+    """POST /api/places/<place_id>/like/ or /api/posts/<place_id>/like/"""
+    from web.api.likes import like_toggle
+    return like_toggle(request, place_id)
+
+
+@csrf_exempt
+def api_review_like_toggle(request, review_id):
+    """POST /api/reviews/<review_id>/like/"""
+    from web.api.likes import like_toggle
+    review = get_object_or_404(Review, pk=review_id)
+    if review.place:
+        return like_toggle(request, review.place.id)
+    return JsonResponse({"success": False, "error": "Review has no associated place"}, status=400)
 
 
 @csrf_exempt

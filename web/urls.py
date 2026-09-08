@@ -64,6 +64,21 @@ urlpatterns = [
         views.api_wishlist_toggle_view,
         name="api_wishlist_toggle",
     ),
+    path(
+        "api/places/<int:place_id>/like/",
+        views.api_place_like_toggle,
+        name="api_place_like",
+    ),
+    path(
+        "api/posts/<int:place_id>/like/",
+        views.api_place_like_toggle,
+        name="api_post_like",
+    ),
+    path(
+        "api/reviews/<int:review_id>/like/",
+        views.api_review_like_toggle,
+        name="api_review_like",
+    ),
     # Place Details
     path("places/<int:place_id>/", views.place_detail, name="place_detail_id"),
     path("places/<slug:slug>/", views.place_detail, name="place_detail"),

@@ -1327,6 +1327,9 @@ async function loadRecentReviews(page = 1, append = false) {
 
         reviews.forEach(r => {
             reviewsDataMap.set(r.id, r);
+            if (typeof r.is_liked !== 'undefined') {
+                likedReviewsMap.set(r.id, r.is_liked);
+            }
         });
 
         if (!append && reviews.length === 0) {
@@ -1373,8 +1376,8 @@ function renderReviewCardHtml(r) {
     const authorInitial = (r.author?.username || "T")[0].toUpperCase();
     const stars = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
     const dateFormatted = formatDateTimeWithRelative(r.created_at);
-    const isLiked = likedReviewsMap.get(r.id) || false;
-    const fakeLikes = 12 + (r.id * 5) + (isLiked ? 1 : 0);
+    const isLiked = (typeof r.is_liked !== 'undefined') ? r.is_liked : (likedReviewsMap.get(r.id) || false);
+    const likesCount = (typeof r.likes_count !== 'undefined') ? r.likes_count : (isLiked ? 1 : 0);
     const comments = r.comments || [];
     const commentsCount = comments.length;
 
@@ -1452,11 +1455,11 @@ function renderReviewCardHtml(r) {
             ${imgHtml}
 
             <div class="review-actions">
-                <button type="button" class="action-btn ${isLiked ? 'liked' : ''}" id="like_btn_${r.id}" onclick="toggleLikeReview(${r.id})">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="${isLiked ? '#ec4899' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button type="button" class="action-btn ${isLiked ? 'liked' : ''}" id="like_btn_${r.id}" onclick="toggleLikeReview(${r.id}, ${r.place ? r.place.id : 0})">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="${isLiked ? '#FF9D9D' : 'none'}" stroke="${isLiked ? '#FF9D9D' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                     </svg>
-                    <span id="like_count_${r.id}">${fakeLikes}</span>
+                    <span id="like_count_${r.id}">${likesCount}</span>
                 </button>
 
                 <button type="button" class="action-btn" onclick="toggleCommentsSection(${r.id})">
@@ -1579,27 +1582,109 @@ async function submitComment(event, reviewId) {
     }
 }
 
-function toggleLikeReview(reviewId) {
+async function toggleLikeReview(reviewId, placeId) {
     if (!IS_AUTHENTICATED) {
-        showToast("กรุณาเข้าสู่ระบบเพื่อกดไลก์รีวิว ❤️");
+        showToast("กรุณาเข้าสู่ระบบเพื่อกดไลก์ ❤️");
+        setTimeout(() => {
+            window.location.href = `/signin/?next=${encodeURIComponent(window.location.pathname + window.location.hash)}`;
+        }, 800);
         return;
     }
-    const isLiked = likedReviewsMap.get(reviewId) || false;
+
+    if (!placeId) {
+        const cached = reviewsDataMap.get(reviewId);
+        placeId = cached?.place?.id;
+    }
+
     const btn = document.getElementById(`like_btn_${reviewId}`);
     const countEl = document.getElementById(`like_count_${reviewId}`);
     if (!btn || !countEl) return;
 
-    let count = parseInt(countEl.innerText) || 0;
-    if (isLiked) {
-        likedReviewsMap.set(reviewId, false);
-        btn.classList.remove("liked");
-        countEl.innerText = Math.max(0, count - 1);
-        showToast("ยกเลิกการถูกใจ");
-    } else {
-        likedReviewsMap.set(reviewId, true);
-        btn.classList.add("liked");
-        countEl.innerText = count + 1;
-        showToast("ถูกใจรีวิวนี้แล้ว");
+    const wasLiked = btn.classList.contains("liked");
+    const currentCount = parseInt(countEl.innerText) || 0;
+    const newLiked = !wasLiked;
+    const newCount = Math.max(0, currentCount + (newLiked ? 1 : -1));
+
+    // Optimistic UI update
+    btn.classList.toggle("liked", newLiked);
+    const svg = btn.querySelector("svg");
+    if (svg) {
+        svg.setAttribute("fill", newLiked ? "#FF9D9D" : "none");
+        svg.setAttribute("stroke", newLiked ? "#FF9D9D" : "currentColor");
+    }
+    countEl.innerText = newCount;
+    likedReviewsMap.set(reviewId, newLiked);
+
+    const targetUrl = placeId ? `/api/places/${placeId}/like/` : `/api/reviews/${reviewId}/like/`;
+
+    try {
+        const res = await fetch(targetUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+            }
+        });
+
+        if (res.status === 401) {
+            showToast("กรุณาเข้าสู่ระบบก่อนกดไลก์");
+            setTimeout(() => {
+                window.location.href = `/signin/?next=${encodeURIComponent(window.location.pathname + window.location.hash)}`;
+            }, 800);
+            return;
+        }
+
+        const data = await res.json();
+        if (data.success || data.liked !== undefined) {
+            const isNowLiked = (data.is_liked !== undefined) ? data.is_liked : data.liked;
+            const totalLikes = (data.total_likes !== undefined) ? data.total_likes : (data.likes_count !== undefined ? data.likes_count : newCount);
+
+            likedReviewsMap.set(reviewId, isNowLiked);
+            countEl.innerText = totalLikes;
+            btn.classList.toggle("liked", isNowLiked);
+            if (svg) {
+                svg.setAttribute("fill", isNowLiked ? "#FF9D9D" : "none");
+                svg.setAttribute("stroke", isNowLiked ? "#FF9D9D" : "currentColor");
+            }
+            showToast(isNowLiked ? "ถูกใจโพสต์นี้แล้ว ❤️" : "ยกเลิกการถูกใจแล้ว");
+
+            // Sync other cards for the same place in the feed if any
+            if (placeId) {
+                reviewsDataMap.forEach((rev, rId) => {
+                    if (rev.place && rev.place.id === placeId && rId !== reviewId) {
+                        rev.is_liked = isNowLiked;
+                        rev.likes_count = totalLikes;
+                        likedReviewsMap.set(rId, isNowLiked);
+                        const otherBtn = document.getElementById(`like_btn_${rId}`);
+                        const otherCount = document.getElementById(`like_count_${rId}`);
+                        if (otherBtn) {
+                            otherBtn.classList.toggle("liked", isNowLiked);
+                            const otherSvg = otherBtn.querySelector("svg");
+                            if (otherSvg) {
+                                otherSvg.setAttribute("fill", isNowLiked ? "#FF9D9D" : "none");
+                                otherSvg.setAttribute("stroke", isNowLiked ? "#FF9D9D" : "currentColor");
+                            }
+                        }
+                        if (otherCount) {
+                            otherCount.innerText = totalLikes;
+                        }
+                    }
+                });
+            }
+        } else {
+            throw new Error(data.message || "Failed");
+        }
+    } catch (err) {
+        console.error("Like toggle error:", err);
+        // Rollback on error
+        btn.classList.toggle("liked", wasLiked);
+        if (svg) {
+            svg.setAttribute("fill", wasLiked ? "#FF9D9D" : "none");
+            svg.setAttribute("stroke", wasLiked ? "#FF9D9D" : "currentColor");
+        }
+        countEl.innerText = currentCount;
+        likedReviewsMap.set(reviewId, wasLiked);
+        showToast("เกิดข้อผิดพลาดในการกดไลก์");
     }
 }
 
