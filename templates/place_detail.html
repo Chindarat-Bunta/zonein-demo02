@@ -122,12 +122,14 @@
                     <span>{{ place.address|default:"อำเภอแม่ริม จังหวัดเชียงใหม่" }}</span>
                 </div>
             </div>
-            <!-- Photo Gallery Showcase -->
+            <!-- Photo Gallery Showcase (แสดงเมื่อมีรูปภาพเท่านั้น) -->
+            {% if place.cover_image_url or gallery_images %}
             <div class="place-gallery-grid">
                 <div class="gallery-main-photo">
-                    <img src="{{ place.cover_image_url|default:'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1400&auto=format&fit=crop' }}"
+                    <img src="{{ place.cover_image_url|default:gallery_images.0.image_url }}"
                          alt="{{ place.name }}">
                 </div>
+                {% if gallery_images %}
                 <div class="gallery-side-thumbs">
                     {% for img in gallery_images|slice:":2" %}
                         <div class="thumb-photo-box">
@@ -136,43 +138,27 @@
                                 <div class="thumb-caption">{{ img.caption }}</div>
                             {% endif %}
                         </div>
-                    {% empty %}
-                        <div class="thumb-photo-box">
-                            <img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=800&auto=format&fit=crop"
-                                 alt="เครื่องดื่ม">
-                            <div class="thumb-caption">เครื่องดื่มและของว่าง</div>
-                        </div>
-                        <div class="thumb-photo-box">
-                            <img src="https://images.unsplash.com/photo-1497636577773-f1231844b336?q=80&w=800&auto=format&fit=crop"
-                                 alt="บรรยากาศ">
-                            <div class="thumb-caption">บรรยากาศธรรมชาติ</div>
-                        </div>
                     {% endfor %}
                 </div>
+                {% endif %}
             </div>
+            {% endif %}
             <!-- Content Layout: 2 Columns (Main Content + Sidebar Map) -->
             <div class="place-content-layout">
                 <!-- LEFT COLUMN: Description & Reviews Section -->
                 <div class="place-main-column">
-                    <!-- Card 1: เกี่ยวกับสถานที่ (About & Atmosphere) -->
+                    <!-- Card 1: เกี่ยวกับสถานที่ (แสดงเมื่อมีรายละเอียด) -->
+                    {% if place.description %}
                     <section class="content-card">
                         <div class="card-title-row">
                             <div class="card-icon">🌿</div>
                             <h2>เกี่ยวกับสถานที่และบรรยากาศ</h2>
                         </div>
                         <p class="place-desc-text">
-                            {{ place.description|default:"ฟาร์มสเตย์และคาเฟ่สไตล์ญี่ปุ่นกลางหุบเขา โอบล้อมด้วยธรรมชาติ ทิวทัศน์ภูเขา และอากาศบริสุทธิ์ มีมุมถ่ายรูปสไตล์มินิมอลแบบชนบทญี่ปุ่น เสิร์ฟเครื่องดื่มกาแฟดริป ชาเขียวมัทฉะแท้ และเบเกอรี่โฮมเมดสูตรเฉพาะ เหมาะสำหรับการพักผ่อน สูดอากาศดี และหลีกหนีความวุ่นวาย" }}
+                            {{ place.description }}
                         </p>
-                        <!-- Highlights Pills -->
-                        <div class="highlights-grid">
-                            <div class="highlight-pill"><span class="icon">☕</span><span>กาแฟดริปพิเศษ</span></div>
-                            <div class="highlight-pill"><span class="icon">⛰️</span><span>วิวภูเขาพาโนรามา</span></div>
-                            <div class="highlight-pill"><span class="icon">🚗</span><span>มีที่จอดรถสะดวก</span></div>
-                            <div class="highlight-pill"><span class="icon">📶</span><span>ฟรี Wi-Fi</span></div>
-                            <div class="highlight-pill"><span class="icon">🐾</span><span>Pet Friendly</span></div>
-                            <div class="highlight-pill"><span class="icon">📸</span><span>มุมถ่ายรูปสวย</span></div>
-                        </div>
                     </section>
+                    {% endif %}
                     <!-- Card 2: พื้นที่สำหรับดึงคอมเมนต์รีวิวมาแสดง (Reviews & Comments Section) -->
                     <section class="content-card" id="reviewsSection">
                         <div class="card-title-row">

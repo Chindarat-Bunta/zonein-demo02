@@ -1462,19 +1462,34 @@ function renderReviewCardHtml(r) {
             </div>
 
             ${r.place ? `
-                <a href="/places/${r.place.id}/" class="review-place-tag" title="คลิกเพื่อดูรายละเอียดและแผนที่ของ ${r.place.name}">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
-                    <span>${r.place.name} (${r.place.location || 'ที่ตั้ง'})</span>
-                    <span style="font-size: 0.75rem; opacity: 0.85; margin-left: 2px;">➔</span>
-                </a>
+                <div class="post-title-block" style="margin-top: 0.4rem; margin-bottom: 0.5rem;">
+                    <h3 class="post-title-text" style="font-size: 1.05rem; font-weight: 700; color: #1e242b; line-height: 1.4; margin: 0;">${r.place.name}</h3>
+                </div>
             ` : ''}
 
             <p class="review-content" id="review_content_${r.id}">${r.content || ''}</p>
 
             ${imgHtml}
+
+            ${r.place ? `
+                <div class="post-map-link-row" style="margin-top: 0.75rem; margin-bottom: 0.35rem;">
+                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.place.name + ' ' + (r.place.location || ''))}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="btn-post-map-location"
+                       style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(255, 157, 157, 0.12); border: 1px solid rgba(255, 157, 157, 0.35); border-radius: 9999px; color: #d94646; font-size: 0.82rem; font-weight: 600; text-decoration: none; transition: all 0.2s ease;"
+                       onmouseover="this.style.background='rgba(255, 157, 157, 0.22)'; this.style.borderColor='#FF9D9D';"
+                       onmouseout="this.style.background='rgba(255, 157, 157, 0.12)'; this.style.borderColor='rgba(255, 157, 157, 0.35)';"
+                       title="เปิดนำทางบน Google Maps">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span>📍 ${r.place.name} (${r.place.location || 'ศรีสะเกษ'})</span>
+                        <span style="font-size: 0.75rem; opacity: 0.85;">➔</span>
+                    </a>
+                </div>
+            ` : ''}
 
             <div class="review-actions">
                 <button type="button" class="action-btn ${isLiked ? 'liked' : ''}" id="like_btn_${r.id}" onclick="toggleLikeReview(${r.id}, ${r.place ? r.place.id : 0})">
