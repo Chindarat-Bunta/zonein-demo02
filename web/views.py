@@ -1078,6 +1078,96 @@ def api_review_detail(request, review_id):
     )
 
 
+@csrf_exempt
+@require_http_methods(["POST", "PATCH"])
+def api_edit_review(request, review_id):
+    """
+    PATCH /api/reviews/<review_id>/edit/
+    แก้ไขข้อความรีวิวและ/หรือคะแนน
+    เฉพาะเจ้าของรีวิว หรือเจ้าของโพสต์ (place.author) เท่านั้น
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({"success": False, "error": "กรุณาเข้าสู่ระบบ"}, status=401)
+
+    review = get_object_or_404(Review.objects.select_related("user", "place__author"), pk=review_id)
+
+    # Permission check: review owner OR place author
+    is_review_owner = review.user == request.user
+    is_place_owner = (
+        review.place.author is not None and review.place.author == request.user
+    )
+    if not (is_review_owner or is_place_owner):
+        return JsonResponse({"success": False, "error": "คุณไม่มีสิทธิ์แก้ไขรีวิวนี้"}, status=403)
+
+    try:
+        payload = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        payload = request.POST.dict()
+
+    new_comment = payload.get("comment", "").strip()
+    new_rating_raw = payload.get("rating")
+
+    if not new_comment:
+        return JsonResponse({"success": False, "error": "กรุณากรอกข้อความรีวิว"}, status=400)
+
+    if new_rating_raw is not None:
+        try:
+            new_rating = int(new_rating_raw)
+            if not (1 <= new_rating <= 5):
+                raise ValueError
+            review.rating = new_rating
+        except (ValueError, TypeError):
+            return JsonResponse({"success": False, "error": "คะแนนต้องอยู่ระหว่าง 1-5"}, status=400)
+
+    review.comment = new_comment
+    review.save(update_fields=["comment", "rating", "updated_at"])
+
+    return JsonResponse({
+        "success": True,
+        "message": "แก้ไขรีวิวเรียบร้อยแล้ว",
+        "review": {
+            "id": review.id,
+            "comment": review.comment,
+            "rating": review.rating,
+            "updated_at": review.updated_at.isoformat(),
+        },
+        "new_average_rating": review.place.average_rating,
+        "total_reviews": review.place.review_count,
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST", "DELETE"])
+def api_delete_review(request, review_id):
+    """
+    DELETE /api/reviews/<review_id>/delete/
+    ลบรีวิว — เฉพาะเจ้าของรีวิว หรือเจ้าของโพสต์เท่านั้น
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({"success": False, "error": "กรุณาเข้าสู่ระบบ"}, status=401)
+
+    review = get_object_or_404(Review.objects.select_related("user", "place__author"), pk=review_id)
+
+    # Permission check
+    is_review_owner = review.user == request.user
+    is_place_owner = (
+        review.place.author is not None and review.place.author == request.user
+    )
+    if not (is_review_owner or is_place_owner):
+        return JsonResponse({"success": False, "error": "คุณไม่มีสิทธิ์ลบรีวิวนี้"}, status=403)
+
+    place = review.place
+    review.delete()
+
+    return JsonResponse({
+        "success": True,
+        "message": "ลบรีวิวเรียบร้อยแล้ว",
+        "new_average_rating": place.average_rating,
+        "total_reviews": place.review_count,
+    })
+
+
+
 def api_places_view(request):
     """Places search API for search filter."""
     wishlist_ids = get_user_wishlist_place_ids(request)
@@ -1186,6 +1276,7 @@ def place_detail(request, place_id=None, slug=None):
                 "rating": r.rating,
                 "created_at": r.created_at.strftime("%d %b %Y"),
                 "comment": r.comment,
+                "review_id": r.id,
             }
         )
 

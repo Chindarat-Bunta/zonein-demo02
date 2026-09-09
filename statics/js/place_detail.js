@@ -390,11 +390,212 @@ document.addEventListener('DOMContentLoaded', () => {
         return div.innerHTML;
     }
 
-    // Close share modal on Escape key
+    // ---- Edit star picker (inside modal) ----
+    const editStarPicker = document.getElementById('editStarPicker');
+    const editRatingInput = document.getElementById('editRatingInput');
+    const editStarHint = document.getElementById('editStarHint');
+    const starHintsEdit = {
+        1: '1 ดาว — ปรับปรุง', 2: '2 ดาว — พอใช้',
+        3: '3 ดาว — ปานกลาง', 4: '4 ดาว — ดีมาก',
+        5: '5 ดาว — ยอดเยี่ยม ประทับใจมาก'
+    };
+    if (editStarPicker) {
+        const editStars = editStarPicker.querySelectorAll('.star-picker-star');
+        function setEditStars(rating) {
+            editStars.forEach(s => {
+                const v = parseInt(s.getAttribute('data-value'), 10);
+                s.classList.toggle('selected', v <= rating);
+                s.classList.remove('hovered');
+            });
+            if (editStarHint) editStarHint.textContent = starHintsEdit[rating] || '';
+            if (editRatingInput) editRatingInput.value = rating;
+        }
+        editStars.forEach(star => {
+            star.addEventListener('mouseenter', () => {
+                const v = parseInt(star.getAttribute('data-value'), 10);
+                editStars.forEach(s => s.classList.toggle('hovered', parseInt(s.getAttribute('data-value'), 10) <= v));
+            });
+            star.addEventListener('mouseleave', () => {
+                editStars.forEach(s => s.classList.remove('hovered'));
+                setEditStars(parseInt(editRatingInput.value, 10) || 5);
+            });
+            star.addEventListener('click', () => {
+                setEditStars(parseInt(star.getAttribute('data-value'), 10));
+            });
+        });
+        window._setEditStars = setEditStars;
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.review-menu-wrap')) {
+            document.querySelectorAll('.review-dropdown').forEach(d => d.style.display = 'none');
+        }
+    });
+
+    // Close share/edit modal on Escape key
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeShareModal();
+        if (e.key === 'Escape') {
+            closeShareModal();
+            closeEditReviewModal();
+        }
     });
 });
+
+// =============================================================
+// 3-dot Review Menu Functions (global scope for onclick attrs)
+// =============================================================
+function toggleReviewMenu(btn) {
+    const dropdown = btn.nextElementSibling;
+    // Close all other open dropdowns first
+    document.querySelectorAll('.review-dropdown').forEach(d => {
+        if (d !== dropdown) d.style.display = 'none';
+    });
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+// Track which card is being edited
+let _editingCard = null;
+
+function openEditReview(card) {
+    // Close dropdown
+    const dd = card.querySelector('.review-dropdown');
+    if (dd) dd.style.display = 'none';
+
+    _editingCard = card;
+    const comment = card.getAttribute('data-review-comment') || '';
+    const rating = parseInt(card.getAttribute('data-review-rating'), 10) || 5;
+
+    const textarea = document.getElementById('editReviewTextarea');
+    if (textarea) textarea.value = comment;
+
+    if (typeof window._setEditStars === 'function') window._setEditStars(rating);
+
+    const modal = document.getElementById('editReviewModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => { if (textarea) textarea.focus(); }, 100);
+    }
+}
+
+function closeEditReviewModal(event) {
+    if (event && event.target !== document.getElementById('editReviewModal')) return;
+    const modal = document.getElementById('editReviewModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
+async function submitEditReview() {
+    if (!_editingCard) return;
+    const reviewId = _editingCard.getAttribute('data-review-id');
+    if (!reviewId) { showDetailToast('ไม่พบ ID รีวิว'); return; }
+
+    const textarea = document.getElementById('editReviewTextarea');
+    const ratingInput = document.getElementById('editRatingInput');
+    const comment = textarea ? textarea.value.trim() : '';
+    const rating = ratingInput ? parseInt(ratingInput.value, 10) : 5;
+
+    if (!comment) { showDetailToast('กรุณากรอกข้อความรีวิว'); return; }
+
+    const btn = document.getElementById('btnSaveEdit');
+    if (btn) { btn.disabled = true; btn.textContent = 'กำลังบันทึก...'; }
+
+    try {
+        const res = await fetch(`/api/reviews/${reviewId}/edit/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ comment, rating }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            // Update card in-place
+            const bodyEl = _editingCard.querySelector('.review-body-text');
+            if (bodyEl) bodyEl.textContent = comment;
+            _editingCard.setAttribute('data-review-comment', comment);
+            _editingCard.setAttribute('data-review-rating', rating);
+
+            // Update stars display
+            const starsEl = _editingCard.querySelector('.review-stars-score');
+            if (starsEl) starsEl.textContent = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+
+            // Update average rating counters
+            if (typeof data.new_average_rating !== 'undefined') {
+                document.querySelectorAll('.score-number').forEach(el => el.textContent = data.new_average_rating);
+            }
+
+            // Close modal
+            const modal = document.getElementById('editReviewModal');
+            if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
+            showDetailToast('แก้ไขรีวิวเรียบร้อยแล้ว ✅');
+        } else {
+            showDetailToast(data.error || 'เกิดข้อผิดพลาด');
+        }
+    } catch (err) {
+        console.error('[Zone In] Edit review error:', err);
+        showDetailToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> บันทึกการแก้ไข'; }
+    }
+}
+
+async function confirmDeleteReview(card) {
+    if (!card) return;
+    const dd = card.querySelector('.review-dropdown');
+    if (dd) dd.style.display = 'none';
+
+    const reviewId = card.getAttribute('data-review-id');
+    if (!reviewId) { showDetailToast('ไม่พบ ID รีวิว'); return; }
+
+    if (!confirm('ต้องการลบรีวิวนี้หรือไม่?')) return;
+
+    try {
+        const res = await fetch(`/api/reviews/${reviewId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        const data = await res.json();
+        if (data.success) {
+            card.style.transition = 'opacity 0.3s, transform 0.3s';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.97)';
+            setTimeout(() => card.remove(), 300);
+
+            if (typeof data.new_average_rating !== 'undefined') {
+                document.querySelectorAll('.score-number').forEach(el => el.textContent = data.new_average_rating);
+            }
+            if (typeof data.total_reviews !== 'undefined') {
+                document.querySelectorAll('.score-total-reviews').forEach(el => el.textContent = `จาก ${data.total_reviews} นักเดินทาง`);
+            }
+            showDetailToast('ลบรีวิวเรียบร้อยแล้ว 🗑️');
+        } else {
+            showDetailToast(data.error || 'เกิดข้อผิดพลาด');
+        }
+    } catch (err) {
+        console.error('[Zone In] Delete review error:', err);
+        showDetailToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    }
+}
+
+function getCsrfToken() {
+    const name = 'csrftoken';
+    for (const cookie of document.cookie.split(';')) {
+        const c = cookie.trim();
+        if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+    }
+    return '';
+}
+
+
 
 // ===================================================
 // Modern Multi-Platform Sharing System
