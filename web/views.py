@@ -1189,26 +1189,6 @@ def place_detail(request, place_id=None, slug=None):
             }
         )
 
-    # If place has fewer reviews, provide realistic sample reviews to complement
-    if len(reviews) == 0:
-        reviews = [
-            {
-                "user_name": "แพรวา พาเที่ยว",
-                "username": "ploy_wanderer",
-                "user_avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop",
-                "rating": 5,
-                "created_at": "3 วันที่แล้ว",
-                "comment": "บรรยากาศดีมากๆ กาแฟดี มัทฉะเข้มข้น แนะนำให้มาช่วงเช้า แสงสวยและคนไม่เยอะค่ะ การเดินทางสะดวก ถนนดีตลอดทาง",
-            },
-            {
-                "user_name": "ธนภัทร นักสำรวจ",
-                "username": "somchai_explorer",
-                "user_avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop",
-                "rating": 5,
-                "created_at": "1 สัปดาห์ที่แล้ว",
-                "comment": "วิวสวยแบบพาโนรามา พนักงานน่ารักมาก ที่จอดรถสะดวกสบาย จะกลับมาซ้ำแน่นอนครับ",
-            },
-        ]
 
     db_images = place.images.all()
     gallery_images = []

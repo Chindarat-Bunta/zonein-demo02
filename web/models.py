@@ -187,10 +187,35 @@ class Place(models.Model):
     def price_level(self):
         return 2
 
+    def _get_location_sibling_ids(self):
+        """
+        หา ID ของสถานที่ทั้งหมดที่มีพิกัด GPS ใกล้กับตัวเอง (ห่างไม่เกิน ~11 เมตร)
+        ใช้สำหรับรวมคะแนนรีวิวจากโพสต์หลายอันที่ปักหมุดเดียวกัน
+        """
+        if not self.latitude or not self.longitude:
+            return [self.id]
+        TOLERANCE = 0.0001  # ≈ 11 เมตร
+        siblings = Place.objects.filter(
+            latitude__isnull=False,
+            longitude__isnull=False,
+            latitude__range=(
+                float(self.latitude) - TOLERANCE,
+                float(self.latitude) + TOLERANCE,
+            ),
+            longitude__range=(
+                float(self.longitude) - TOLERANCE,
+                float(self.longitude) + TOLERANCE,
+            ),
+        ).values_list("id", flat=True)
+        return list(siblings) if siblings else [self.id]
+
     @property
     def average_rating(self):
-        """Calculate average rating from reviews (returns 0.0 if no reviews)."""
-        aggregate = self.reviews.aggregate(models.Avg("rating"))
+        """คำนวณคะแนนเฉลี่ยจากทุกรีวิวของสถานที่ที่ปักหมุดเดียวกัน"""
+        sibling_ids = self._get_location_sibling_ids()
+        aggregate = Review.objects.filter(place_id__in=sibling_ids).aggregate(
+            models.Avg("rating")
+        )
         avg = aggregate.get("rating__avg")
         return round(float(avg), 1) if avg is not None else 0.0
 
@@ -200,11 +225,36 @@ class Place(models.Model):
 
     @property
     def review_count(self):
-        return self.reviews.count()
+        """จำนวนรีวิวทั้งหมดจากสถานที่ที่ปักหมุดเดียวกัน"""
+        sibling_ids = self._get_location_sibling_ids()
+        return Review.objects.filter(place_id__in=sibling_ids).count()
 
     @property
     def reviews_count(self):
-        return self.reviews.count()
+        return self.review_count
+
+    @property
+    def rating_breakdown(self):
+        """สัดส่วนคะแนนรีวิว 5-1 ดาว รวมจากทุกสถานที่ที่ปักหมุดเดียวกัน"""
+        sibling_ids = self._get_location_sibling_ids()
+        all_reviews = Review.objects.filter(place_id__in=sibling_ids)
+        total = all_reviews.count()
+        counts = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+        for r in all_reviews:
+            if r.rating in counts:
+                counts[r.rating] += 1
+        breakdown = []
+        for star in range(5, 0, -1):
+            cnt = counts[star]
+            pct = round((cnt / total * 100)) if total > 0 else 0
+            breakdown.append(
+                {
+                    "star": star,
+                    "count": cnt,
+                    "percentage": pct,
+                }
+            )
+        return breakdown
 
     @property
     def likes_count(self):
@@ -220,7 +270,6 @@ class Place(models.Model):
         if self.latitude and self.longitude:
             return f"https://www.google.com/maps/dir/?api=1&destination={self.latitude},{self.longitude}"
         import urllib.parse
-
         dest = f"{self.name} {self.address}".strip()
         return f"https://www.google.com/maps/dir/?api=1&destination={urllib.parse.quote_plus(dest)}"
 
@@ -230,7 +279,6 @@ class Place(models.Model):
         if self.latitude and self.longitude:
             return f"https://www.google.com/maps/search/?api=1&query={self.latitude},{self.longitude}"
         import urllib.parse
-
         dest = f"{self.name} {self.address}".strip()
         return f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote_plus(dest)}"
 
@@ -240,30 +288,8 @@ class Place(models.Model):
         if self.latitude and self.longitude:
             return f"https://maps.google.com/maps?q={self.latitude},{self.longitude}&hl=th&z=15&output=embed"
         import urllib.parse
-
         dest = f"{self.name} {self.address}".strip()
         return f"https://maps.google.com/maps?q={urllib.parse.quote_plus(dest)}&hl=th&z=15&output=embed"
-
-    @property
-    def rating_breakdown(self):
-        """Calculate review counts and percentages for each star rating (5 down to 1)"""
-        total = self.reviews_count
-        counts = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
-        for r in self.reviews.all():
-            if r.rating in counts:
-                counts[r.rating] += 1
-        breakdown = []
-        for star in range(5, 0, -1):
-            cnt = counts[star]
-            pct = round((cnt / total * 100)) if total > 0 else 0
-            breakdown.append(
-                {
-                    "star": star,
-                    "count": cnt,
-                    "percentage": pct,
-                }
-            )
-        return breakdown
 
 
 # ==============================================================================

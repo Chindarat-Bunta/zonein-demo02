@@ -1,11 +1,9 @@
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from web.models import Place, Review
 from .views import parse_json_body
 
 
-@csrf_exempt
 def place_reviews_list_create(request, place_id):
     """
     Endpoint: /api/places/<place_id>/reviews/
@@ -45,6 +43,12 @@ def place_reviews_list_create(request, place_id):
         })
 
     elif request.method == "POST":
+        if not request.user.is_authenticated:
+            return JsonResponse(
+                {"success": False, "error": "unauthorized", "message": "กรุณาเข้าสู่ระบบก่อนเขียนรีวิว"},
+                status=401,
+            )
+
         payload = parse_json_body(request)
         if payload is None:
             payload = request.POST.dict()
@@ -60,12 +64,6 @@ def place_reviews_list_create(request, place_id):
         comment = payload.get("comment", "").strip()
         if not comment:
             return JsonResponse({"success": False, "error": "กรุณากรอกข้อความรีวิว"}, status=400)
-
-        if not request.user.is_authenticated:
-            return JsonResponse(
-                {"success": False, "error": "unauthorized", "message": "กรุณาเข้าสู่ระบบก่อนเขียนรีวิว"},
-                status=401,
-            )
 
         user = request.user
 
@@ -86,6 +84,13 @@ def place_reviews_list_create(request, place_id):
             image_url=image_url
         )
 
+        # Build reviewer info to return to the frontend
+        profile = getattr(user, "profile", None)
+        display_name = (
+            profile.get_display_name() if profile else user.username
+        )
+        avatar_url = profile.avatar_url if profile else ""
+
         return JsonResponse({
             "success": True,
             "message": "บันทึกรีวิวเรียบร้อยแล้ว",
@@ -95,9 +100,14 @@ def place_reviews_list_create(request, place_id):
                 "rating": review.rating,
                 "comment": review.comment,
                 "created_at": review.created_at.isoformat(),
+                # Extra fields for the JS card builder
+                "user_name": display_name,
+                "username": user.username,
+                "avatar_url": avatar_url,
             },
             "new_average_rating": place.average_rating,
             "total_reviews": place.review_count,
         }, status=201)
 
     return JsonResponse({"success": False, "error": f"Method {request.method} not allowed"}, status=405)
+

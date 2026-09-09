@@ -77,14 +77,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. Review Submission (Optimistic UI + Event Hook for other branch integration)
+    // 3. Review Submission — Real API call with fetch POST
     const reviewForm = document.getElementById('reviewForm');
     const reviewTextarea = document.getElementById('reviewTextarea');
     const reviewsList = document.getElementById('reviewsList');
 
+    /** Helper: read a cookie value by name (needed for Django CSRF) */
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            for (const cookie of document.cookie.split(';')) {
+                const c = cookie.trim();
+                if (c.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(c.slice(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     if (reviewForm) {
-        reviewForm.addEventListener('submit', (e) => {
+        reviewForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+
             if (typeof window.IS_AUTHENTICATED !== 'undefined' && !window.IS_AUTHENTICATED) {
                 showDetailToast('กรุณาเข้าสู่ระบบก่อนเขียนรีวิว ✍️');
                 setTimeout(() => {
@@ -92,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 800);
                 return;
             }
+
             const text = reviewTextarea ? reviewTextarea.value.trim() : '';
             const rating = selectedRatingInput ? parseInt(selectedRatingInput.value, 10) : 5;
 
@@ -101,44 +118,109 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Create optimistic review card
-            const newCard = document.createElement('div');
-            newCard.className = 'review-item-card';
-            newCard.style.animation = 'fadeIn 0.4s ease';
-
-            const starString = '★'.repeat(rating) + '☆'.repeat(5 - rating);
-
-            newCard.innerHTML = `
-                <div class="review-author-row">
-                    <div class="author-profile-box">
-                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop" class="author-avatar" alt="User Avatar">
-                        <div class="author-meta">
-                            <span class="author-name">คุณ (เพิ่งเขียนรีวิว)</span>
-                            <span class="author-date">เมื่อสักครู่นี้</span>
-                        </div>
-                    </div>
-                    <div class="review-stars-score" title="${rating} จาก 5 ดาว">${starString}</div>
-                </div>
-                <div class="review-body-text">${escapeHtml(text)}</div>
-            `;
-
-            if (reviewsList) {
-                reviewsList.insertBefore(newCard, reviewsList.firstChild);
+            const placeId = reviewsList ? reviewsList.getAttribute('data-place-id') : null;
+            if (!placeId) {
+                showDetailToast('ไม่พบข้อมูลสถานที่ กรุณารีเฟรชหน้าใหม่');
+                return;
             }
 
-            if (reviewTextarea) reviewTextarea.value = '';
-            showDetailToast('ส่งรีวิวของคุณเรียบร้อยแล้ว ขอบคุณที่ร่วมแบ่งปันครับ! 🎉');
+            // Disable submit button while sending
+            const submitBtn = document.getElementById('btnSubmitReview');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.querySelector('span').textContent = 'กำลังส่ง...';
+            }
 
-            // Dispatch custom event for external branch API listeners (e.g. feature/api-setup)
-            const placeId = reviewsList ? reviewsList.getAttribute('data-place-id') : null;
-            const eventPayload = {
-                placeId: placeId,
-                rating: rating,
-                comment: text,
-                createdAt: new Date().toISOString()
-            };
-            window.dispatchEvent(new CustomEvent('zonein:reviewCreated', { detail: eventPayload }));
-            console.log('[Zone In]: Review created & event dispatched:', eventPayload);
+            try {
+                const res = await fetch(`/api/places/${placeId}/reviews/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ rating, comment: text }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    // Build a real review card from server response
+                    const newCard = document.createElement('div');
+                    newCard.className = 'review-item-card';
+                    newCard.style.animation = 'fadeIn 0.4s ease';
+                    const starString = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+
+                    // Prefer server-returned user info; fall back to generic label
+                    const reviewer = data.review || {};
+                    const avatarUrl = reviewer.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop';
+                    const displayName = reviewer.user_name || 'คุณ (เพิ่งเขียนรีวิว)';
+                    const profileUrl = reviewer.username ? `/profile/${reviewer.username}/` : '#';
+
+                    newCard.innerHTML = `
+                        <div class="review-author-row">
+                            <div class="author-profile-box">
+                                <a href="${profileUrl}" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;">
+                                    <img src="${escapeHtml(avatarUrl)}" class="author-avatar" alt="${escapeHtml(displayName)}">
+                                    <div class="author-meta">
+                                        <span class="author-name">${escapeHtml(displayName)}</span>
+                                        <span class="author-date">เมื่อสักครู่นี้</span>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="review-stars-score" title="${rating} จาก 5 ดาว">${starString}</div>
+                        </div>
+                        <div class="review-body-text">${escapeHtml(text)}</div>
+                    `;
+
+                    // Remove "no reviews yet" placeholder if it exists
+                    const emptyPlaceholder = reviewsList.querySelector('p[style*="text-align: center"]');
+                    if (emptyPlaceholder) emptyPlaceholder.closest('.review-item-card')?.remove();
+
+                    reviewsList.insertBefore(newCard, reviewsList.firstChild);
+
+                    if (reviewTextarea) reviewTextarea.value = '';
+
+                    // Update average rating display if returned by server
+                    if (typeof data.new_average_rating !== 'undefined') {
+                        document.querySelectorAll('.score-number').forEach(el => {
+                            el.textContent = data.new_average_rating;
+                        });
+                        document.querySelectorAll('[data-rating-badge]').forEach(el => {
+                            el.textContent = data.new_average_rating;
+                        });
+                    }
+                    if (typeof data.total_reviews !== 'undefined') {
+                        document.querySelectorAll('.score-total-reviews').forEach(el => {
+                            el.textContent = `จาก ${data.total_reviews} นักเดินทาง`;
+                        });
+                    }
+
+                    showDetailToast('ส่งรีวิวของคุณเรียบร้อยแล้ว ขอบคุณที่ร่วมแบ่งปันครับ! 🎉');
+
+                    // Fire custom event for other integrations
+                    window.dispatchEvent(new CustomEvent('zonein:reviewCreated', {
+                        detail: { placeId, rating, comment: text, createdAt: new Date().toISOString() }
+                    }));
+
+                } else if (res.status === 401) {
+                    showDetailToast('กรุณาเข้าสู่ระบบก่อนเขียนรีวิว ✍️');
+                    setTimeout(() => {
+                        window.location.href = `/signin/?next=${encodeURIComponent(window.location.pathname)}`;
+                    }, 1000);
+                } else {
+                    showDetailToast(data.error || data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+                }
+
+            } catch (err) {
+                console.error('[Zone In] Review submit error:', err);
+                showDetailToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.querySelector('span').textContent = 'ส่งรีวิวของคุณ';
+                }
+            }
         });
     }
 
