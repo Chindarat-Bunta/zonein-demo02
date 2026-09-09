@@ -447,7 +447,7 @@ def home_view(request, active_tab="home"):
     }
 
     # Render web/home.html for main page with interactive tabs and search panel
-    return render(request, "web/home.html", context)
+    return render(request, "home.html", context)
 
 
 def search_view(request):

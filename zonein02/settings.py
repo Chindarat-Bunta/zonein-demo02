@@ -99,7 +99,7 @@ ROOT_URLCONF = "zonein02.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates", BASE_DIR / "web" / "templates"],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -175,7 +175,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 STATICFILES_DIRS = [
     BASE_DIR / "statics",
-    BASE_DIR / "static",
 ]
 
 # ==============================================================================
