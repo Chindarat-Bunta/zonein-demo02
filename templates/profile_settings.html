@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -10,6 +11,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Design System Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
     <style>
         :root {
@@ -48,76 +52,11 @@
             font-family: var(--font-family);
             color: var(--text-main);
             padding-bottom: 60px;
-        }
-
-        /* App Bar */
-        .app-bar {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(255, 197, 170, 0.35);
-            padding: 14px 24px;
-        }
-
-        .app-bar-inner {
-            max-width: 860px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .brand-link {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--text-main);
-        }
-
-        .brand-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(255, 157, 157, 0.4);
-        }
-
-        .brand-text {
-            font-size: 1.35rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-        }
-
-        .brand-text span {
-            color: #FF9D9D;
-        }
-
-        .header-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            border-radius: var(--radius-pill);
-            background: var(--primary-light);
-            border: 1px solid rgba(255, 157, 157, 0.4);
-            color: #e56d6d;
-            font-size: 0.82rem;
-            font-weight: 700;
-        }
-
         /* Container */
         .page-container {
             max-width: 860px;
-            margin: 32px auto 0 auto;
-            padding: 0 20px;
+            margin: 0 auto;
+            padding: 105px 20px 60px;
         }
 
         /* Alert Messages */
@@ -536,24 +475,8 @@
 </head>
 <body>
 
-    <!-- App Header -->
-    <header class="app-bar">
-        <div class="app-bar-inner">
-            <a href="{% url 'web:profile_settings' %}" class="brand-link">
-                <div class="brand-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
-                    </svg>
-                </div>
-                <div class="brand-text">Zone<span>In</span></div>
-            </a>
-            
-            <div class="header-chip">
-                <span>⚙️ ตั้งค่าโปรไฟล์</span>
-            </div>
-        </div>
-    </header>
+    <!-- Unified Top Navbar -->
+    {% include 'components/navbar.html' %}
 
     <!-- Main Container -->
     <main class="page-container">
@@ -771,5 +694,8 @@
             }
         });
     </script>
+    <!-- JavaScript from Dev -->
+    <script src="{% static 'js/navbar.js' %}"></script>
 </body>
 </html>
+

@@ -61,18 +61,29 @@ def place_reviews_list_create(request, place_id):
         if not comment:
             return JsonResponse({"success": False, "error": "กรุณากรอกข้อความรีวิว"}, status=400)
 
-        user = request.user if request.user.is_authenticated else None
-        if not user:
-            user, _ = User.objects.get_or_create(
-                username="reviewer_demo",
-                defaults={"first_name": "Reviewer", "email": "reviewer@zonein.app"}
+        if not request.user.is_authenticated:
+            return JsonResponse(
+                {"success": False, "error": "unauthorized", "message": "กรุณาเข้าสู่ระบบก่อนเขียนรีวิว"},
+                status=401,
             )
+
+        user = request.user
+
+        # Handle review photo upload to Cloudinary
+        image_url = payload.get("image_url", "").strip()
+        image_file = request.FILES.get("image") or request.FILES.get("photo")
+        if image_file:
+            from web.services import upload_image
+            upload_res = upload_image(image_file, folder="zonein/reviews")
+            if upload_res.get("success"):
+                image_url = upload_res.get("url")
 
         review = Review.objects.create(
             place=place,
             user=user,
             rating=rating,
-            comment=comment
+            comment=comment,
+            image_url=image_url
         )
 
         return JsonResponse({

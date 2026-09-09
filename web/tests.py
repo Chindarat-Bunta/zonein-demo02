@@ -42,12 +42,18 @@ class ProfileSettingsTests(TestCase):
         self.profile = UserProfile.objects.get(user=self.user)
 
     def test_profile_settings_view_get(self):
+        self.client.force_login(self.user)
         response = self.client.get("/profile/settings/")
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "profile_settings.html")
-        self.assertContains(response, "แก้ไขข้อมูลส่วนตัว")
-        self.assertContains(response, "ชื่อเล่น / ชื่อที่แสดง")
-        self.assertContains(response, "ข้อความ Bio แนะนำตัว")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/profile/?edit=1", response.url)
+
+        # Follow redirect to profile page
+        profile_response = self.client.get("/profile/?edit=1")
+        self.assertEqual(profile_response.status_code, 200)
+        self.assertTemplateUsed(profile_response, "profile.html")
+        self.assertContains(profile_response, "แก้ไขข้อมูลส่วนตัว")
+        self.assertContains(profile_response, "ชื่อเล่น / ชื่อที่แสดง")
+        self.assertContains(profile_response, "ข้อความ Bio แนะนำตัว")
 
     @patch("web.services.cloudinary_service.cloudinary.uploader.upload")
     def test_profile_settings_post_with_avatar(self, mock_upload):
@@ -104,6 +110,35 @@ class ProfileSettingsTests(TestCase):
         self.assertTrue(data["success"])
         self.assertEqual(data["nickname"], "นกน้อยพาเที่ยว")
         self.assertEqual(data["avatar_url"], "https://res.cloudinary.com/zonein/image/upload/v123/api_avatar.jpg")
+
+
+class AuthRedirectTests(TestCase):
+    """Test suite for authentication redirects (logout, signin, signup)."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username="testauthuser", password="password123"
+        )
+
+    def test_logout_redirects_to_home(self):
+        self.client.force_login(self.user)
+        response = self.client.get("/logout/")
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
+
+    def test_authenticated_user_visiting_signin_redirects_to_home(self):
+        self.client.force_login(self.user)
+        response = self.client.get("/signin/")
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
+
+    def test_authenticated_user_visiting_signup_redirects_to_home(self):
+        self.client.force_login(self.user)
+        response = self.client.get("/signup/")
+        self.assertRedirects(response, "/", fetch_redirect_response=False)
+
+    def test_anonymous_user_can_view_signin(self):
+        response = self.client.get("/signin/")
+        self.assertEqual(response.status_code, 200)
 
 
 class PlaceModelTests(TestCase):
@@ -203,10 +238,11 @@ class HomePageAPITests(TestCase):
 
     def test_api_add_comment(self):
         """Adding a comment to a review should succeed."""
+        self.client.force_login(self.user1)
         review = Review.objects.first()
         response = self.client.post(
             reverse("web:api_add_comment", args=[review.id]),
-            data=json.dumps({"content": "สวยมากครับ!", "username": "somchai"}),
+            data=json.dumps({"content": "สวยมากครับ!"}),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)
@@ -446,6 +482,11 @@ class ModelsSchemaTests(TestCase):
 class WishlistTestCase(TestCase):
     def setUp(self):
         self.client = Client()
+        self.user = User.objects.create_user(
+            username="wishlist_tester",
+            email="tester@example.com",
+            password="testpassword123",
+        )
         self.place = Place.objects.create(
             name="Nana Coffee Roasters",
             slug="nana-coffee-roasters",
@@ -454,13 +495,24 @@ class WishlistTestCase(TestCase):
             description="คาเฟ่สวย กาแฟดี",
         )
 
-    def test_wishlist_page_renders_empty_state(self):
-        response = self.client.get(reverse("web:wishlist"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "รายการสถานที่โปรด (My Wishlist)")
-        self.assertContains(response, "ยังไม่มีสถานที่ในรายการโปรด")
+    def test_wishlist_unauthenticated_restrictions(self):
+        """Unauthenticated user cannot view wishlist directly and receives 401 on toggle."""
+        res_page = self.client.get(reverse("web:wishlist"))
+        self.assertEqual(res_page.status_code, 302)
+        self.assertIn("/signin/?next=/wishlist/", res_page.url)
 
-    def test_api_wishlist_toggle_add_and_remove(self):
+        res_api = self.client.post(
+            reverse("web:api_wishlist_toggle"),
+            data=json.dumps({"place_id": self.place.id}),
+            content_type="application/json",
+        )
+        self.assertEqual(res_api.status_code, 401)
+
+    def test_api_wishlist_toggle_and_profile_integration(self):
+        """Authenticated user toggles wishlist, and it properly reflects in profile."""
+        self.client.login(username="wishlist_tester", password="testpassword123")
+
+        # 1. Add to wishlist
         response = self.client.post(
             reverse("web:api_wishlist_toggle"),
             data=json.dumps({"place_id": self.place.id}),
@@ -473,7 +525,13 @@ class WishlistTestCase(TestCase):
         self.assertTrue(data["is_wishlisted"])
         self.assertEqual(data["total_count"], 1)
 
-        # 2. Remove from wishlist
+        # 2. Check profile page contains the wishlisted place
+        res_profile = self.client.get(reverse("web:profile"))
+        self.assertEqual(res_profile.status_code, 200)
+        self.assertContains(res_profile, "Nana Coffee Roasters")
+        self.assertContains(res_profile, "wishlist-count-val")
+
+        # 3. Remove from wishlist
         response2 = self.client.post(
             reverse("web:api_wishlist_toggle"),
             data=json.dumps({"place_id": self.place.id}),

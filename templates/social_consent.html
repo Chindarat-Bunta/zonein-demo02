@@ -1,0 +1,424 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ขออนุญาตเข้าถึงและจัดเก็บข้อมูล ({{ disclosures.provider_name }}) — Zone In</title>
+    <meta name="description" content="แจ้งข้อมูลที่จัดเก็บและความยินยอมในการเข้าสู่ระบบผ่าน {{ disclosures.provider_name }} ตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล (PDPA)">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        :root {
+            --primary: #FF9D9D;
+            --primary-dark: #f08383;
+            --primary-light: #FFECEC;
+            --bg-base: #FAF9F6;
+            --text-main: #2D3748;
+            --text-muted: #718096;
+            --text-dim: #A0AEC0;
+            --card-bg: rgba(255, 255, 255, 0.94);
+            --card-border: rgba(255, 197, 170, 0.45);
+            --radius-card: 26px;
+            --shadow-card: 0 20px 50px -10px rgba(255, 157, 157, 0.22), 0 10px 25px rgba(45, 55, 72, 0.05);
+            --font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(255, 157, 157, 0.25) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(187, 241, 210, 0.28) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(238, 248, 205, 0.35) 0%, transparent 60%),
+                linear-gradient(135deg, #FFF7F3 0%, #FFFDF7 50%, #F4FBF7 100%);
+            background-attachment: fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 16px;
+            font-family: var(--font-family);
+            color: var(--text-main);
+        }
+
+        .consent-container {
+            width: 100%;
+            max-width: 580px;
+        }
+
+        .consent-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 36px 32px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(255, 157, 157, 0.4);
+        }
+
+        .brand-name {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .brand-name span { color: #FF9D9D; }
+
+        .provider-badge-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .provider-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-main);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        }
+
+        .consent-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 8px;
+            line-height: 1.35;
+        }
+
+        .consent-subtitle {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.55;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Data list cards */
+        .data-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .data-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 197, 170, 0.35);
+            border-radius: 14px;
+            transition: transform 0.2s ease;
+        }
+
+        .data-item:hover {
+            transform: translateX(3px);
+            background: #ffffff;
+            border-color: rgba(255, 157, 157, 0.6);
+        }
+
+        .data-item-icon {
+            font-size: 1.25rem;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .data-item-content { flex: 1; }
+
+        .data-item-label {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .data-item-detail {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.45;
+        }
+
+        /* Safe guarantee box */
+        .safe-guarantee-box {
+            background: rgba(240, 253, 244, 0.9);
+            border: 1px solid rgba(74, 222, 128, 0.4);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 24px;
+        }
+
+        .safe-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #15803d;
+            margin-bottom: 6px;
+        }
+
+        .safe-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .safe-list li {
+            font-size: 0.82rem;
+            color: #166534;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Checkbox */
+        .consent-agreement {
+            background: rgba(255, 247, 243, 0.85);
+            border: 1.5px solid rgba(255, 157, 157, 0.5);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .consent-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #FF9D9D;
+            margin-top: 3px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .consent-agreement-text {
+            font-size: 0.86rem;
+            line-height: 1.5;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .consent-agreement-text a {
+            color: #f08383;
+            font-weight: 700;
+            text-decoration: underline;
+        }
+
+        /* Action Buttons */
+        .action-row {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-consent-submit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 9999px;
+            border: none;
+            background: linear-gradient(135deg, #FF9D9D 0%, #FF8080 100%);
+            color: #ffffff;
+            font-size: 0.96rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255, 157, 157, 0.4);
+            transition: all 0.25s ease;
+            text-decoration: none;
+        }
+
+        .btn-consent-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px rgba(255, 157, 157, 0.55);
+        }
+
+        .btn-consent-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-cancel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 12px 20px;
+            border-radius: 9999px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cancel:hover {
+            background: #f8fafc;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+<div class="consent-container">
+    <div class="consent-card">
+        
+        <!-- Brand Header -->
+        <div class="brand-header">
+            <div class="brand-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                </svg>
+            </div>
+            <div class="brand-name">Zone<span>In</span></div>
+        </div>
+
+        <!-- Provider Badge -->
+        <div class="provider-badge-row">
+            <div class="provider-badge">
+                {% if provider == 'google' %}
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    <span>เชื่อมต่อด้วย Google Account</span>
+                {% else %}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    <span>เชื่อมต่อด้วย Facebook Account</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <h1 class="consent-title">ขออนุญาตเข้าถึงและจัดเก็บข้อมูล</h1>
+        <p class="consent-subtitle">
+            ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล (PDPA) Zone In มีความจำเป็นต้องขออนุญาตเข้าถึงและจัดเก็บข้อมูลจากบัญชี {{ disclosures.provider_name }} ของคุณเพื่อให้บริการ
+        </p>
+
+        <!-- Data items requested -->
+        <div class="section-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            ข้อมูลที่ระบบจะขอเข้าถึงและจัดเก็บ
+        </div>
+        <div class="data-items-list">
+            {% for item in disclosures.collected_data %}
+            <div class="data-item">
+                <span class="data-item-icon">{{ item.icon }}</span>
+                <div class="data-item-content">
+                    <div class="data-item-label">{{ item.label }}</div>
+                    <div class="data-item-detail">{{ item.detail }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Safe guarantee -->
+        <div class="safe-guarantee-box">
+            <div class="safe-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                คำยืนยันความปลอดภัยและความเป็นส่วนตัว
+            </div>
+            <ul class="safe-list">
+                {% for excluded in disclosures.excluded_data %}
+                <li>• {{ excluded }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Checkbox Consent -->
+        <form action="{% url 'social_login' provider=provider %}" method="GET" id="socialConsentForm">
+            <input type="hidden" name="consent" value="1">
+            
+            <label class="consent-agreement">
+                <input type="checkbox" id="chkAgree" class="consent-checkbox" required onchange="toggleConsentSubmit(this.checked)">
+                <span class="consent-agreement-text">
+                    ข้าพเจ้ายินยอมให้ <strong>Zone In</strong> เข้าถึงและจัดเก็บข้อมูลข้างต้นเพื่อการสมัครสมาชิกและเข้าสู่ระบบตาม 
+                    <a href="{% url 'privacy_policy' %}" target="_blank">นโยบายความเป็นส่วนตัว (PDPA)</a> และยอมรับ 
+                    <a href="{% url 'terms' %}" target="_blank">เงื่อนไขการให้บริการ</a>
+                </span>
+            </label>
+
+            <!-- Buttons -->
+            <div class="action-row">
+                <button type="submit" class="btn-consent-submit" id="btnSubmitConsent" disabled>
+                    <span>ยินยอมและเข้าสู่ระบบด้วย {{ disclosures.provider_name }}</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </button>
+                <a href="{% url 'signin' %}" class="btn-cancel">ยกเลิกและกลับไปหน้าก่อน</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+function toggleConsentSubmit(isChecked) {
+    const btn = document.getElementById('btnSubmitConsent');
+    if (btn) {
+        btn.disabled = !isChecked;
+    }
+}
+</script>
+
+</body>
+</html>

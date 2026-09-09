@@ -15,6 +15,7 @@ urlpatterns = [
 
     # Likes & Hearts
     path("places/<int:place_id>/like/", likes.like_toggle, name="api_place_like"),
+    path("posts/<int:place_id>/like/", likes.like_toggle, name="api_post_like"),
 
     # Wishlist (Favorites)
     path("wishlist/", wishlist.wishlist_list, name="api_wishlist"),

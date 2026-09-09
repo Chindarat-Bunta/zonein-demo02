@@ -99,7 +99,7 @@ ROOT_URLCONF = "zonein02.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates", BASE_DIR / "web" / "templates"],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -175,7 +175,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 STATICFILES_DIRS = [
     BASE_DIR / "statics",
-    BASE_DIR / "static",
 ]
 
 # ==============================================================================
@@ -207,3 +206,9 @@ else:
         api_secret=CLOUDINARY_API_SECRET or "demo_secret",
         secure=True,
     )
+
+# Social Authentication (Google & Facebook OAuth 2.0)
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
+FACEBOOK_CLIENT_ID = os.environ.get("FACEBOOK_CLIENT_ID", "").strip() or os.environ.get("FACEBOOK_APP_ID", "").strip()
+FACEBOOK_CLIENT_SECRET = os.environ.get("FACEBOOK_CLIENT_SECRET", "").strip() or os.environ.get("FACEBOOK_APP_SECRET", "").strip()

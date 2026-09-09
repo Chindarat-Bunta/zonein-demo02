@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>นโยบายความเป็นส่วนตัวและการคุ้มครองข้อมูลส่วนบุคคล (PDPA) — Zone In</title>
+    <meta name="description" content="นโยบายความเป็นส่วนตัวและการคุ้มครองข้อมูลส่วนบุคคลตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 ของ Zone In">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        :root {
+            --primary: #FF9D9D;
+            --text-main: #2D3748;
+            --text-muted: #718096;
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --card-border: rgba(255, 197, 170, 0.45);
+            --radius-card: 24px;
+            --font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #FFF7F3 0%, #FFFDF7 50%, #F4FBF7 100%);
+            padding: 50px 20px;
+            font-family: var(--font-family);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+        }
+        .policy-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 40px 36px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+        }
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .policy-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+        .policy-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        .policy-section {
+            margin-bottom: 24px;
+        }
+        .policy-section h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+        .policy-section p {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+        .policy-section ul {
+            padding-left: 20px;
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #f08383;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.92rem;
+            margin-top: 10px;
+        }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="policy-container">
+    <div class="brand-header">
+        <a href="{% url 'web:index' %}" class="back-link">← กลับสู่หน้าแรก Zone In</a>
+    </div>
+
+    <h1 class="policy-title">นโยบายความเป็นส่วนตัว (Privacy Policy)</h1>
+    <div class="policy-date">มีผลบังคับใช้ตั้งแต่วันที่ 1 มกราคม 2026 | สอดคล้องตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)</div>
+
+    <div class="policy-section">
+        <h2>1. ข้อมูลที่เราเก็บรวบรวม</h2>
+        <p>เมื่อท่านลงทะเบียนหรือเข้าสู่ระบบ Zone In ผ่านทางอีเมล, Google หรือ Facebook ระบบจะเก็บรวบรวมข้อมูลต่อไปนี้ตามความยินยอมของท่าน:</p>
+        <ul>
+            <li><strong>ข้อมูลระบุตัวตน:</strong> ชื่อ-นามสกุล, ชื่อผู้ใช้ (Username), และชื่อเล่นสำหรับแสดงผล</li>
+            <li><strong>ข้อมูลการติดต่อ:</strong> ที่อยู่อีเมล (Email)</li>
+            <li><strong>ข้อมูลรูปโปรไฟล์:</strong> รูปถ่ายที่อัปโหลด หรือรูปที่ได้รับอนุญาตจาก Google/Facebook</li>
+            <li><strong>ข้อมูลกิจกรรม:</strong> สถานที่ที่บันทึกเป็นรายการโปรด (Wishlist), รีวิว, ความคิดเห็น, และรูปภาพสถานที่</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>2. วัตถุประสงค์ในการเก็บรวบรวมและประมวลผล</h2>
+        <p>เรานำข้อมูลส่วนบุคคลของท่านไปใช้เพื่อวัตถุประสงค์ดังต่อไปนี้:</p>
+        <ul>
+            <li>เพื่อสร้างและบริหารจัดการบัญชีผู้ใช้งาน (Account Management)</li>
+            <li>เพื่อให้บริการเชื่อมต่อการเข้าสู่ระบบผ่าน Social Login (Google & Facebook SSO)</li>
+            <li>เพื่อแสดงเครดิตผู้สร้างโพสต์และผู้เขียนรีวิวสถานที่ท่องเที่ยว</li>
+            <li>เพื่อส่งการแจ้งเตือนกิจกรรมที่เกี่ยวข้องกับโพสต์หรือรีวิวของท่าน</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>3. สิทธิของเจ้าของข้อมูลส่วนบุคคล (Data Subject Rights)</h2>
+        <p>ตามกฎหมาย PDPA ท่านมีสิทธิดังนี้:</p>
+        <ul>
+            <li>สิทธิในการเข้าถึงและขอรับสำเนาข้อมูลส่วนบุคคลของตนเอง</li>
+            <li>สิทธิในการขอแก้ไขข้อมูลให้ถูกต้องและเป็นปัจจุบันผ่านหน้าการตั้งค่าโปรไฟล์</li>
+            <li>สิทธิในการขอให้ลบหรือทำลายข้อมูลส่วนบุคคล หรือเพิกถอนความยินยอมได้ตลอดเวลา</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>4. การติดต่อเจ้าหน้าที่คุ้มครองข้อมูล</h2>
+        <p>หากท่านมีข้อสงสัยเกี่ยวกับนโยบายความเป็นส่วนตัว สามารถติดต่อทีมงาน Zone In ได้ที่ <strong>privacy@zonein.app</strong></p>
+    </div>
+
+    <a href="{% url 'web:index' %}" class="back-link">← กลับสู่หน้าแรก Zone In</a>
+</div>
+
+</body>
+</html>
