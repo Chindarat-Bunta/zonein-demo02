@@ -49,6 +49,16 @@ urlpatterns = [
         name="api_add_comment",
     ),
     path(
+        "api/comments/<int:comment_id>/edit/",
+        views.api_edit_comment,
+        name="api_edit_comment",
+    ),
+    path(
+        "api/comments/<int:comment_id>/delete/",
+        views.api_delete_comment,
+        name="api_delete_comment",
+    ),
+    path(
         "api/reviews/<int:review_id>/edit/",
         views.api_edit_review,
         name="api_edit_review",

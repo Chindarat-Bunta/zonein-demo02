@@ -2107,6 +2107,24 @@
         </div>
     </div>
 </div>
+
+<!-- Edit Comment Modal -->
+<div class="edit-post-overlay" id="editCommentOverlay" onclick="closeEditCommentModal(event)">
+    <div class="edit-post-card" onclick="event.stopPropagation()">
+        <div class="edit-post-header">
+            <h3>✏️ แก้ไขความคิดเห็น</h3>
+            <button type="button" class="edit-post-close" onclick="closeEditCommentModal()" title="ปิด">×</button>
+        </div>
+        <textarea class="edit-post-textarea" id="editCommentTextarea" placeholder="เขียนความคิดเห็นของคุณ..."></textarea>
+        <div class="edit-post-actions">
+            <button type="button" class="btn-edit-post-cancel" onclick="closeEditCommentModal()">ยกเลิก</button>
+            <button type="button" class="btn-edit-post-save" id="btnSaveEditComment" onclick="submitEditComment()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                บันทึกความคิดเห็น
+            </button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 {% block extra_scripts %}
     <script>
@@ -2276,7 +2294,7 @@ function getHomeCSRFToken() {
     return '';
 }
 
-// Close edit post modal on Escape key
+// Close edit post or comment modal on Escape key
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         const overlay = document.getElementById('editPostOverlay');
@@ -2285,8 +2303,181 @@ document.addEventListener('keydown', (e) => {
             document.body.style.overflow = '';
             _editingPostId = null;
         }
+        const commentOverlay = document.getElementById('editCommentOverlay');
+        if (commentOverlay && commentOverlay.classList.contains('show')) {
+            commentOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+            _editingCommentId = null;
+            _editingCommentReviewId = null;
+        }
     }
 });
+
+let _editingCommentId = null;
+let _editingCommentReviewId = null;
+
+function openEditCommentModal(commentId, content, reviewId) {
+    _editingCommentId = commentId;
+    _editingCommentReviewId = reviewId;
+    const textarea = document.getElementById('editCommentTextarea');
+    if (textarea) textarea.value = content || '';
+    const overlay = document.getElementById('editCommentOverlay');
+    if (overlay) {
+        overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => { if (textarea) textarea.focus(); }, 100);
+    }
+}
+
+function closeEditCommentModal(event) {
+    if (event && event.target !== document.getElementById('editCommentOverlay')) return;
+    const overlay = document.getElementById('editCommentOverlay');
+    if (overlay) {
+        overlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    _editingCommentId = null;
+    _editingCommentReviewId = null;
+}
+
+async function submitEditComment() {
+    if (!_editingCommentId) return;
+    const textarea = document.getElementById('editCommentTextarea');
+    const content = textarea ? textarea.value.trim() : '';
+    if (!content) {
+        showToast('กรุณากรอกความคิดเห็น');
+        return;
+    }
+    const btn = document.getElementById('btnSaveEditComment');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'กำลังบันทึก...';
+    }
+
+    try {
+        const res = await fetch(`/api/comments/${_editingCommentId}/edit/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getHomeCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ content: content })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const textEl = document.getElementById(`comment_text_${_editingCommentId}`);
+            if (textEl) textEl.textContent = content;
+
+            // Also update in reviewsDataMap cache if present
+            if (_editingCommentReviewId) {
+                const cached = reviewsDataMap.get(_editingCommentReviewId);
+                if (cached && cached.comments) {
+                    const c = cached.comments.find(item => item.id === _editingCommentId);
+                    if (c) c.content = content;
+                }
+            }
+
+            const overlay = document.getElementById('editCommentOverlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+            showToast('แก้ไขความคิดเห็นเรียบร้อยแล้ว ✅');
+        } else {
+            showToast(data.error || 'เกิดข้อผิดพลาดในการแก้ไขความคิดเห็น');
+        }
+    } catch (e) {
+        console.error('Edit comment error:', e);
+        showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> บันทึกความคิดเห็น';
+        }
+        _editingCommentId = null;
+        _editingCommentReviewId = null;
+    }
+}
+
+async function confirmDeleteComment(commentId, reviewId) {
+    if (!confirm('คุณต้องการลบความคิดเห็นนี้ใช่หรือไม่?')) return;
+
+    try {
+        const res = await fetch(`/api/comments/${commentId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getHomeCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            const el = document.getElementById(`comment_${commentId}`);
+            if (el) {
+                el.style.transition = 'opacity 0.25s, transform 0.25s';
+                el.style.opacity = '0';
+                el.style.transform = 'scale(0.95)';
+                setTimeout(() => el.remove(), 250);
+            }
+            const countEl = document.getElementById(`comment_count_${reviewId}`);
+            if (countEl) {
+                const currentCount = parseInt(countEl.innerText) || 0;
+                countEl.innerText = Math.max(0, currentCount - 1);
+            }
+            if (reviewId) {
+                const cached = reviewsDataMap.get(reviewId);
+                if (cached && cached.comments) {
+                    cached.comments = cached.comments.filter(item => item.id !== commentId);
+                }
+            }
+            showToast('ลบความคิดเห็นเรียบร้อยแล้ว 🗑️');
+        } else {
+            showToast(data.error || 'เกิดข้อผิดพลาดในการลบความคิดเห็น');
+        }
+    } catch (e) {
+        console.error('Delete comment error:', e);
+        showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    }
+}
+
+function renderSingleCommentHtml(c, reviewId) {
+    const authorUsername = c.author?.username || 'user';
+    const authorNickname = c.author?.nickname || authorUsername;
+    const authorInitial = (authorNickname || authorUsername || 'U')[0].toUpperCase();
+    const avatarHtml = c.author?.avatar_url
+        ? `<img src="${c.author.avatar_url}" alt="${authorUsername}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
+        : authorInitial;
+    const timeFormatted = formatDateTimeWithRelative(c.created_at);
+    const isOwner = c.is_author;
+
+    const safeContent = (c.content || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+    return `
+        <div class="comment-item" id="comment_${c.id}" style="text-align: left; position: relative;">
+            <a href="/profile/${encodeURIComponent(authorUsername)}/" style="text-decoration: none; color: inherit; flex-shrink: 0;" title="ดูโปรไฟล์ @${authorUsername}">
+                <div class="comment-avatar">${avatarHtml}</div>
+            </a>
+            <div class="comment-body" style="text-align: left;">
+                <div class="comment-meta" style="text-align: left; justify-content: flex-start; align-items: center; gap: 6px;">
+                    <a href="/profile/${encodeURIComponent(authorUsername)}/" class="comment-author" style="text-decoration: none; color: inherit; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">
+                        ${authorNickname}
+                    </a>
+                    ${authorNickname !== authorUsername ? `<span style="font-size: 0.74rem; color: #8c98a4;">@${authorUsername}</span>` : ''}
+                    <span class="comment-time" style="text-align: left; margin-left: 2px;">${timeFormatted}</span>
+                    ${isOwner ? `
+                    <div class="comment-actions" style="margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                        <button type="button" class="btn-comment-action" onclick="openEditCommentModal(${c.id}, '${safeContent}', ${reviewId})" title="แก้ไขความคิดเห็น" style="background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 0.8rem; opacity: 0.65; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">✏️</button>
+                        <button type="button" class="btn-comment-action" onclick="confirmDeleteComment(${c.id}, ${reviewId})" title="ลบความคิดเห็น" style="background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 0.8rem; opacity: 0.65; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">🗑️</button>
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="comment-text" id="comment_text_${c.id}" style="text-align: left;">${c.content}</div>
+            </div>
+        </div>
+    `;
+}
 
 async function toggleFollowAuthor(event, authorId, username) {
     if (event) {
@@ -2491,18 +2682,7 @@ function renderReviewCardHtml(r) {
         `;
     }
 
-    const commentsListHtml = comments.map(c => `
-        <div class="comment-item" id="comment_${c.id}">
-            <div class="comment-avatar">${(c.author?.username || 'U')[0].toUpperCase()}</div>
-            <div class="comment-body" style="text-align: left;">
-                <div class="comment-meta" style="text-align: left; justify-content: flex-start;">
-                    <span class="comment-author" style="text-align: left;">${c.author?.username || 'นักเดินทาง'}</span>
-                    <span class="comment-time" style="text-align: left;">${formatDateTimeWithRelative(c.created_at)}</span>
-                </div>
-                <div class="comment-text" style="text-align: left;">${c.content}</div>
-            </div>
-        </div>
-    `).join("");
+    const commentsListHtml = comments.map(c => renderSingleCommentHtml(c, r.id)).join("");
 
     const authorId = r.author?.id || 0;
     const authorUsername = r.author?.username || 'นักเดินทาง';
@@ -2675,18 +2855,7 @@ async function submitComment(event, reviewId) {
 
         input.value = "";
 
-        const newCommentHtml = `
-            <div class="comment-item" id="comment_${c.id}">
-                <div class="comment-avatar">${(c.author?.username || 'U')[0].toUpperCase()}</div>
-                <div class="comment-body">
-                    <div class="comment-meta">
-                        <span class="comment-author">${c.author?.username || 'นักเดินทาง'}</span>
-                        <span class="comment-time">${formatDateTimeWithRelative(c.created_at)}</span>
-                    </div>
-                    <div class="comment-text">${c.content}</div>
-                </div>
-            </div>
-        `;
+        const newCommentHtml = renderSingleCommentHtml(c, reviewId);
 
         if (list) {
             list.insertAdjacentHTML("beforeend", newCommentHtml);
