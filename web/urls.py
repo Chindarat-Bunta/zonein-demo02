@@ -95,6 +95,11 @@ urlpatterns = [
         views.api_user_following,
         name="api_user_following",
     ),
+    path(
+        "api/notifications/read-all/",
+        views.api_mark_notifications_read,
+        name="api_mark_notifications_read",
+    ),
     # Place Details
     path("places/<int:place_id>/", views.place_detail, name="place_detail_id"),
     path("places/<slug:slug>/", views.place_detail, name="place_detail"),

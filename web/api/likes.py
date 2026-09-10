@@ -36,11 +36,15 @@ def like_toggle(request, place_id):
         is_liked = True
         message = "ถูกใจสถานที่นี้แล้ว"
         if place.author and place.author != user:
+            profile = getattr(user, "profile", None)
+            actor_name = profile.get_display_name() if profile else (user.first_name or user.username)
+            actor_tag = f"{actor_name} (@{user.username})" if actor_name and actor_name != user.username else f"@{user.username}"
             Notification.objects.create(
                 actor=user,
                 recipient=place.author,
                 action_type="like",
                 post=place,
+                message=f"{actor_tag} ได้กดถูกใจโพสต์ '{place.name}'",
             )
 
     return JsonResponse({

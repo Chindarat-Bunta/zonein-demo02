@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from web.models import Place, Review
+from web.models import Place, Review, Notification
 from .views import parse_json_body
 
 
@@ -90,6 +90,17 @@ def place_reviews_list_create(request, place_id):
             profile.get_display_name() if profile else user.username
         )
         avatar_url = profile.avatar_url if profile else ""
+
+        # Trigger notification to place author if not self
+        if place.author and place.author != user:
+            actor_tag = f"{display_name} (@{user.username})" if display_name and display_name != user.username else f"@{user.username}"
+            Notification.objects.create(
+                actor=user,
+                recipient=place.author,
+                action_type="comment",
+                post=place,
+                message=f"{actor_tag} ได้แสดงความคิดเห็นบนโพสต์ '{place.name}'",
+            )
 
         return JsonResponse({
             "success": True,
