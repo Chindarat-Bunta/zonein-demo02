@@ -2172,23 +2172,6 @@
     </div>
 </div>
 
-<!-- Edit Post Modal -->
-<div class="edit-post-overlay" id="editPostOverlay" onclick="closeEditPostModal(event)">
-    <div class="edit-post-card" onclick="event.stopPropagation()">
-        <div class="edit-post-header">
-            <h3>✏️ แก้ไขโพสต์</h3>
-            <button type="button" class="edit-post-close" onclick="closeEditPostModal()" title="ปิด">×</button>
-        </div>
-        <textarea class="edit-post-textarea" id="editPostTextarea" placeholder="เขียนเนื้อหาโพสต์..."></textarea>
-        <div class="edit-post-actions">
-            <button type="button" class="btn-edit-post-cancel" onclick="closeEditPostModal()">ยกเลิก</button>
-            <button type="button" class="btn-edit-post-save" id="btnSaveEditPost" onclick="submitEditPost()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                บันทึกการแก้ไข
-            </button>
-        </div>
-    </div>
-</div>
 
 <!-- Edit Comment Modal -->
 <div class="edit-post-overlay" id="editCommentOverlay" onclick="closeEditCommentModal(event)">
@@ -2259,79 +2242,27 @@ document.addEventListener('click', (e) => {
 });
 
 function openEditPost(reviewId) {
-    _editingPostId = reviewId;
     // Close dropdown
     const dd = document.getElementById(`post_dropdown_${reviewId}`);
     if (dd) dd.classList.remove('open');
 
     const cached = reviewsDataMap.get(reviewId);
-    const currentContent = cached ? (cached.content || '') : '';
+    if (!cached) return;
 
-    const textarea = document.getElementById('editPostTextarea');
-    if (textarea) textarea.value = currentContent;
+    const postData = {
+        review_id: reviewId,
+        name: cached.place?.name || '',
+        category: cached.place?.category || 'cafe',
+        address: cached.place?.address || cached.place?.location || '',
+        latitude: (cached.place?.latitude !== undefined && cached.place?.latitude !== null) ? cached.place.latitude : null,
+        longitude: (cached.place?.longitude !== undefined && cached.place?.longitude !== null) ? cached.place.longitude : null,
+        image_url: cached.image_url || cached.place?.cover_image_url || '',
+        comment: cached.content || '',
+        rating: cached.rating || 5
+    };
 
-    const overlay = document.getElementById('editPostOverlay');
-    if (overlay) {
-        overlay.classList.add('show');
-        document.body.style.overflow = 'hidden';
-        setTimeout(() => { if (textarea) textarea.focus(); }, 100);
-    }
-}
-
-function closeEditPostModal(event) {
-    if (event && event.target !== document.getElementById('editPostOverlay')) return;
-    const overlay = document.getElementById('editPostOverlay');
-    if (overlay) {
-        overlay.classList.remove('show');
-        document.body.style.overflow = '';
-    }
-    _editingPostId = null;
-}
-
-async function submitEditPost() {
-    if (!_editingPostId) return;
-    const textarea = document.getElementById('editPostTextarea');
-    const content = textarea ? textarea.value.trim() : '';
-    if (!content) { showToast('กรุณากรอกเนื้อหาโพสต์'); return; }
-
-    const btn = document.getElementById('btnSaveEditPost');
-    if (btn) { btn.disabled = true; btn.textContent = 'กำลังบันทึก...'; }
-
-    try {
-        const res = await fetch(`/api/reviews/${_editingPostId}/edit/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getHomeCSRFToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            body: JSON.stringify({ comment: content }),
-        });
-        const data = await res.json();
-        if (data.success) {
-            // Update content in feed card
-            const contentEl = document.getElementById(`review_content_${_editingPostId}`);
-            if (contentEl) contentEl.textContent = content;
-
-            // Update cache
-            const cached = reviewsDataMap.get(_editingPostId);
-            if (cached) cached.content = content;
-
-            const overlay = document.getElementById('editPostOverlay');
-            if (overlay) { overlay.classList.remove('show'); document.body.style.overflow = ''; }
-            showToast('แก้ไขโพสต์เรียบร้อยแล้ว ✅');
-        } else {
-            showToast(data.error || 'เกิดข้อผิดพลาด');
-        }
-    } catch (err) {
-        console.error('[Zone In] Edit post error:', err);
-        showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> บันทึกการแก้ไข';
-        }
-        _editingPostId = null;
+    if (typeof window.openEditPostModal === 'function') {
+        window.openEditPostModal(postData);
     }
 }
 
@@ -2549,8 +2480,7 @@ async function confirmDeleteComment(commentId, reviewId) {
 
 function renderSingleCommentHtml(c, reviewId) {
     const authorUsername = c.author?.username || 'user';
-    const authorNickname = c.author?.nickname || authorUsername;
-    const authorInitial = (authorNickname || authorUsername || 'U')[0].toUpperCase();
+    const authorInitial = (authorUsername || 'U')[0].toUpperCase();
     const avatarHtml = c.author?.avatar_url
         ? `<img src="${c.author.avatar_url}" alt="${authorUsername}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
         : authorInitial;
@@ -2567,9 +2497,8 @@ function renderSingleCommentHtml(c, reviewId) {
             <div class="comment-body" style="text-align: left;">
                 <div class="comment-meta" style="text-align: left; justify-content: flex-start; align-items: center; gap: 6px;">
                     <a href="/profile/${encodeURIComponent(authorUsername)}/" class="comment-author" style="text-decoration: none; color: inherit; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">
-                        ${authorNickname}
+                        ${authorUsername}
                     </a>
-                    ${authorNickname !== authorUsername ? `<span style="font-size: 0.74rem; color: #8c98a4;">@${authorUsername}</span>` : ''}
                     <span class="comment-time" style="text-align: left; margin-left: 2px;">${timeFormatted}</span>
                     ${isOwner ? `
                     <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">

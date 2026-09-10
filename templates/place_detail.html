@@ -384,13 +384,8 @@
                                                 <div style="flex: 1; min-width: 0;">
                                                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px;">
                                                         <a href="/profile/{{ c.author.username|default:c.username }}/" style="text-decoration: none; color: inherit; font-size: 0.85rem; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">
-                                                            {{ c.author.name|default:c.user_name }}
+                                                            {{ c.author.username|default:c.username }}
                                                         </a>
-                                                        {% if c.author.name != c.author.username and c.author.username %}
-                                                            <span style="font-size: 0.72rem; color: var(--text-muted);">@{{ c.author.username }}</span>
-                                                        {% elif c.user_name != c.username and c.username %}
-                                                            <span style="font-size: 0.72rem; color: var(--text-muted);">@{{ c.username }}</span>
-                                                        {% endif %}
                                                         <span style="font-size: 0.74rem; color: var(--text-muted); margin-left: 2px;">{{ c.created_at }}</span>
                                                         {% if c.is_author %}
                                                         <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">
@@ -1017,10 +1012,9 @@
                     }
 
                     const authorUsername = c.author?.username || 'user';
-                    const authorName = c.author?.nickname || authorUsername;
-                    const authorInitial = (authorName || 'U')[0].toUpperCase();
+                    const authorInitial = (authorUsername || 'U')[0].toUpperCase();
                     const avatarHtml = c.author?.avatar_url
-                        ? `<img src="${c.author.avatar_url}" alt="${authorName}" style="width: 100%; height: 100%; object-fit: cover;">`
+                        ? `<img src="${c.author.avatar_url}" alt="${authorUsername}" style="width: 100%; height: 100%; object-fit: cover;">`
                         : authorInitial;
 
                     const safeContent = (c.content || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
@@ -1035,9 +1029,8 @@
                             <div style="flex: 1; min-width: 0;">
                                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px;">
                                     <a href="/profile/${encodeURIComponent(authorUsername)}/" style="text-decoration: none; color: inherit; font-size: 0.85rem; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">
-                                        ${authorName}
+                                        ${authorUsername}
                                     </a>
-                                    ${authorName !== authorUsername ? `<span style="font-size: 0.72rem; color: var(--text-muted);">@${authorUsername}</span>` : ''}
                                     <span style="font-size: 0.74rem; color: var(--text-muted); margin-left: 2px;">เมื่อสักครู่นี้</span>
                                     <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">
                                         <button class="comment-menu-btn" type="button" aria-label="เมนูความคิดเห็น" onclick="toggleDetailCommentMenu(event, ${c.id})">⋯</button>

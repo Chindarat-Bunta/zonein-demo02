@@ -247,6 +247,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 800);
             return;
         }
+        // Reset to Create mode
+        const modalTitle = document.getElementById('postModalTitle');
+        const modalSubtitle = document.getElementById('postModalSubtitle');
+        const btnSubmitText = document.getElementById('btnSubmitPostText');
+        const postMode = document.getElementById('postModalMode');
+        const editingId = document.getElementById('editingPostReviewId');
+
+        if (modalTitle) modalTitle.textContent = 'สร้างโพสต์ใหม่';
+        if (modalSubtitle) modalSubtitle.textContent = 'แบ่งปันสถานที่ท่องเที่ยว คาเฟ่ หรือที่พักสุดประทับใจให้เพื่อนๆ ได้ตามรอย';
+        if (btnSubmitText) btnSubmitText.textContent = 'เผยแพร่โพสต์';
+        if (postMode) postMode.value = 'create';
+        if (editingId) editingId.value = '';
+
+        // Reset form inputs & previews
+        const form = document.getElementById('createPostForm');
+        if (form) form.reset();
+        if (typeof window.removePostImage === 'function') window.removePostImage();
+        const mapFrame = document.getElementById('postMapEmbed');
+        if (mapFrame) mapFrame.src = 'https://maps.google.com/maps?q=ศรีสะเกษ&hl=th&z=13&output=embed';
+        const mapBadge = document.getElementById('mapStatusBadge');
+        if (mapBadge) mapBadge.textContent = 'พร้อมปักหมุด';
+        const allPills = document.querySelectorAll('#postCategoryGrid .category-pill');
+        allPills.forEach((p, idx) => {
+            if (idx === 0) p.classList.add('active');
+            else p.classList.remove('active');
+        });
+        const catInput = document.getElementById('postCategoryInput');
+        if (catInput) catInput.value = 'cafe';
+        if (typeof window.setPostRating === 'function') window.setPostRating(5);
+        const descInput = document.getElementById('postDescription');
+        if (descInput && typeof window.updatePostCharCount === 'function') {
+            window.updatePostCharCount(descInput);
+        }
+
         const modal = document.getElementById('createPostModal');
         if (!modal) return;
         modal.classList.add('active');
@@ -255,6 +289,114 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             const nameInput = document.getElementById('postPlaceName');
+            if (nameInput) nameInput.focus();
+        }, 120);
+    };
+
+    // Open Edit Post Modal
+    window.openEditPostModal = function (postData) {
+        if (!postData) return;
+
+        const modal = document.getElementById('createPostModal');
+        if (!modal) return;
+
+        // Set to Edit mode
+        const modalTitle = document.getElementById('postModalTitle');
+        const modalSubtitle = document.getElementById('postModalSubtitle');
+        const btnSubmitText = document.getElementById('btnSubmitPostText');
+        const postMode = document.getElementById('postModalMode');
+        const editingId = document.getElementById('editingPostReviewId');
+
+        if (modalTitle) modalTitle.textContent = 'แก้ไขโพสต์';
+        if (modalSubtitle) modalSubtitle.textContent = 'แก้ไขข้อมูลสถานที่ท่องเที่ยว คาเฟ่ หรือที่พักของคุณ';
+        if (btnSubmitText) btnSubmitText.textContent = 'บันทึกการแก้ไข';
+        if (postMode) postMode.value = 'edit';
+        if (editingId) editingId.value = postData.review_id || '';
+
+        // Pre-fill Name
+        const nameInput = document.getElementById('postPlaceName');
+        if (nameInput) nameInput.value = postData.name || '';
+
+        // Pre-fill Category
+        const catVal = postData.category || 'cafe';
+        const catInput = document.getElementById('postCategoryInput');
+        if (catInput) catInput.value = catVal;
+        const allPills = document.querySelectorAll('#postCategoryGrid .category-pill');
+        allPills.forEach(pill => {
+            if (pill.getAttribute('data-category') === catVal) {
+                pill.classList.add('active');
+            } else {
+                pill.classList.remove('active');
+            }
+        });
+
+        // Pre-fill Address & Coordinates
+        const addrInput = document.getElementById('postAddress');
+        const latInput = document.getElementById('postLatitude');
+        const lngInput = document.getElementById('postLongitude');
+        const mapFrame = document.getElementById('postMapEmbed');
+        const mapStatusBadge = document.getElementById('mapStatusBadge');
+
+        const addr = postData.address || postData.location || '';
+        if (addrInput) addrInput.value = addr;
+        if (latInput) latInput.value = (postData.latitude !== null && postData.latitude !== undefined) ? postData.latitude : '';
+        if (lngInput) lngInput.value = (postData.longitude !== null && postData.longitude !== undefined) ? postData.longitude : '';
+
+        if (postData.latitude && postData.longitude) {
+            if (mapFrame) {
+                mapFrame.src = `https://maps.google.com/maps?q=${postData.latitude},${postData.longitude}&hl=th&z=16&output=embed`;
+            }
+            if (mapStatusBadge) {
+                mapStatusBadge.textContent = `📍 เช็กอินแล้ว (${Number(postData.latitude).toFixed(4)}, ${Number(postData.longitude).toFixed(4)})`;
+            }
+        } else if (addr) {
+            if (mapFrame) {
+                mapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(addr)}&hl=th&z=15&output=embed`;
+            }
+            if (mapStatusBadge) {
+                mapStatusBadge.textContent = `📍 ปักหมุด: ${addr}`;
+            }
+        }
+
+        // Pre-fill Image
+        const imageUrl = postData.image_url || postData.cover_image_url || '';
+        const previewContainer = document.getElementById('postPreviewContainer');
+        const previewImg = document.getElementById('postImagePreview');
+        const dropzone = document.getElementById('postDropzone');
+        const urlInput = document.getElementById('postImageUrlInput');
+
+        if (imageUrl) {
+            if (previewImg) previewImg.src = imageUrl;
+            if (previewContainer) previewContainer.style.display = 'block';
+            if (dropzone) dropzone.style.display = 'none';
+            if (urlInput) urlInput.value = imageUrl;
+        } else {
+            if (previewContainer) previewContainer.style.display = 'none';
+            if (dropzone) dropzone.style.display = 'block';
+            if (urlInput) urlInput.value = '';
+        }
+
+        // Pre-fill Description / Comment
+        const descInput = document.getElementById('postDescription');
+        const commentText = postData.comment || postData.content || postData.description || '';
+        if (descInput) {
+            descInput.value = commentText;
+            if (typeof window.updatePostCharCount === 'function') {
+                window.updatePostCharCount(descInput);
+            }
+        }
+
+        // Pre-fill Rating
+        const ratingVal = parseInt(postData.rating, 10) || 5;
+        if (typeof window.setPostRating === 'function') {
+            window.setPostRating(ratingVal);
+        }
+
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+
+        setTimeout(() => {
             if (nameInput) nameInput.focus();
         }, 120);
     };
@@ -503,16 +645,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (errorBox) errorBox.style.display = 'none';
 
+        const isEditMode = (document.getElementById('postModalMode')?.value === 'edit');
+        const editingReviewId = document.getElementById('editingPostReviewId')?.value;
+
         // Set Loading state
         if (submitBtn) submitBtn.disabled = true;
-        if (btnText) btnText.textContent = "กำลังเผยแพร่...";
+        if (btnText) btnText.textContent = isEditMode ? "กำลังบันทึก..." : "กำลังเผยแพร่...";
         if (btnSpinner) btnSpinner.style.display = 'inline-block';
 
         const form = document.getElementById('createPostForm');
         const formData = new FormData(form);
 
+        const targetUrl = isEditMode ? `/api/reviews/${editingReviewId}/edit/` : '/api/places/';
+
         try {
-            const response = await fetch('/api/places/', {
+            const response = await fetch(targetUrl, {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -525,8 +672,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok && data.success) {
                 // Success Toast
                 const toast = document.getElementById('toast') || document.getElementById('zoneinToast');
+                const successMsg = isEditMode ? "บันทึกการแก้ไขโพสต์ของคุณสำเร็จแล้ว! 🎉" : "โพสต์สถานที่ของคุณสำเร็จแล้ว! 🎉";
                 if (toast) {
-                    toast.innerHTML = `<span style="font-size: 1.1rem;">🎉</span> <span>โพสต์สถานที่ของคุณสำเร็จแล้ว!</span>`;
+                    toast.innerHTML = `<span style="font-size: 1.1rem;">🎉</span> <span>${successMsg}</span>`;
                     toast.classList.add('show');
                     toast.style.display = 'block';
                     setTimeout(() => {
@@ -540,12 +688,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.removePostImage();
                 window.closeCreatePostModal();
 
-                // Go to home page immediately so the user sees their post on the home page
+                // Go to home page immediately so the user sees their post
                 setTimeout(() => {
                     if (window.location.pathname === '/' || window.location.pathname === '/home/') {
                         window.location.href = '/?t=' + Date.now();
                     } else {
-                        window.location.href = '/';
+                        window.location.reload();
                     }
                 }, 600);
             } else {
@@ -563,7 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } finally {
             if (submitBtn) submitBtn.disabled = false;
-            if (btnText) btnText.textContent = "เผยแพร่โพสต์";
+            if (btnText) btnText.textContent = isEditMode ? "บันทึกการแก้ไข" : "เผยแพร่โพสต์";
             if (btnSpinner) btnSpinner.style.display = 'none';
         }
     };

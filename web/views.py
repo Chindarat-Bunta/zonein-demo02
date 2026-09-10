@@ -906,11 +906,6 @@ def api_recent_reviews(request):
         for pr in all_place_reviews:
             for c in pr.comments.all().order_by("created_at"):
                 c_prof = getattr(c.author, "profile", None)
-                c_name = (
-                    c_prof.get_display_name()
-                    if c_prof
-                    else (c.author.first_name or c.author.username)
-                )
                 comments_data.append(
                     {
                         "id": c.id,
@@ -921,7 +916,7 @@ def api_recent_reviews(request):
                         "author": {
                             "id": c.author.id,
                             "username": c.author.username,
-                            "nickname": c_name,
+                            "nickname": c.author.username,
                             "avatar_url": c_prof.avatar_url if c_prof else "",
                         },
                     }
@@ -953,7 +948,11 @@ def api_recent_reviews(request):
                     "id": review.place.id,
                     "name": review.place.name,
                     "location": review.place.location,
+                    "address": review.place.address,
                     "category": review.place.category,
+                    "latitude": float(review.place.latitude) if review.place.latitude else None,
+                    "longitude": float(review.place.longitude) if review.place.longitude else None,
+                    "cover_image_url": review.place.cover_image_url,
                     "author_username": post_author.username,
                     "author_display": author_display,
                 },
@@ -1050,7 +1049,7 @@ def api_add_comment(request, review_id):
                 "author": {
                     "id": comment.author.id,
                     "username": comment.author.username,
-                    "nickname": author_profile.nickname if author_profile and author_profile.nickname else comment.author.username,
+                    "nickname": comment.author.username,
                     "avatar_url": avatar_url,
                 },
                 "is_author": True,
@@ -1060,41 +1059,7 @@ def api_add_comment(request, review_id):
     )
 
 
-@csrf_exempt
-@require_http_methods(["POST", "PUT"])
-def api_edit_review(request, review_id):
-    """POST /api/reviews/<review_id>/edit/"""
-    review = get_object_or_404(Review, pk=review_id)
-    try:
-        data = json.loads(request.body.decode("utf-8")) if request.body else {}
-    except json.JSONDecodeError:
-        data = request.POST
 
-    content = data.get("content")
-    if content is not None:
-        review.content = content.strip()
-
-    rating = data.get("rating")
-    if rating is not None:
-        try:
-            rating_val = int(rating)
-            if 1 <= rating_val <= 5:
-                review.rating = rating_val
-        except (ValueError, TypeError):
-            pass
-
-    review.save()
-    return JsonResponse(
-        {
-            "success": True,
-            "review": {
-                "id": review.id,
-                "rating": review.rating,
-                "content": review.content,
-                "created_at": review.created_at.isoformat(),
-            },
-        }
-    )
 
 
 @csrf_exempt
@@ -1198,60 +1163,116 @@ def api_review_detail(request, review_id):
 
 
 @csrf_exempt
-@require_http_methods(["POST", "PATCH"])
+@require_http_methods(["POST", "PUT", "PATCH"])
 def api_edit_review(request, review_id):
     """
-    PATCH /api/reviews/<review_id>/edit/
-    แก้ไขข้อความรีวิวและ/หรือคะแนน
-    เฉพาะเจ้าของรีวิว หรือเจ้าของโพสต์ (place.author) เท่านั้น
+    POST /api/reviews/<review_id>/edit/
+    แก้ไขโพสต์ / รีวิว และข้อมูลสถานที่ (ชื่อสถานที่, หมวดหมู่, ที่อยู่/ทำเล, พิกัด GPS, รูปภาพ, รายละเอียด, คะแนน)
     """
     if not request.user.is_authenticated:
-        return JsonResponse({"success": False, "error": "กรุณาเข้าสู่ระบบ"}, status=401)
+        return JsonResponse({"success": False, "error": "กรุณาเข้าสู่ระบบก่อนแก้ไขโพสต์"}, status=401)
 
-    review = get_object_or_404(Review.objects.select_related("user", "place__author"), pk=review_id)
+    review = get_object_or_404(Review.objects.select_related("user", "place", "place__author"), pk=review_id)
 
-    # Permission check: review owner OR place author
+    # Permission check: review owner OR place author OR staff
     is_review_owner = review.user == request.user
-    is_place_owner = (
-        review.place.author is not None and review.place.author == request.user
-    )
-    if not (is_review_owner or is_place_owner):
-        return JsonResponse({"success": False, "error": "คุณไม่มีสิทธิ์แก้ไขรีวิวนี้"}, status=403)
+    is_place_owner = review.place and review.place.author is not None and review.place.author == request.user
+    if not (is_review_owner or is_place_owner or request.user.is_staff or request.user.is_superuser):
+        return JsonResponse({"success": False, "error": "คุณไม่มีสิทธิ์แก้ไขโพสต์นี้"}, status=403)
 
     try:
-        payload = json.loads(request.body)
-    except (json.JSONDecodeError, ValueError):
+        payload = json.loads(request.body.decode("utf-8")) if request.body and not request.POST else request.POST.dict()
+    except (json.JSONDecodeError, ValueError, UnicodeDecodeError):
         payload = request.POST.dict()
 
-    new_comment = payload.get("comment", "").strip()
-    new_rating_raw = payload.get("rating")
+    name = payload.get("name", "").strip()
+    category = payload.get("category", "").strip()
+    address = payload.get("address", "").strip()
+    description = (payload.get("description") or payload.get("comment") or payload.get("content") or "").strip()
+    cover_image_url = payload.get("cover_image_url", "").strip()
+    rating_raw = payload.get("rating")
 
-    if not new_comment:
-        return JsonResponse({"success": False, "error": "กรุณากรอกข้อความรีวิว"}, status=400)
+    # Image upload to Cloudinary if file provided
+    image_file = request.FILES.get("cover_image") or request.FILES.get("image")
+    if image_file:
+        from web.services import upload_image
+        upload_res = upload_image(image_file, folder="zonein/places")
+        if upload_res.get("success"):
+            cover_image_url = upload_res.get("url")
+            if review.place:
+                review.place.cover_image_public_id = upload_res.get("public_id", "")
 
-    if new_rating_raw is not None:
+    # Update Place
+    if review.place:
+        place = review.place
+        if name:
+            place.name = name
+        if category:
+            place.category = category
+        if address:
+            place.address = address
+
+        lat_val = payload.get("latitude")
+        lng_val = payload.get("longitude")
+        if lat_val:
+            try:
+                from decimal import Decimal, InvalidOperation
+                place.latitude = Decimal(str(lat_val))
+            except (InvalidOperation, ValueError, TypeError):
+                pass
+        if lng_val:
+            try:
+                from decimal import Decimal, InvalidOperation
+                place.longitude = Decimal(str(lng_val))
+            except (InvalidOperation, ValueError, TypeError):
+                pass
+
+        if cover_image_url:
+            place.cover_image_url = cover_image_url
+            place.image_url = cover_image_url
+        if description:
+            place.description = description
+
+        place.save()
+
+    # Update Review
+    if description:
+        review.comment = description
+    if cover_image_url:
+        review.image_url = cover_image_url
+
+    if rating_raw is not None:
         try:
-            new_rating = int(new_rating_raw)
-            if not (1 <= new_rating <= 5):
-                raise ValueError
-            review.rating = new_rating
+            r_val = int(rating_raw)
+            if 1 <= r_val <= 5:
+                review.rating = r_val
         except (ValueError, TypeError):
-            return JsonResponse({"success": False, "error": "คะแนนต้องอยู่ระหว่าง 1-5"}, status=400)
+            pass
 
-    review.comment = new_comment
-    review.save(update_fields=["comment", "rating", "updated_at"])
+    review.save()
 
     return JsonResponse({
         "success": True,
-        "message": "แก้ไขรีวิวเรียบร้อยแล้ว",
+        "message": "แก้ไขโพสต์เรียบร้อยแล้ว",
+        "post": {
+            "id": review.id,
+            "place_id": review.place.id if review.place else None,
+            "name": review.place.name if review.place else "",
+            "category": review.place.category if review.place else "",
+            "address": review.place.address if review.place else "",
+            "latitude": float(review.place.latitude) if (review.place and review.place.latitude) else None,
+            "longitude": float(review.place.longitude) if (review.place and review.place.longitude) else None,
+            "cover_image_url": review.place.cover_image_url if review.place else review.image_url,
+            "comment": review.comment,
+            "rating": review.rating,
+            "updated_at": review.updated_at.isoformat(),
+        },
         "review": {
             "id": review.id,
             "comment": review.comment,
             "rating": review.rating,
             "updated_at": review.updated_at.isoformat(),
-        },
-        "new_average_rating": review.place.average_rating,
-        "total_reviews": review.place.review_count,
+        }
     })
 
 
@@ -1392,23 +1413,18 @@ def place_detail(request, place_id=None, slug=None):
         for c in r.comments.all().order_by("created_at"):
             c_prof = getattr(c.author, "profile", None)
             c_avatar = c_prof.avatar_url if c_prof and c_prof.avatar_url else ""
-            c_name = (
-                c_prof.get_display_name()
-                if c_prof
-                else (c.author.first_name or c.author.username)
-            )
             comments_list.append(
                 {
                     "id": c.id,
                     "content": c.content,
                     "created_at": c.created_at.strftime("%d %b %Y %H:%M"),
                     "username": c.author.username,
-                    "user_name": c_name,
+                    "user_name": c.author.username,
                     "avatar": c_avatar,
                     "author": {
                         "id": c.author.id,
                         "username": c.author.username,
-                        "name": c_name,
+                        "name": c.author.username,
                         "avatar": c_avatar,
                     },
                     "is_author": request.user.is_authenticated and request.user.id == c.author_id,
