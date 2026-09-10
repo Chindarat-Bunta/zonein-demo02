@@ -598,11 +598,11 @@ def signup_view(request):
 def social_login_consent_view(request, provider):
     """
     Dedicated screen presenting the PDPA consent and data collection disclosure
-    before proceeding to Google or Facebook authentication.
+    before proceeding to Google authentication.
     """
     provider = provider.lower()
-    if provider not in ("google", "facebook"):
-        messages.error(request, "ผู้ให้บริการไม่ถูกต้อง")
+    if provider != "google":
+        messages.error(request, "ระบบรองรับเฉพาะการเข้าสู่ระบบด้วย Google")
         return redirect("web:signin")
 
     disclosures = get_consent_disclosures(provider)
@@ -618,12 +618,12 @@ def social_login_consent_view(request, provider):
 
 def social_login_view(request, provider):
     """
-    Initiates Social Login (Google or Facebook).
+    Initiates Social Login (Google).
     Checks user consent, then either redirects to OAuth 2.0 or opens Sandbox/Simulator.
     """
     provider = provider.lower()
-    if provider not in ("google", "facebook"):
-        messages.error(request, "ผู้ให้บริการไม่ถูกต้อง")
+    if provider != "google":
+        messages.error(request, "ระบบรองรับเฉพาะการเข้าสู่ระบบด้วย Google")
         return redirect("web:signin")
 
     has_consent = request.GET.get("consent") == "1" or request.POST.get("consent") == "1"
@@ -650,7 +650,7 @@ def social_login_view(request, provider):
     if request.method == "POST" and request.POST.get("simulate_login") == "1":
         sim_name = (
             request.POST.get("sim_name", "").strip()
-            or ("Google Traveler" if provider == "google" else "Facebook Traveler")
+            or "Google Traveler"
         )
         sim_email = (
             request.POST.get("sim_email", "").strip().lower()
@@ -695,12 +695,12 @@ def social_login_view(request, provider):
 
 def social_login_callback_view(request, provider):
     """
-    OAuth 2.0 Redirect Callback from Google or Facebook.
+    OAuth 2.0 Redirect Callback from Google.
     Exchanges code for access token and provisions user in Neon DB.
     """
     provider = provider.lower()
-    if provider not in ("google", "facebook"):
-        messages.error(request, "ผู้ให้บริการไม่ถูกต้อง")
+    if provider != "google":
+        messages.error(request, "ระบบรองรับเฉพาะการเข้าสู่ระบบด้วย Google")
         return redirect("web:signin")
 
     # Check for errors returned by provider
