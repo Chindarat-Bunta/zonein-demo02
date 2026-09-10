@@ -1,5 +1,5 @@
 """
-Social Authentication & OAuth 2.0 Integration Service (Google & Facebook)
+Social Authentication & OAuth 2.0 Integration Service (Google)
 Compliant with Thailand Personal Data Protection Act (PDPA) consent guidelines.
 """
 
@@ -27,17 +27,6 @@ PROVIDERS = {
         "color": "#4285F4",
         "icon": "google",
     },
-    "facebook": {
-        "name": "Facebook",
-        "auth_url": "https://www.facebook.com/v19.0/dialog/oauth",
-        "token_url": "https://graph.facebook.com/v19.0/oauth/access_token",
-        "userinfo_url": "https://graph.facebook.com/me?fields=id,name,email,picture.type(large)",
-        "scopes": "email,public_profile",
-        "client_id_setting": "FACEBOOK_CLIENT_ID",
-        "client_secret_setting": "FACEBOOK_CLIENT_SECRET",
-        "color": "#1877F2",
-        "icon": "facebook",
-    },
 }
 
 
@@ -51,7 +40,7 @@ def is_provider_configured(provider: str) -> bool:
     return bool(
         client_id
         and client_secret
-        and client_id not in ("your_google_client_id", "your_facebook_client_id", "")
+        and client_id not in ("your_google_client_id", "")
     )
 
 
@@ -75,7 +64,7 @@ def generate_oauth_state() -> str:
 
 def get_authorization_url(provider: str, redirect_uri: str, state: str) -> str:
     """
-    Construct the OAuth 2.0 authorization URL for Google or Facebook.
+    Construct the OAuth 2.0 authorization URL for Google.
     """
     prov = PROVIDERS.get(provider.lower())
     if not prov:
@@ -92,16 +81,6 @@ def get_authorization_url(provider: str, redirect_uri: str, state: str) -> str:
             "state": state,
             "access_type": "online",
             "prompt": "select_account consent",
-        }
-        return f"{prov['auth_url']}?{urllib.parse.urlencode(params)}"
-
-    elif provider.lower() == "facebook":
-        params = {
-            "client_id": client_id,
-            "redirect_uri": redirect_uri,
-            "scope": prov["scopes"],
-            "state": state,
-            "response_type": "code",
         }
         return f"{prov['auth_url']}?{urllib.parse.urlencode(params)}"
 
@@ -163,52 +142,6 @@ def exchange_code_for_user_info(provider: str, code: str, redirect_uri: str) -> 
                 "raw": user_data,
             }
 
-        elif provider.lower() == "facebook":
-            # 1. Exchange code for access token
-            token_resp = requests.get(
-                prov["token_url"],
-                params={
-                    "client_id": client_id,
-                    "client_secret": client_secret,
-                    "redirect_uri": redirect_uri,
-                    "code": code,
-                },
-                timeout=12,
-            )
-            token_data = token_resp.json()
-            if "error" in token_data:
-                logger.error("Facebook Token Exchange Error: %s", token_data)
-                return {
-                    "success": False,
-                    "error": token_data["error"].get("message", "การยืนยันรหัสเข้าสู่ระบบกับ Facebook ล้มเหลว"),
-                }
-
-            access_token = token_data.get("access_token")
-
-            # 2. Fetch User Profile from Graph API
-            userinfo_resp = requests.get(
-                prov["userinfo_url"],
-                params={"access_token": access_token},
-                timeout=12,
-            )
-            user_data = userinfo_resp.json()
-            if "error" in user_data:
-                return {"success": False, "error": "ไม่สามารถดึงข้อมูลโปรไฟล์จาก Facebook ได้"}
-
-            picture_url = ""
-            if "picture" in user_data and "data" in user_data["picture"]:
-                picture_url = user_data["picture"]["data"].get("url", "")
-
-            return {
-                "success": True,
-                "provider": "facebook",
-                "id": user_data.get("id"),
-                "email": user_data.get("email") or f"fb_{user_data.get('id')}@zonein.app",
-                "name": user_data.get("name", "Facebook User"),
-                "picture": picture_url,
-                "raw": user_data,
-            }
-
     except Exception as e:
         logger.error("OAuth Exchange Exception for %s: %s", provider, str(e), exc_info=True)
         return {"success": False, "error": f"เกิดข้อผิดพลาดในการเชื่อมต่อ: {str(e)}"}
@@ -231,10 +164,11 @@ def sync_social_user(provider: str, user_info: dict) -> tuple:
     if email:
         user = User.objects.filter(email__iexact=email).first()
 
-    # 2. If not found, create new user with a clean unique username
+    # 2. If not found, create new user with username matching full_name (ชื่อ)
     if not user:
-        base_username = slugify(full_name, allow_unicode=False) or f"{provider}_{social_id[:6]}"
-        base_username = base_username.replace("-", "_")[:20]
+        clean_name = full_name.strip() if full_name else ""
+        base_username = clean_name if clean_name else f"user_{social_id[:6]}"
+        base_username = base_username[:30]
         username = base_username
 
         # Guarantee unique username in Neon DB
@@ -311,9 +245,9 @@ def get_consent_disclosures(provider: str = "google") -> dict:
             },
         ],
         "excluded_data": [
-            "รหัสผ่านบัญชี Google หรือ Facebook ของคุณ (ระบบไม่สามารถและจะไม่เข้าถึงรหัสผ่านใดๆ)",
-            "รายชื่อเพื่อน, ข้อความแชทส่วนตัว, ประวัติการค้นหา หรือโพสต์ส่วนตัวบนโซเชียลมีเดีย",
-            "ระบบจะไม่มีการโพสต์สิ่งใดลงบนหน้าฟีดหรือบัญชีโซเชียลของคุณโดยเด็ดขาด",
+            "รหัสผ่านบัญชี Google ของคุณ (ระบบไม่สามารถและจะไม่เข้าถึงรหัสผ่านใดๆ)",
+            "รายชื่อเพื่อน, ข้อความแชทส่วนตัว, ประวัติการค้นหา หรือโพสต์ส่วนตัวบนบัญชี Google",
+            "ระบบจะไม่มีการโพสต์สิ่งใดลงบนหน้าฟีดหรือบัญชีของคุณโดยเด็ดขาด",
         ],
         "purposes": [
             "เพื่อสร้างและยืนยันตัวตนบัญชีสมาชิก Zone In ผ่านระบบ Single Sign-On (SSO)",

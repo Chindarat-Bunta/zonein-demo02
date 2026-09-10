@@ -230,49 +230,41 @@
 
         <div class="production-tip">
             💡 <strong>สำหรับ Production จริง:</strong> เมื่อใส่ 
-            {% if provider == 'google' %}
             <code>GOOGLE_CLIENT_ID</code> และ <code>GOOGLE_CLIENT_SECRET</code>
-            {% else %}
-            <code>FACEBOOK_CLIENT_ID</code> และ <code>FACEBOOK_CLIENT_SECRET</code>
-            {% endif %}
-            ในไฟล์ <code>.env</code> ระบบจะเชื่อมต่อกับ Server ของ {{ disclosures.provider_name }} โดยตรงทันที
+            ในไฟล์ <code>.env</code> ระบบจะเชื่อมต่อกับ Server ของ Google โดยตรงทันที
         </div>
 
-        <form action="{% url 'social_login' provider=provider %}" method="POST">
+        <form action="{% url 'social_login' provider='google' %}" method="POST">
             {% csrf_token %}
             <input type="hidden" name="consent" value="1">
             <input type="hidden" name="simulate_login" value="1">
 
             <!-- Profile Card Preview -->
             <div class="profile-preview-box">
-                <img id="avatarPreview" src="{% if provider == 'google' %}https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80{% else %}https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80{% endif %}" alt="Avatar" class="sim-avatar-img">
+                <img id="avatarPreview" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80" alt="Avatar" class="sim-avatar-img">
                 <div class="preview-info">
-                    <div class="preview-name" id="namePreview">
-                        {% if provider == 'google' %}คุณธนกฤต เดินทางไกล{% else %}คุณพิมพ์ชนก ตะลอนทัวร์{% endif %}
-                    </div>
-                    <div class="preview-email" id="emailPreview">
-                        {% if provider == 'google' %}thanakrit.travel@gmail.com{% else %}pimchanok.tour@facebook.com{% endif %}
-                    </div>
-                    <span class="preview-provider-tag">Verified by {{ disclosures.provider_name }}</span>
+                    <div class="preview-name" id="namePreview">คุณธนกฤต เดินทางไกล</div>
+                    <div class="preview-email" id="emailPreview">thanakrit.travel@gmail.com</div>
+                    <span class="preview-provider-tag">Verified by Google</span>
                 </div>
             </div>
 
             <!-- Customizable Form Fields -->
             <div class="form-group">
-                <label for="simName" class="form-label">ชื่อ - นามสกุลที่ส่งมาจาก {{ disclosures.provider_name }}</label>
+                <label for="simName" class="form-label">ชื่อ - นามสกุลที่ส่งมาจาก Google</label>
                 <input type="text" id="simName" name="sim_name" class="form-input" 
-                       value="{% if provider == 'google' %}คุณธนกฤต เดินทางไกล{% else %}คุณพิมพ์ชนก ตะลอนทัวร์{% endif %}" 
+                       value="คุณธนกฤต เดินทางไกล" 
                        oninput="document.getElementById('namePreview').innerText = this.value || 'Anonymous'">
             </div>
 
             <div class="form-group">
                 <label for="simEmail" class="form-label">ที่อยู่อีเมลที่ได้รับอนุญาต</label>
                 <input type="email" id="simEmail" name="sim_email" class="form-input" 
-                       value="{% if provider == 'google' %}thanakrit.travel@gmail.com{% else %}pimchanok.tour@facebook.com{% endif %}"
+                       value="thanakrit.travel@gmail.com" 
                        oninput="document.getElementById('emailPreview').innerText = this.value || 'user@example.com'">
             </div>
 
-            <input type="hidden" name="sim_picture" value="{% if provider == 'google' %}https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80{% else %}https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80{% endif %}">
+            <input type="hidden" name="sim_picture" value="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80">
 
             <button type="submit" class="btn-confirm-sim">
                 <span>บันทึกลง Neon DB และเข้าสู่ระบบ</span>

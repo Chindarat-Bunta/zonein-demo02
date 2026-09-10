@@ -76,13 +76,16 @@ def profile_settings_view(request):
                     request, f"อัปโหลดรูปภาพไม่สำเร็จ: {upload_res.get('error')}"
                 )
 
-        # 2. Update nickname & bio
+        # 2. Update nickname (ชื่อ) & bio
         profile.nickname = new_nickname
+        target_user = user
+        if new_nickname:
+            target_user.first_name = new_nickname
+            target_user.save(update_fields=["first_name"])
         profile.bio = new_bio
         profile.save()
 
         # 3. Update username if provided and changed
-        target_user = user if user.is_authenticated else demo_user
         if new_username and new_username != target_user.username:
             if (
                 not User.objects.filter(username__iexact=new_username)
@@ -90,7 +93,7 @@ def profile_settings_view(request):
                 .exists()
             ):
                 target_user.username = new_username
-                target_user.save()
+                target_user.save(update_fields=["username"])
             else:
                 messages.error(request, f"ชื่อผู้ใช้ '{new_username}' มีผู้อื่นใช้งานแล้ว")
 
@@ -143,6 +146,9 @@ def update_profile_api(request):
             )
 
     profile.nickname = new_nickname
+    if new_nickname:
+        target_user.first_name = new_nickname
+        target_user.save(update_fields=["first_name"])
     profile.bio = new_bio
     profile.save()
 
@@ -153,7 +159,7 @@ def update_profile_api(request):
             .exists()
         ):
             target_user.username = new_username
-            target_user.save()
+            target_user.save(update_fields=["username"])
         else:
             return JsonResponse(
                 {"success": False, "error": f"ชื่อผู้ใช้ '{new_username}' ถูกใช้งานแล้ว"}
@@ -203,7 +209,7 @@ def profile_view(request, username=None):
     bio = profile.bio or ""
     avatar_url = profile.avatar_url or ""
     user_username = target_user.username
-    email = target_user.email if target_user.email else f"{user_username}@zonein.app"
+    email = target_user.email if (is_own_profile and target_user.email) else ""
     join_date = (
         target_user.date_joined.strftime("%b %Y")
         if hasattr(target_user, "date_joined") and target_user.date_joined
@@ -586,7 +592,7 @@ def signup_view(request):
             profile.nickname = full_name
             profile.save()
 
-        login(request, new_user)
+        login(request, new_user, backend="django.contrib.auth.backends.ModelBackend")
         messages.success(
             request, f"สมัครสมาชิกสำเร็จ! ยินดีต้อนรับสู่ Zone In, {new_user.first_name}"
         )
@@ -598,11 +604,11 @@ def signup_view(request):
 def social_login_consent_view(request, provider):
     """
     Dedicated screen presenting the PDPA consent and data collection disclosure
-    before proceeding to Google or Facebook authentication.
+    before proceeding to Google authentication.
     """
     provider = provider.lower()
-    if provider not in ("google", "facebook"):
-        messages.error(request, "ผู้ให้บริการไม่ถูกต้อง")
+    if provider != "google":
+        messages.error(request, "ระบบรองรับเฉพาะการเข้าสู่ระบบด้วย Google")
         return redirect("web:signin")
 
     disclosures = get_consent_disclosures(provider)
@@ -618,12 +624,12 @@ def social_login_consent_view(request, provider):
 
 def social_login_view(request, provider):
     """
-    Initiates Social Login (Google or Facebook).
+    Initiates Social Login (Google).
     Checks user consent, then either redirects to OAuth 2.0 or opens Sandbox/Simulator.
     """
     provider = provider.lower()
-    if provider not in ("google", "facebook"):
-        messages.error(request, "ผู้ให้บริการไม่ถูกต้อง")
+    if provider != "google":
+        messages.error(request, "ระบบรองรับเฉพาะการเข้าสู่ระบบด้วย Google")
         return redirect("web:signin")
 
     has_consent = request.GET.get("consent") == "1" or request.POST.get("consent") == "1"
@@ -650,7 +656,7 @@ def social_login_view(request, provider):
     if request.method == "POST" and request.POST.get("simulate_login") == "1":
         sim_name = (
             request.POST.get("sim_name", "").strip()
-            or ("Google Traveler" if provider == "google" else "Facebook Traveler")
+            or "Google Traveler"
         )
         sim_email = (
             request.POST.get("sim_email", "").strip().lower()
@@ -671,7 +677,7 @@ def social_login_view(request, provider):
             "picture": sim_picture or default_pic,
         }
         user, profile, created = sync_social_user(provider, user_info)
-        login(request, user)
+        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
         action_word = "ลงทะเบียนและเข้าสู่ระบบ" if created else "เข้าสู่ระบบ"
         messages.success(
             request,
@@ -695,12 +701,12 @@ def social_login_view(request, provider):
 
 def social_login_callback_view(request, provider):
     """
-    OAuth 2.0 Redirect Callback from Google or Facebook.
+    OAuth 2.0 Redirect Callback from Google.
     Exchanges code for access token and provisions user in Neon DB.
     """
     provider = provider.lower()
-    if provider not in ("google", "facebook"):
-        messages.error(request, "ผู้ให้บริการไม่ถูกต้อง")
+    if provider != "google":
+        messages.error(request, "ระบบรองรับเฉพาะการเข้าสู่ระบบด้วย Google")
         return redirect("web:signin")
 
     # Check for errors returned by provider
@@ -740,7 +746,7 @@ def social_login_callback_view(request, provider):
 
     # Provision user and profile in Neon PostgreSQL
     user, profile, created = sync_social_user(provider, result)
-    login(request, user)
+    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
 
     action_word = "ลงทะเบียนและเข้าสู่ระบบ" if created else "เข้าสู่ระบบ"
     messages.success(
