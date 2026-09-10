@@ -393,9 +393,16 @@
                                                         {% endif %}
                                                         <span style="font-size: 0.74rem; color: var(--text-muted); margin-left: 2px;">{{ c.created_at }}</span>
                                                         {% if c.is_author %}
-                                                        <div style="margin-left: auto; display: flex; align-items: center; gap: 4px;">
-                                                            <button type="button" onclick="openDetailEditComment({{ c.id }}, '{{ c.content|escapejs }}', {{ r.review_id }})" title="แก้ไขความคิดเห็น" style="background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 0.8rem; opacity: 0.65; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">✏️</button>
-                                                            <button type="button" onclick="confirmDetailDeleteComment({{ c.id }}, {{ r.review_id }})" title="ลบความคิดเห็น" style="background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 0.8rem; opacity: 0.65; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">🗑️</button>
+                                                        <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">
+                                                            <button class="comment-menu-btn" type="button" aria-label="เมนูความคิดเห็น" onclick="toggleDetailCommentMenu(event, {{ c.id }})">⋯</button>
+                                                            <div class="comment-dropdown" id="detail_comment_dropdown_{{ c.id }}" style="display: none;">
+                                                                <button type="button" class="comment-dd-item" onclick="openDetailEditComment({{ c.id }}, '{{ c.content|escapejs }}', {{ r.review_id }})">
+                                                                    ✏️ แก้ไขความคิดเห็น
+                                                                </button>
+                                                                <button type="button" class="comment-dd-item comment-dd-delete" onclick="confirmDetailDeleteComment({{ c.id }}, {{ r.review_id }})">
+                                                                    🗑️ ลบความคิดเห็น
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                         {% endif %}
                                                     </div>
@@ -742,6 +749,40 @@
         .review-dd-delete { color: #e05d5d; }
         .review-dd-delete:hover { background: rgba(224,93,93,0.08); }
 
+        /* ---- Comment 3-dot Dropdown ---- */
+        .comment-menu-wrap { position: relative; display: inline-flex; align-items: center; }
+        .comment-menu-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 1.15rem; color: var(--text-muted, #718096);
+            padding: 1px 6px; border-radius: 6px;
+            transition: background 0.15s, color 0.15s;
+            line-height: 1;
+        }
+        .comment-menu-btn:hover { background: rgba(255,157,157,0.18); color: var(--color-coral-dark, #FF9D9D); }
+        .comment-dropdown {
+            position: absolute; right: 0; top: calc(100% + 4px);
+            background: #fff;
+            border: 1px solid rgba(255,197,170,0.5);
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            min-width: 145px; z-index: 250;
+            overflow: hidden;
+            animation: fadeInDown 0.15s ease;
+        }
+        .comment-dd-item {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; background: none; border: none;
+            padding: 9px 14px; cursor: pointer;
+            font-size: 0.82rem; font-weight: 600;
+            color: var(--text-primary, #2d3748); text-align: left;
+            font-family: inherit;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .comment-dd-item:hover { background: rgba(255,197,170,0.2); }
+        .comment-dd-delete { color: #e05d5d; }
+        .comment-dd-delete:hover { background: rgba(224,93,93,0.08); }
+
         /* ---- Edit Review Modal ---- */
         .edit-review-overlay {
             position: fixed; inset: 0; z-index: 1000;
@@ -807,7 +848,35 @@
             return '';
         }
 
+        function toggleDetailCommentMenu(event, commentId) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            const dropdown = document.getElementById(`detail_comment_dropdown_${commentId}`);
+            if (!dropdown) return;
+            document.querySelectorAll('.comment-dropdown').forEach(d => {
+                if (d !== dropdown) d.style.display = 'none';
+            });
+            document.querySelectorAll('.review-dropdown').forEach(d => {
+                d.style.display = 'none';
+            });
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close comment dropdowns on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.comment-menu-wrap')) {
+                document.querySelectorAll('.comment-dropdown').forEach(d => d.style.display = 'none');
+            }
+            if (!e.target.closest('.review-menu-wrap')) {
+                document.querySelectorAll('.review-dropdown').forEach(d => d.style.display = 'none');
+            }
+        });
+
         function openDetailEditComment(commentId, content, reviewId) {
+            const dd = document.getElementById(`detail_comment_dropdown_${commentId}`);
+            if (dd) dd.style.display = 'none';
             _editingDetailCommentId = commentId;
             _editingDetailCommentReviewId = reviewId;
             const textarea = document.getElementById('editDetailCommentTextarea');
@@ -878,6 +947,8 @@
         }
 
         async function confirmDetailDeleteComment(commentId, reviewId) {
+            const dd = document.getElementById(`detail_comment_dropdown_${commentId}`);
+            if (dd) dd.style.display = 'none';
             if (!confirm('คุณต้องการลบความคิดเห็นนี้ใช่หรือไม่?')) return;
 
             try {
@@ -968,9 +1039,16 @@
                                     </a>
                                     ${authorName !== authorUsername ? `<span style="font-size: 0.72rem; color: var(--text-muted);">@${authorUsername}</span>` : ''}
                                     <span style="font-size: 0.74rem; color: var(--text-muted); margin-left: 2px;">เมื่อสักครู่นี้</span>
-                                    <div style="margin-left: auto; display: flex; align-items: center; gap: 4px;">
-                                        <button type="button" onclick="openDetailEditComment(${c.id}, '${safeContent}', ${reviewId})" title="แก้ไขความคิดเห็น" style="background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 0.8rem; opacity: 0.65; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">✏️</button>
-                                        <button type="button" onclick="confirmDetailDeleteComment(${c.id}, ${reviewId})" title="ลบความคิดเห็น" style="background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 0.8rem; opacity: 0.65; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">🗑️</button>
+                                    <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">
+                                        <button class="comment-menu-btn" type="button" aria-label="เมนูความคิดเห็น" onclick="toggleDetailCommentMenu(event, ${c.id})">⋯</button>
+                                        <div class="comment-dropdown" id="detail_comment_dropdown_${c.id}" style="display: none;">
+                                            <button type="button" class="comment-dd-item" onclick="openDetailEditComment(${c.id}, '${safeContent}', ${reviewId})">
+                                                ✏️ แก้ไขความคิดเห็น
+                                            </button>
+                                            <button type="button" class="comment-dd-item comment-dd-delete" onclick="confirmDetailDeleteComment(${c.id}, ${reviewId})">
+                                                🗑️ ลบความคิดเห็น
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 <div id="comment_text_${c.id}" style="font-size: 0.86rem; color: var(--text-main); line-height: 1.4; word-break: break-word;">${c.content}</div>

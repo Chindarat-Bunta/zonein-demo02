@@ -1758,3 +1758,17 @@ def api_mark_notifications_read(request):
     updated = Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
     return JsonResponse({"success": True, "updated_count": updated})
 
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_mark_single_notification_read(request, notif_id):
+    """Mark a single notification as read for current user."""
+    if not request.user.is_authenticated:
+        return JsonResponse({"success": False, "error": "unauthorized"}, status=401)
+    notif = get_object_or_404(Notification, pk=notif_id, recipient=request.user)
+    if not notif.is_read:
+        notif.is_read = True
+        notif.save(update_fields=["is_read"])
+    unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+    return JsonResponse({"success": True, "notif_id": notif_id, "unread_count": unread_count})
+

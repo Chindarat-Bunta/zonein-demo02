@@ -1358,6 +1358,41 @@
     .post-dd-delete { color: #e05d5d; }
     .post-dd-delete:hover { background: rgba(224,93,93,0.08); }
 
+    /* ---- Comment 3-dot Dropdown ---- */
+    .comment-menu-wrap { position: relative; display: inline-flex; align-items: center; }
+    .comment-menu-btn {
+        background: none; border: none; cursor: pointer;
+        font-size: 1.15rem; color: #8c98a4;
+        padding: 1px 6px; border-radius: 6px;
+        transition: background 0.15s, color 0.15s;
+        line-height: 1;
+    }
+    .comment-menu-btn:hover { background: rgba(255,157,157,0.18); color: #FF9D9D; }
+    .comment-dropdown {
+        position: absolute; right: 0; top: calc(100% + 4px);
+        background: #fff;
+        border: 1px solid rgba(255,197,170,0.5);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        min-width: 145px; z-index: 350;
+        overflow: hidden;
+        animation: commentMenuFade 0.15s ease;
+    }
+    @keyframes commentMenuFade { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+    .comment-dd-item {
+        display: flex; align-items: center; gap: 8px;
+        width: 100%; background: none; border: none;
+        padding: 9px 14px; cursor: pointer;
+        font-size: 0.82rem; font-weight: 600;
+        color: #1e242b; text-align: left;
+        font-family: inherit;
+        transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .comment-dd-item:hover { background: rgba(255,197,170,0.2); }
+    .comment-dd-delete { color: #e05d5d; }
+    .comment-dd-delete:hover { background: rgba(224,93,93,0.08); }
+
     /* ---- Edit Post Modal ---- */
     .edit-post-overlay {
         position: fixed; inset: 0; z-index: 4000;
@@ -1857,8 +1892,8 @@
                     </div>
                 {% elif notifications %}
                     {% for notif in notifications %}
-                    <a href="{{ notif.target_url }}" class="notif-card-link" style="text-decoration: none; color: inherit; display: block;">
-                        <div class="notif-item-card {% if not notif.is_read %}notif-unread{% endif %}" style="background: var(--bg-card); border: 1px solid {% if not notif.is_read %}rgba(255, 157, 157, 0.6){% else %}var(--border-color){% endif %}; border-radius: var(--radius-md); padding: 1.1rem 1.35rem; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: {% if not notif.is_read %}0 6px 20px rgba(255, 157, 157, 0.18){% else %}var(--shadow-card){% endif %}; backdrop-filter: blur(12px); transition: all 0.25s ease; position: relative;">
+                    <a href="{{ notif.target_url }}" class="notif-card-link" id="notif_link_{{ notif.id }}" onclick="handleNotificationClick(event, {{ notif.id }}, {{ notif.is_read|yesno:'true,false' }})" style="text-decoration: none; color: inherit; display: block;">
+                        <div class="notif-item-card {% if not notif.is_read %}notif-unread{% endif %}" id="notif_card_{{ notif.id }}" style="background: var(--bg-card); border: 1px solid {% if not notif.is_read %}rgba(255, 157, 157, 0.6){% else %}var(--border-color){% endif %}; border-radius: var(--radius-md); padding: 1.1rem 1.35rem; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: {% if not notif.is_read %}0 6px 20px rgba(255, 157, 157, 0.18){% else %}var(--shadow-card){% endif %}; backdrop-filter: blur(12px); transition: all 0.25s ease; position: relative;">
                             
                             <div style="display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1;">
                                 <!-- User Avatar with Action Icon Overlay -->
@@ -1897,7 +1932,7 @@
                                     {{ notif.created_at|timesince }} ที่แล้ว
                                 </span>
                                 {% if not notif.is_read %}
-                                <span class="notif-pill-new" style="background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #ffffff; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(255, 157, 157, 0.4);">
+                                <span class="notif-pill-new" id="notif_pill_{{ notif.id }}" style="background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #ffffff; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(255, 157, 157, 0.4);">
                                     ใหม่
                                 </span>
                                 {% endif %}
@@ -1919,6 +1954,53 @@
     </div>
 
     <script>
+    function handleNotificationClick(event, notifId, isRead) {
+        if (!isRead) {
+            // Optimistically update card style to read
+            const card = document.getElementById(`notif_card_${notifId}`);
+            if (card) {
+                card.classList.remove('notif-unread');
+                card.style.borderColor = 'var(--border-color)';
+                card.style.boxShadow = 'var(--shadow-card)';
+            }
+            const pill = document.getElementById(`notif_pill_${notifId}`);
+            if (pill) pill.remove();
+
+            // Decrement badge count on navbar
+            ['notifBadgeDesktop', 'notifBadgeMobile'].forEach(id => {
+                const badge = document.getElementById(id);
+                if (badge) {
+                    const count = parseInt(badge.textContent.trim()) || 0;
+                    if (count <= 1) {
+                        badge.remove();
+                    } else {
+                        badge.textContent = count - 1;
+                    }
+                }
+            });
+
+            // Check if any unread cards remain
+            const remaining = document.querySelectorAll('.notif-item-card.notif-unread').length;
+            if (remaining === 0) {
+                const btn = document.getElementById('btnMarkAllRead');
+                if (btn) btn.remove();
+            }
+
+            // Fire async POST to mark single notification as read
+            try {
+                fetch(`/api/notifications/${notifId}/read/`, {
+                    method: 'POST',
+                    keepalive: true,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).catch(e => console.error("Error marking notification as read:", e));
+            } catch (e) {
+                console.error("Error marking notification read:", e);
+            }
+        }
+    }
+
     async function markAllNotificationsAsRead() {
         try {
             const res = await fetch('/api/notifications/read-all/', {
@@ -2166,10 +2248,13 @@ function togglePostMenu(event, reviewId) {
     dropdown.classList.toggle('open');
 }
 
-// Close post dropdowns when clicking outside
+// Close post and comment dropdowns when clicking outside
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.post-menu-wrap')) {
         document.querySelectorAll('.post-dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+    if (!e.target.closest('.comment-menu-wrap')) {
+        document.querySelectorAll('.comment-dropdown').forEach(d => d.style.display = 'none');
     }
 });
 
@@ -2316,7 +2401,25 @@ document.addEventListener('keydown', (e) => {
 let _editingCommentId = null;
 let _editingCommentReviewId = null;
 
+function toggleHomeCommentMenu(event, commentId) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    const dropdown = document.getElementById(`home_comment_dropdown_${commentId}`);
+    if (!dropdown) return;
+    document.querySelectorAll('.comment-dropdown').forEach(d => {
+        if (d !== dropdown) d.style.display = 'none';
+    });
+    document.querySelectorAll('.post-dropdown.open').forEach(d => {
+        d.classList.remove('open');
+    });
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
 function openEditCommentModal(commentId, content, reviewId) {
+    const dd = document.getElementById(`home_comment_dropdown_${commentId}`);
+    if (dd) dd.style.display = 'none';
     _editingCommentId = commentId;
     _editingCommentReviewId = reviewId;
     const textarea = document.getElementById('editCommentTextarea');
@@ -2401,6 +2504,8 @@ async function submitEditComment() {
 }
 
 async function confirmDeleteComment(commentId, reviewId) {
+    const dd = document.getElementById(`home_comment_dropdown_${commentId}`);
+    if (dd) dd.style.display = 'none';
     if (!confirm('คุณต้องการลบความคิดเห็นนี้ใช่หรือไม่?')) return;
 
     try {
@@ -2467,9 +2572,16 @@ function renderSingleCommentHtml(c, reviewId) {
                     ${authorNickname !== authorUsername ? `<span style="font-size: 0.74rem; color: #8c98a4;">@${authorUsername}</span>` : ''}
                     <span class="comment-time" style="text-align: left; margin-left: 2px;">${timeFormatted}</span>
                     ${isOwner ? `
-                    <div class="comment-actions" style="margin-left: auto; display: flex; align-items: center; gap: 4px;">
-                        <button type="button" class="btn-comment-action" onclick="openEditCommentModal(${c.id}, '${safeContent}', ${reviewId})" title="แก้ไขความคิดเห็น" style="background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 0.8rem; opacity: 0.65; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">✏️</button>
-                        <button type="button" class="btn-comment-action" onclick="confirmDeleteComment(${c.id}, ${reviewId})" title="ลบความคิดเห็น" style="background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 0.8rem; opacity: 0.65; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">🗑️</button>
+                    <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">
+                        <button class="comment-menu-btn" type="button" aria-label="เมนูความคิดเห็น" onclick="toggleHomeCommentMenu(event, ${c.id})">⋯</button>
+                        <div class="comment-dropdown" id="home_comment_dropdown_${c.id}" style="display: none;">
+                            <button type="button" class="comment-dd-item" onclick="openEditCommentModal(${c.id}, '${safeContent}', ${reviewId})">
+                                ✏️ แก้ไขความคิดเห็น
+                            </button>
+                            <button type="button" class="comment-dd-item comment-dd-delete" onclick="confirmDeleteComment(${c.id}, ${reviewId})">
+                                🗑️ ลบความคิดเห็น
+                            </button>
+                        </div>
                     </div>
                     ` : ''}
                 </div>

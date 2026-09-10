@@ -110,6 +110,11 @@ urlpatterns = [
         views.api_mark_notifications_read,
         name="api_mark_notifications_read",
     ),
+    path(
+        "api/notifications/<int:notif_id>/read/",
+        views.api_mark_single_notification_read,
+        name="api_mark_single_notification_read",
+    ),
     # Place Details
     path("places/<int:place_id>/", views.place_detail, name="place_detail_id"),
     path("places/<slug:slug>/", views.place_detail, name="place_detail"),
