@@ -417,11 +417,13 @@ def home_view(request, active_tab="home"):
     ]
 
     user_notifications = []
+    unread_notifications_count = 0
     if request.user.is_authenticated:
+        notif_qs = Notification.objects.filter(recipient=request.user)
+        unread_notifications_count = notif_qs.filter(is_read=False).count()
         user_notifications = list(
-            Notification.objects.filter(recipient=request.user)
-            .select_related("actor", "post")
-            .order_by("-created_at")[:20]
+            notif_qs.select_related("actor", "actor__profile", "post")
+            .order_by("-created_at")[:30]
         )
 
     followed_user_ids = []
@@ -442,6 +444,7 @@ def home_view(request, active_tab="home"):
         "all_places_count": places.count(),
         "wishlist_ids": wishlist_ids,
         "notifications": user_notifications,
+        "unread_notifications_count": unread_notifications_count,
         "followed_user_ids": followed_user_ids,
         "filters": {
             "q": request.GET.get("q", ""),
@@ -976,6 +979,21 @@ def api_add_comment(request, review_id):
     author = request.user
 
     comment = Comment.objects.create(review=review, author=author, content=content)
+
+    # Trigger notification to review author if not self
+    if review.user and review.user != author:
+        author_profile = getattr(author, "profile", None)
+        author_name = author_profile.get_display_name() if author_profile else (author.first_name or author.username)
+        actor_tag = f"{author_name} (@{author.username})" if author_name and author_name != author.username else f"@{author.username}"
+        post_title = f"'{review.place.name}'" if review.place else "รีวิวของคุณ"
+        Notification.objects.create(
+            actor=author,
+            recipient=review.user,
+            action_type="comment",
+            post=review.place,
+            message=f"{actor_tag} ได้แสดงความคิดเห็นบนรีวิวของคุณ ({post_title})",
+        )
+
     return JsonResponse(
         {
             "success": True,
@@ -1488,14 +1506,14 @@ def api_toggle_follow(request, user_id):
     else:
         UserFollow.objects.create(follower=request.user, following=target_user)
         is_following = True
-        actor_name = request.user.first_name or request.user.username
-        if hasattr(request.user, "profile") and request.user.profile.get_display_name():
-            actor_name = request.user.profile.get_display_name()
+        profile = getattr(request.user, "profile", None)
+        actor_name = profile.get_display_name() if profile else (request.user.first_name or request.user.username)
+        actor_tag = f"{actor_name} (@{request.user.username})" if actor_name and actor_name != request.user.username else f"@{request.user.username}"
         Notification.objects.create(
             actor=request.user,
             recipient=target_user,
             action_type="follow",
-            message=f"{actor_name} ได้เริ่มติดตามคุณ",
+            message=f"{actor_tag} ได้เริ่มติดตามคุณ",
         )
         message = f"ติดตาม @{target_user.username} เรียบร้อยแล้ว"
 
@@ -1588,4 +1606,14 @@ def api_user_following(request, user_id):
             }
         )
     return JsonResponse({"success": True, "count": len(users_data), "users": users_data})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_mark_notifications_read(request):
+    """Mark all unread notifications for current user as read."""
+    if not request.user.is_authenticated:
+        return JsonResponse({"success": False, "error": "unauthorized"}, status=401)
+    updated = Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({"success": True, "updated_count": updated})
 

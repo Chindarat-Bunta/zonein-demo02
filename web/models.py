@@ -566,25 +566,53 @@ class Notification(models.Model):
             self.save(update_fields=["is_read", "updated_at"])
 
     @property
+    def actor_display_name(self):
+        profile = getattr(self.actor, "profile", None)
+        if profile and profile.get_display_name():
+            return profile.get_display_name()
+        return self.actor.first_name or self.actor.username
+
+    @property
+    def actor_handle(self):
+        return f"@{self.actor.username}"
+
+    @property
+    def actor_tag(self):
+        display = self.actor_display_name
+        if display and display != self.actor.username:
+            return f"{display} (@{self.actor.username})"
+        return f"@{self.actor.username}"
+
+    @property
+    def actor_avatar(self):
+        profile = getattr(self.actor, "profile", None)
+        return profile.avatar_url if profile and profile.avatar_url else ""
+
+    @property
+    def target_url(self):
+        if self.action_type == "follow":
+            return f"/profile/{self.actor.username}/"
+        if self.post:
+            return f"/places/{self.post.id}/"
+        return "#"
+
+    @property
     def summary_text(self):
         if self.message:
             return self.message
 
-        actor_name = getattr(self.actor, "profile", None)
-        actor_display = (
-            actor_name.get_display_name() if actor_name else self.actor.username
-        )
+        actor_str = self.actor_tag
         post_name = f"'{self.post.name}'" if self.post else "โพสต์ของคุณ"
 
         if self.action_type == "like":
-            return f"{actor_display} ได้กดไลก์ {post_name}"
+            return f"{actor_str} ได้กดถูกใจโพสต์ {post_name}"
         elif self.action_type == "review":
-            return f"{actor_display} ได้เขียนรีวิวบน {post_name}"
+            return f"{actor_str} ได้เขียนรีวิวบน {post_name}"
         elif self.action_type == "comment":
-            return f"{actor_display} ได้แสดงความคิดเห็นบน {post_name}"
+            return f"{actor_str} ได้แสดงความคิดเห็นบน {post_name}"
         elif self.action_type == "follow":
-            return f"{actor_display} ได้เริ่มติดตามคุณ"
-        return f"{actor_display} มีการเคลื่อนไหวใหม่บน {post_name}"
+            return f"{actor_str} ได้เริ่มติดตามคุณ"
+        return f"{actor_str} มีการเคลื่อนไหวใหม่บน {post_name}"
 
 
 # ==============================================================================
