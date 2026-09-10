@@ -392,11 +392,9 @@
                                                             <span style="font-size: 0.72rem; color: var(--text-muted);">@{{ c.username }}</span>
                                                         {% endif %}
                                                         <span style="font-size: 0.74rem; color: var(--text-muted); margin-left: 2px;">{{ c.created_at }}</span>
-                                                        {% if c.can_delete or c.is_author %}
+                                                        {% if c.is_author %}
                                                         <div style="margin-left: auto; display: flex; align-items: center; gap: 4px;">
-                                                            {% if c.is_author %}
                                                             <button type="button" onclick="openDetailEditComment({{ c.id }}, '{{ c.content|escapejs }}', {{ r.review_id }})" title="แก้ไขความคิดเห็น" style="background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 0.8rem; opacity: 0.65; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">✏️</button>
-                                                            {% endif %}
                                                             <button type="button" onclick="confirmDetailDeleteComment({{ c.id }}, {{ r.review_id }})" title="ลบความคิดเห็น" style="background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 0.8rem; opacity: 0.65; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.65'">🗑️</button>
                                                         </div>
                                                         {% endif %}

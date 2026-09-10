@@ -1138,8 +1138,8 @@ def api_edit_comment(request, comment_id):
 def api_delete_comment(request, comment_id):
     """POST /api/comments/<comment_id>/delete/"""
     comment = get_object_or_404(Comment, pk=comment_id)
-    if not request.user.is_authenticated or (request.user != comment.author and request.user != comment.review.user and not request.user.is_staff):
-        return JsonResponse({"success": False, "error": "unauthorized", "message": "คุณไม่มีสิทธิ์ลบความคิดเห็นนี้"}, status=403)
+    if not request.user.is_authenticated or (request.user != comment.author and not request.user.is_superuser):
+        return JsonResponse({"success": False, "error": "unauthorized", "message": "คุณไม่มีสิทธิ์ลบความคิดเห็นนี้ เนื่องจากไม่ใช่เจ้าของความคิดเห็น"}, status=403)
     review_id = comment.review_id
     comment.delete()
     comments_count = Comment.objects.filter(review_id=review_id).count()
@@ -1412,12 +1412,7 @@ def place_detail(request, place_id=None, slug=None):
                         "avatar": c_avatar,
                     },
                     "is_author": request.user.is_authenticated and request.user.id == c.author_id,
-                    "can_delete": request.user.is_authenticated
-                    and (
-                        request.user.id == c.author_id
-                        or (r.user and request.user == r.user)
-                        or request.user.is_staff
-                    ),
+                    "can_delete": request.user.is_authenticated and (request.user.id == c.author_id or request.user.is_superuser),
                 }
             )
 
