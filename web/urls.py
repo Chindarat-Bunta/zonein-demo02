@@ -49,6 +49,16 @@ urlpatterns = [
         name="api_add_comment",
     ),
     path(
+        "api/comments/<int:comment_id>/edit/",
+        views.api_edit_comment,
+        name="api_edit_comment",
+    ),
+    path(
+        "api/comments/<int:comment_id>/delete/",
+        views.api_delete_comment,
+        name="api_delete_comment",
+    ),
+    path(
         "api/reviews/<int:review_id>/edit/",
         views.api_edit_review,
         name="api_edit_review",
@@ -99,6 +109,11 @@ urlpatterns = [
         "api/notifications/read-all/",
         views.api_mark_notifications_read,
         name="api_mark_notifications_read",
+    ),
+    path(
+        "api/notifications/<int:notif_id>/read/",
+        views.api_mark_single_notification_read,
+        name="api_mark_single_notification_read",
     ),
     # Place Details
     path("places/<int:place_id>/", views.place_detail, name="place_detail_id"),

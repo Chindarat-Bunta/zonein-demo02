@@ -16,7 +16,7 @@
                 </div>
                 <div>
                     <h2 class="modal-title" id="postModalTitle">สร้างโพสต์ใหม่</h2>
-                    <p class="modal-subtitle">แบ่งปันสถานที่ท่องเที่ยว คาเฟ่ หรือที่พักสุดประทับใจให้เพื่อนๆ ได้ตามรอย</p>
+                    <p class="modal-subtitle" id="postModalSubtitle">แบ่งปันสถานที่ท่องเที่ยว คาเฟ่ หรือที่พักสุดประทับใจให้เพื่อนๆ ได้ตามรอย</p>
                 </div>
             </div>
             <button type="button" class="btn-close-modal" onclick="closeCreatePostModal()" aria-label="ปิดหน้าต่างสร้างโพสต์">
@@ -30,6 +30,8 @@
         <!-- Modal Body: Form -->
         <form id="createPostForm" onsubmit="handleCreatePostSubmit(event)" enctype="multipart/form-data" novalidate style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; margin: 0;">
             {% csrf_token %}
+            <input type="hidden" name="post_mode" id="postModalMode" value="create">
+            <input type="hidden" name="editing_review_id" id="editingPostReviewId" value="">
             <div class="modal-body post-modal-body" style="overflow-y: auto; flex: 1 1 auto; min-height: 0; overscroll-behavior: contain;">
                 
                 <!-- 1. ชื่อสถานที่ / หัวข้อโพสต์ -->
@@ -264,7 +266,7 @@
                             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                         </svg>
                     </span>
-                    <span class="btn-text">เผยแพร่โพสต์</span>
+                    <span class="btn-text" id="btnSubmitPostText">เผยแพร่โพสต์</span>
                     <span class="btn-spinner" style="display: none;"></span>
                 </button>
             </div>

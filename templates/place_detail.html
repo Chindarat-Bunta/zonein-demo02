@@ -121,6 +121,28 @@
                     </svg>
                     <span>{{ place.address|default:"อำเภอแม่ริม จังหวัดเชียงใหม่" }}</span>
                 </div>
+                {% if place_author %}
+                <div class="place-post-author-row" style="display: flex; align-items: center; gap: 10px; margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px dashed rgba(255, 197, 170, 0.45);">
+                    <a href="/profile/{{ place_author.username }}/" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;" title="ดูโปรไฟล์เจ้าของโพสต์">
+                        <div class="comment-avatar" style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #FF9D9D, #FFB095); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.95rem; flex-shrink: 0; box-shadow: 0 2px 8px rgba(255, 157, 157, 0.35);">
+                            {% if place_author_avatar %}
+                                <img src="{{ place_author_avatar }}" alt="{{ place_author_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                {{ place_author_name|slice:":1"|upper }}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">
+                                โพสต์โดย <span style="color: #FF9D9D;">{{ place_author_name }}</span> 
+                                {% if place_author_name != place_author.username %}
+                                    <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">(@{{ place_author.username }})</span>
+                                {% endif %}
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">เจ้าของโพสต์สถานที่แรกเริ่ม</div>
+                        </div>
+                    </a>
+                </div>
+                {% endif %}
             </div>
             <!-- Photo Gallery Showcase (แสดงเมื่อมีรูปภาพเท่านั้น) -->
             {% if place.cover_image_url %}
@@ -304,91 +326,95 @@
                         <!-- Reviews List Container -->
                         <div id="reviewsList" data-place-id="{{ place.id|default:'2' }}" data-place-author-id="{{ place.author.id|default:'' }}">
                             {% for r in reviews %}
-                                {% with can_manage=False %}
-                                {% if user.is_authenticated %}
-                                    {% if user.username == r.username or user == place.author %}
-                                        {% with can_manage=True %}
-                                        <div class="review-item-card"
-                                             data-review-id="{{ r.review_id }}"
-                                             data-review-comment="{{ r.comment|escapejs }}"
-                                             data-review-rating="{{ r.rating }}">
-                                            <div class="review-author-row">
-                                                <div class="author-profile-box">
-                                                    <a href="{% if r.username %}/profile/{{ r.username }}/{% else %}#{% endif %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
-                                                        <img src="{{ r.user_avatar|default:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' }}"
-                                                             class="author-avatar"
-                                                             alt="{{ r.user_name }}">
-                                                        <div class="author-meta">
-                                                            <span class="author-name" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">{{ r.user_name }}</span>
-                                                            <span class="author-date">{{ r.created_at }}</span>
-                                                        </div>
-                                                    </a>
+                                <div class="review-item-card"
+                                     data-review-id="{{ r.review_id }}"
+                                     data-review-comment="{{ r.comment|escapejs }}"
+                                     data-review-rating="{{ r.rating }}">
+                                    <div class="review-author-row">
+                                        <div class="author-profile-box">
+                                            <a href="{% if r.username %}/profile/{{ r.username }}/{% else %}#{% endif %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;" title="ดูโปรไฟล์ @{{ r.username }}">
+                                                <img src="{{ r.user_avatar|default:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' }}"
+                                                     class="author-avatar"
+                                                     alt="{{ r.user_name }}">
+                                                <div class="author-meta">
+                                                    <span class="author-name" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">{{ r.user_name }}</span>
+                                                    <span class="author-date">{{ r.created_at }}</span>
                                                 </div>
-                                                <div style="display:flex;align-items:center;gap:10px;">
-                                                    <div class="review-stars-score" title="{{ r.rating }} ดาว">
-                                                        {% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
-                                                    </div>
-                                                    <!-- 3-dot menu (เจ้าของรีวิว / เจ้าของโพสต์เท่านั้น) -->
-                                                    <div class="review-menu-wrap">
-                                                        <button class="review-menu-btn" type="button" aria-label="เมนูรีวิว" onclick="toggleReviewMenu(this)">⋯</button>
-                                                        <div class="review-dropdown" style="display:none;">
-                                                            <button type="button" class="review-dd-item" onclick="openEditReview(this.closest('.review-item-card'))">
-                                                                ✏️ แก้ไขรีวิว
-                                                            </button>
-                                                            <button type="button" class="review-dd-item review-dd-delete" onclick="confirmDeleteReview(this.closest('.review-item-card'))">
-                                                                🗑️ ลบรีวิว
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="review-body-text">{{ r.comment }}</div>
+                                            </a>
                                         </div>
-                                        {% endwith %}
-                                    {% else %}
-                                        <div class="review-item-card">
-                                            <div class="review-author-row">
-                                                <div class="author-profile-box">
-                                                    <a href="{% if r.username %}/profile/{{ r.username }}/{% else %}#{% endif %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
-                                                        <img src="{{ r.user_avatar|default:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' }}"
-                                                             class="author-avatar"
-                                                             alt="{{ r.user_name }}">
-                                                        <div class="author-meta">
-                                                            <span class="author-name" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">{{ r.user_name }}</span>
-                                                            <span class="author-date">{{ r.created_at }}</span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="review-stars-score" title="{{ r.rating }} ดาว">
-                                                    {% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
-                                                </div>
-                                            </div>
-                                            <div class="review-body-text">{{ r.comment }}</div>
-                                        </div>
-                                    {% endif %}
-                                {% else %}
-                                    <!-- Not logged in — no menu shown -->
-                                    <div class="review-item-card">
-                                        <div class="review-author-row">
-                                            <div class="author-profile-box">
-                                                <a href="{% if r.username %}/profile/{{ r.username }}/{% else %}#{% endif %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
-                                                    <img src="{{ r.user_avatar|default:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' }}"
-                                                         class="author-avatar"
-                                                         alt="{{ r.user_name }}">
-                                                    <div class="author-meta">
-                                                        <span class="author-name">{{ r.user_name }}</span>
-                                                        <span class="author-date">{{ r.created_at }}</span>
-                                                    </div>
-                                                </a>
-                                            </div>
+                                        <div style="display:flex;align-items:center;gap:10px;">
                                             <div class="review-stars-score" title="{{ r.rating }} ดาว">
                                                 {% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
                                             </div>
+                                            {% if user.is_authenticated and user.username == r.username or user == place.author or user.is_staff %}
+                                            <!-- 3-dot menu (เจ้าของรีวิว / เจ้าของโพสต์ / ผู้ดูแล) -->
+                                            <div class="review-menu-wrap">
+                                                <button class="review-menu-btn" type="button" aria-label="เมนูรีวิว" onclick="toggleReviewMenu(this)">⋯</button>
+                                                <div class="review-dropdown" style="display:none;">
+                                                    <button type="button" class="review-dd-item" onclick="openEditReview(this.closest('.review-item-card'))">
+                                                        ✏️ แก้ไขรีวิว
+                                                    </button>
+                                                    <button type="button" class="review-dd-item review-dd-delete" onclick="confirmDeleteReview(this.closest('.review-item-card'))">
+                                                        🗑️ ลบรีวิว
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {% endif %}
                                         </div>
-                                        <div class="review-body-text">{{ r.comment }}</div>
                                     </div>
-                                {% endif %}
-                                {% endwith %}
+                                    <div class="review-body-text">{{ r.comment }}</div>
+
+                                    <!-- Comments on this Review (ไม่ต้องให้ดาว) -->
+                                    <div class="review-comments-box" style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255, 197, 170, 0.35);">
+                                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.6rem;">
+                                            <span>💬 ความคิดเห็น (<span id="detail_comment_count_{{ r.review_id }}">{{ r.comments_count|default:0 }}</span>)</span>
+                                        </div>
+                                        <div class="detail-comments-list" id="detail_comments_list_{{ r.review_id }}" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 0.75rem;">
+                                            {% for c in r.comments %}
+                                            <div class="comment-item" id="comment_{{ c.id }}" style="display: flex; gap: 0.75rem; align-items: flex-start; background: rgba(255, 255, 255, 0.7); padding: 0.65rem 0.85rem; border-radius: 12px; border: 1px solid rgba(255, 197, 170, 0.35);">
+                                                <a href="/profile/{{ c.author.username|default:c.username }}/" style="text-decoration: none; color: inherit; flex-shrink: 0;" title="ดูโปรไฟล์ @{{ c.author.username|default:c.username }}">
+                                                    <div style="width: 30px; height: 30px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #FF9D9D, #FFB095); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.82rem;">
+                                                        {% if c.author.avatar or c.avatar %}
+                                                            <img src="{{ c.author.avatar|default:c.avatar }}" alt="{{ c.author.name|default:c.user_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                                        {% else %}
+                                                            {{ c.author.name|default:c.user_name|slice:":1"|upper }}
+                                                        {% endif %}
+                                                    </div>
+                                                </a>
+                                                <div style="flex: 1; min-width: 0;">
+                                                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px;">
+                                                        <a href="/profile/{{ c.author.username|default:c.username }}/" style="text-decoration: none; color: inherit; font-size: 0.85rem; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">
+                                                            {{ c.author.username|default:c.username }}
+                                                        </a>
+                                                        <span style="font-size: 0.74rem; color: var(--text-muted); margin-left: 2px;">{{ c.created_at }}</span>
+                                                        {% if c.is_author %}
+                                                        <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">
+                                                            <button class="comment-menu-btn" type="button" aria-label="เมนูความคิดเห็น" onclick="toggleDetailCommentMenu(event, {{ c.id }})">⋯</button>
+                                                            <div class="comment-dropdown" id="detail_comment_dropdown_{{ c.id }}" style="display: none;">
+                                                                <button type="button" class="comment-dd-item" onclick="openDetailEditComment({{ c.id }}, '{{ c.content|escapejs }}', {{ r.review_id }})">
+                                                                    ✏️ แก้ไขความคิดเห็น
+                                                                </button>
+                                                                <button type="button" class="comment-dd-item comment-dd-delete" onclick="confirmDetailDeleteComment({{ c.id }}, {{ r.review_id }})">
+                                                                    🗑️ ลบความคิดเห็น
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div id="comment_text_{{ c.id }}" style="font-size: 0.86rem; color: var(--text-main); line-height: 1.4; word-break: break-word;">{{ c.content }}</div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        <!-- Simple Comment Input Form (ไม่ต้องมีดาว) -->
+                                        <form class="detail-comment-form" onsubmit="submitDetailComment(event, {{ r.review_id }})" style="display: flex; gap: 8px; align-items: center;">
+                                            <input type="text" id="detail_comment_input_{{ r.review_id }}" placeholder="{% if user.is_authenticated %}เขียนความคิดเห็นของคุณ...{% else %}เข้าสู่ระบบเพื่อแสดงความคิดเห็น...{% endif %}" {% if not user.is_authenticated %}readonly onclick="window.location.href='/signin/?next={{ request.path }}'"{% endif %} style="flex: 1; padding: 7px 14px; border-radius: 9999px; border: 1px solid rgba(255, 197, 170, 0.7); font-size: 0.84rem; background: #fff; outline: none; font-family: inherit; transition: border-color 0.2s;" onfocus="this.style.borderColor='#FF9D9D'" onblur="this.style.borderColor='rgba(255, 197, 170, 0.7)'" required>
+                                            <button type="submit" style="padding: 7px 16px; border-radius: 9999px; background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #fff; border: none; font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                                                {% if user.is_authenticated %}ส่งความคิดเห็น{% else %}เข้าสู่ระบบ{% endif %}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             {% empty %}
                                 <div class="review-item-card">
                                     <p style="color: var(--text-muted); text-align: center; padding: 20px;">ยังไม่มีรีวิวสำหรับสถานที่นี้ เป็นคนแรกที่เริ่มเขียนรีวิวเลย!</p>
@@ -659,6 +685,25 @@
                         บันทึกการแก้ไข
                     </button>
                 </div>
+        </div>
+
+        <!-- ======================================================
+             Edit Comment Modal
+             ====================================================== -->
+        <div id="editDetailCommentModal" class="edit-review-overlay" style="display:none;" onclick="closeDetailEditCommentModal(event)">
+            <div class="edit-review-card" onclick="event.stopPropagation()">
+                <div class="edit-review-header">
+                    <h3>✏️ แก้ไขความคิดเห็น</h3>
+                    <button type="button" class="edit-review-close" onclick="closeDetailEditCommentModal()">&times;</button>
+                </div>
+                <textarea id="editDetailCommentTextarea" class="review-textarea" rows="3" placeholder="แก้ไขความคิดเห็นของคุณ..."></textarea>
+                <div class="edit-review-actions">
+                    <button type="button" class="btn-cancel-edit" onclick="closeDetailEditCommentModal()">ยกเลิก</button>
+                    <button type="button" class="btn-save-edit" id="btnSaveDetailCommentEdit" onclick="submitDetailEditComment()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        บันทึกความคิดเห็น
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -698,6 +743,40 @@
         .review-dd-item:hover { background: rgba(255,197,170,0.18); }
         .review-dd-delete { color: #e05d5d; }
         .review-dd-delete:hover { background: rgba(224,93,93,0.08); }
+
+        /* ---- Comment 3-dot Dropdown ---- */
+        .comment-menu-wrap { position: relative; display: inline-flex; align-items: center; }
+        .comment-menu-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 1.15rem; color: var(--text-muted, #718096);
+            padding: 1px 6px; border-radius: 6px;
+            transition: background 0.15s, color 0.15s;
+            line-height: 1;
+        }
+        .comment-menu-btn:hover { background: rgba(255,157,157,0.18); color: var(--color-coral-dark, #FF9D9D); }
+        .comment-dropdown {
+            position: absolute; right: 0; top: calc(100% + 4px);
+            background: #fff;
+            border: 1px solid rgba(255,197,170,0.5);
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            min-width: 145px; z-index: 250;
+            overflow: hidden;
+            animation: fadeInDown 0.15s ease;
+        }
+        .comment-dd-item {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; background: none; border: none;
+            padding: 9px 14px; cursor: pointer;
+            font-size: 0.82rem; font-weight: 600;
+            color: var(--text-primary, #2d3748); text-align: left;
+            font-family: inherit;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .comment-dd-item:hover { background: rgba(255,197,170,0.2); }
+        .comment-dd-delete { color: #e05d5d; }
+        .comment-dd-delete:hover { background: rgba(224,93,93,0.08); }
 
         /* ---- Edit Review Modal ---- */
         .edit-review-overlay {
@@ -749,6 +828,239 @@
         .btn-save-edit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,157,157,0.45); }
         .btn-save-edit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         </style>
+
+        <script>
+        let _editingDetailCommentId = null;
+        let _editingDetailCommentReviewId = null;
+
+        function getDetailCsrf() {
+            if (typeof getCsrfToken === 'function') return getCsrfToken();
+            const name = 'csrftoken';
+            for (const cookie of document.cookie.split(';')) {
+                const c = cookie.trim();
+                if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+            }
+            return '';
+        }
+
+        function toggleDetailCommentMenu(event, commentId) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            const dropdown = document.getElementById(`detail_comment_dropdown_${commentId}`);
+            if (!dropdown) return;
+            document.querySelectorAll('.comment-dropdown').forEach(d => {
+                if (d !== dropdown) d.style.display = 'none';
+            });
+            document.querySelectorAll('.review-dropdown').forEach(d => {
+                d.style.display = 'none';
+            });
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close comment dropdowns on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.comment-menu-wrap')) {
+                document.querySelectorAll('.comment-dropdown').forEach(d => d.style.display = 'none');
+            }
+            if (!e.target.closest('.review-menu-wrap')) {
+                document.querySelectorAll('.review-dropdown').forEach(d => d.style.display = 'none');
+            }
+        });
+
+        function openDetailEditComment(commentId, content, reviewId) {
+            const dd = document.getElementById(`detail_comment_dropdown_${commentId}`);
+            if (dd) dd.style.display = 'none';
+            _editingDetailCommentId = commentId;
+            _editingDetailCommentReviewId = reviewId;
+            const textarea = document.getElementById('editDetailCommentTextarea');
+            if (textarea) textarea.value = content || '';
+            const modal = document.getElementById('editDetailCommentModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => { if (textarea) textarea.focus(); }, 100);
+            }
+        }
+
+        function closeDetailEditCommentModal(event) {
+            if (event && event.target !== document.getElementById('editDetailCommentModal')) return;
+            const modal = document.getElementById('editDetailCommentModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+            _editingDetailCommentId = null;
+            _editingDetailCommentReviewId = null;
+        }
+
+        async function submitDetailEditComment() {
+            if (!_editingDetailCommentId) return;
+            const textarea = document.getElementById('editDetailCommentTextarea');
+            const content = textarea ? textarea.value.trim() : '';
+            if (!content) {
+                if (typeof showDetailToast === 'function') showDetailToast('กรุณากรอกความคิดเห็น');
+                return;
+            }
+            const btn = document.getElementById('btnSaveDetailCommentEdit');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'กำลังบันทึก...';
+            }
+
+            try {
+                const res = await fetch(`/api/comments/${_editingDetailCommentId}/edit/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getDetailCsrf(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ content: content })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const textEl = document.getElementById(`comment_text_${_editingDetailCommentId}`);
+                    if (textEl) textEl.textContent = content;
+                    closeDetailEditCommentModal();
+                    if (typeof showDetailToast === 'function') showDetailToast('แก้ไขความคิดเห็นเรียบร้อยแล้ว ✅');
+                } else {
+                    if (typeof showDetailToast === 'function') showDetailToast(data.error || 'เกิดข้อผิดพลาดในการแก้ไขความคิดเห็น');
+                }
+            } catch (e) {
+                console.error('Edit detail comment error:', e);
+                if (typeof showDetailToast === 'function') showDetailToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> บันทึกความคิดเห็น';
+                }
+                _editingDetailCommentId = null;
+                _editingDetailCommentReviewId = null;
+            }
+        }
+
+        async function confirmDetailDeleteComment(commentId, reviewId) {
+            const dd = document.getElementById(`detail_comment_dropdown_${commentId}`);
+            if (dd) dd.style.display = 'none';
+            if (!confirm('คุณต้องการลบความคิดเห็นนี้ใช่หรือไม่?')) return;
+
+            try {
+                const res = await fetch(`/api/comments/${commentId}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getDetailCsrf(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const el = document.getElementById(`comment_${commentId}`);
+                    if (el) {
+                        el.style.transition = 'opacity 0.25s, transform 0.25s';
+                        el.style.opacity = '0';
+                        el.style.transform = 'scale(0.95)';
+                        setTimeout(() => el.remove(), 250);
+                    }
+                    const countEl = document.getElementById(`detail_comment_count_${reviewId}`);
+                    if (countEl) {
+                        const currentCount = parseInt(countEl.innerText) || 0;
+                        countEl.innerText = Math.max(0, currentCount - 1);
+                    }
+                    if (typeof showDetailToast === 'function') showDetailToast('ลบความคิดเห็นเรียบร้อยแล้ว 🗑️');
+                } else {
+                    if (typeof showDetailToast === 'function') showDetailToast(data.error || 'เกิดข้อผิดพลาดในการลบความคิดเห็น');
+                }
+            } catch (e) {
+                console.error('Delete detail comment error:', e);
+                if (typeof showDetailToast === 'function') showDetailToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            }
+        }
+
+        async function submitDetailComment(event, reviewId) {
+            if (event) event.preventDefault();
+            const isAuth = {{ user.is_authenticated|yesno:"true,false" }};
+            if (!isAuth) {
+                window.location.href = `/signin/?next=${encodeURIComponent(window.location.pathname)}`;
+                return;
+            }
+
+            const input = document.getElementById(`detail_comment_input_${reviewId}`);
+            const content = input ? input.value.trim() : '';
+            if (!content) return;
+
+            try {
+                const res = await fetch(`/api/reviews/${reviewId}/comments/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getDetailCsrf(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ content: content })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const c = data.comment;
+                    input.value = '';
+                    const list = document.getElementById(`detail_comments_list_${reviewId}`);
+                    const countEl = document.getElementById(`detail_comment_count_${reviewId}`);
+                    if (countEl) {
+                        countEl.innerText = (parseInt(countEl.innerText) || 0) + 1;
+                    }
+
+                    const authorUsername = c.author?.username || 'user';
+                    const authorInitial = (authorUsername || 'U')[0].toUpperCase();
+                    const avatarHtml = c.author?.avatar_url
+                        ? `<img src="${c.author.avatar_url}" alt="${authorUsername}" style="width: 100%; height: 100%; object-fit: cover;">`
+                        : authorInitial;
+
+                    const safeContent = (c.content || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                    const commentHtml = `
+                        <div class="comment-item" id="comment_${c.id}" style="display: flex; gap: 0.75rem; align-items: flex-start; background: rgba(255, 255, 255, 0.7); padding: 0.65rem 0.85rem; border-radius: 12px; border: 1px solid rgba(255, 197, 170, 0.35); animation: fadeIn 0.3s ease;">
+                            <a href="/profile/${encodeURIComponent(authorUsername)}/" style="text-decoration: none; color: inherit; flex-shrink: 0;" title="ดูโปรไฟล์ @${authorUsername}">
+                                <div style="width: 30px; height: 30px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #FF9D9D, #FFB095); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.82rem;">
+                                    ${avatarHtml}
+                                </div>
+                            </a>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px;">
+                                    <a href="/profile/${encodeURIComponent(authorUsername)}/" style="text-decoration: none; color: inherit; font-size: 0.85rem; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">
+                                        ${authorUsername}
+                                    </a>
+                                    <span style="font-size: 0.74rem; color: var(--text-muted); margin-left: 2px;">เมื่อสักครู่นี้</span>
+                                    <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">
+                                        <button class="comment-menu-btn" type="button" aria-label="เมนูความคิดเห็น" onclick="toggleDetailCommentMenu(event, ${c.id})">⋯</button>
+                                        <div class="comment-dropdown" id="detail_comment_dropdown_${c.id}" style="display: none;">
+                                            <button type="button" class="comment-dd-item" onclick="openDetailEditComment(${c.id}, '${safeContent}', ${reviewId})">
+                                                ✏️ แก้ไขความคิดเห็น
+                                            </button>
+                                            <button type="button" class="comment-dd-item comment-dd-delete" onclick="confirmDetailDeleteComment(${c.id}, ${reviewId})">
+                                                🗑️ ลบความคิดเห็น
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="comment_text_${c.id}" style="font-size: 0.86rem; color: var(--text-main); line-height: 1.4; word-break: break-word;">${c.content}</div>
+                            </div>
+                        </div>
+                    `;
+                    if (list) {
+                        list.insertAdjacentHTML('beforeend', commentHtml);
+                    }
+                    if (typeof showDetailToast === 'function') showDetailToast('เพิ่มความคิดเห็นเรียบร้อยแล้ว 💬');
+                } else {
+                    if (typeof showDetailToast === 'function') showDetailToast(data.error || 'เกิดข้อผิดพลาดในการส่งความคิดเห็น');
+                }
+            } catch (e) {
+                console.error('Submit detail comment error:', e);
+                if (typeof showDetailToast === 'function') showDetailToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            }
+        }
+        </script>
 
     </body>
 </html>

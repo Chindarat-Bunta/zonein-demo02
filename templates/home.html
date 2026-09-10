@@ -1358,6 +1358,41 @@
     .post-dd-delete { color: #e05d5d; }
     .post-dd-delete:hover { background: rgba(224,93,93,0.08); }
 
+    /* ---- Comment 3-dot Dropdown ---- */
+    .comment-menu-wrap { position: relative; display: inline-flex; align-items: center; }
+    .comment-menu-btn {
+        background: none; border: none; cursor: pointer;
+        font-size: 1.15rem; color: #8c98a4;
+        padding: 1px 6px; border-radius: 6px;
+        transition: background 0.15s, color 0.15s;
+        line-height: 1;
+    }
+    .comment-menu-btn:hover { background: rgba(255,157,157,0.18); color: #FF9D9D; }
+    .comment-dropdown {
+        position: absolute; right: 0; top: calc(100% + 4px);
+        background: #fff;
+        border: 1px solid rgba(255,197,170,0.5);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        min-width: 145px; z-index: 350;
+        overflow: hidden;
+        animation: commentMenuFade 0.15s ease;
+    }
+    @keyframes commentMenuFade { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+    .comment-dd-item {
+        display: flex; align-items: center; gap: 8px;
+        width: 100%; background: none; border: none;
+        padding: 9px 14px; cursor: pointer;
+        font-size: 0.82rem; font-weight: 600;
+        color: #1e242b; text-align: left;
+        font-family: inherit;
+        transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .comment-dd-item:hover { background: rgba(255,197,170,0.2); }
+    .comment-dd-delete { color: #e05d5d; }
+    .comment-dd-delete:hover { background: rgba(224,93,93,0.08); }
+
     /* ---- Edit Post Modal ---- */
     .edit-post-overlay {
         position: fixed; inset: 0; z-index: 4000;
@@ -1857,8 +1892,8 @@
                     </div>
                 {% elif notifications %}
                     {% for notif in notifications %}
-                    <a href="{{ notif.target_url }}" class="notif-card-link" style="text-decoration: none; color: inherit; display: block;">
-                        <div class="notif-item-card {% if not notif.is_read %}notif-unread{% endif %}" style="background: var(--bg-card); border: 1px solid {% if not notif.is_read %}rgba(255, 157, 157, 0.6){% else %}var(--border-color){% endif %}; border-radius: var(--radius-md); padding: 1.1rem 1.35rem; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: {% if not notif.is_read %}0 6px 20px rgba(255, 157, 157, 0.18){% else %}var(--shadow-card){% endif %}; backdrop-filter: blur(12px); transition: all 0.25s ease; position: relative;">
+                    <a href="{{ notif.target_url }}" class="notif-card-link" id="notif_link_{{ notif.id }}" onclick="handleNotificationClick(event, {{ notif.id }}, {{ notif.is_read|yesno:'true,false' }})" style="text-decoration: none; color: inherit; display: block;">
+                        <div class="notif-item-card {% if not notif.is_read %}notif-unread{% endif %}" id="notif_card_{{ notif.id }}" style="background: var(--bg-card); border: 1px solid {% if not notif.is_read %}rgba(255, 157, 157, 0.6){% else %}var(--border-color){% endif %}; border-radius: var(--radius-md); padding: 1.1rem 1.35rem; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: {% if not notif.is_read %}0 6px 20px rgba(255, 157, 157, 0.18){% else %}var(--shadow-card){% endif %}; backdrop-filter: blur(12px); transition: all 0.25s ease; position: relative;">
                             
                             <div style="display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1;">
                                 <!-- User Avatar with Action Icon Overlay -->
@@ -1897,7 +1932,7 @@
                                     {{ notif.created_at|timesince }} ที่แล้ว
                                 </span>
                                 {% if not notif.is_read %}
-                                <span class="notif-pill-new" style="background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #ffffff; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(255, 157, 157, 0.4);">
+                                <span class="notif-pill-new" id="notif_pill_{{ notif.id }}" style="background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #ffffff; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(255, 157, 157, 0.4);">
                                     ใหม่
                                 </span>
                                 {% endif %}
@@ -1919,6 +1954,53 @@
     </div>
 
     <script>
+    function handleNotificationClick(event, notifId, isRead) {
+        if (!isRead) {
+            // Optimistically update card style to read
+            const card = document.getElementById(`notif_card_${notifId}`);
+            if (card) {
+                card.classList.remove('notif-unread');
+                card.style.borderColor = 'var(--border-color)';
+                card.style.boxShadow = 'var(--shadow-card)';
+            }
+            const pill = document.getElementById(`notif_pill_${notifId}`);
+            if (pill) pill.remove();
+
+            // Decrement badge count on navbar
+            ['notifBadgeDesktop', 'notifBadgeMobile'].forEach(id => {
+                const badge = document.getElementById(id);
+                if (badge) {
+                    const count = parseInt(badge.textContent.trim()) || 0;
+                    if (count <= 1) {
+                        badge.remove();
+                    } else {
+                        badge.textContent = count - 1;
+                    }
+                }
+            });
+
+            // Check if any unread cards remain
+            const remaining = document.querySelectorAll('.notif-item-card.notif-unread').length;
+            if (remaining === 0) {
+                const btn = document.getElementById('btnMarkAllRead');
+                if (btn) btn.remove();
+            }
+
+            // Fire async POST to mark single notification as read
+            try {
+                fetch(`/api/notifications/${notifId}/read/`, {
+                    method: 'POST',
+                    keepalive: true,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).catch(e => console.error("Error marking notification as read:", e));
+            } catch (e) {
+                console.error("Error marking notification read:", e);
+            }
+        }
+    }
+
     async function markAllNotificationsAsRead() {
         try {
             const res = await fetch('/api/notifications/read-all/', {
@@ -2090,19 +2172,20 @@
     </div>
 </div>
 
-<!-- Edit Post Modal -->
-<div class="edit-post-overlay" id="editPostOverlay" onclick="closeEditPostModal(event)">
+
+<!-- Edit Comment Modal -->
+<div class="edit-post-overlay" id="editCommentOverlay" onclick="closeEditCommentModal(event)">
     <div class="edit-post-card" onclick="event.stopPropagation()">
         <div class="edit-post-header">
-            <h3>✏️ แก้ไขโพสต์</h3>
-            <button type="button" class="edit-post-close" onclick="closeEditPostModal()" title="ปิด">×</button>
+            <h3>✏️ แก้ไขความคิดเห็น</h3>
+            <button type="button" class="edit-post-close" onclick="closeEditCommentModal()" title="ปิด">×</button>
         </div>
-        <textarea class="edit-post-textarea" id="editPostTextarea" placeholder="เขียนเนื้อหาโพสต์..."></textarea>
+        <textarea class="edit-post-textarea" id="editCommentTextarea" placeholder="เขียนความคิดเห็นของคุณ..."></textarea>
         <div class="edit-post-actions">
-            <button type="button" class="btn-edit-post-cancel" onclick="closeEditPostModal()">ยกเลิก</button>
-            <button type="button" class="btn-edit-post-save" id="btnSaveEditPost" onclick="submitEditPost()">
+            <button type="button" class="btn-edit-post-cancel" onclick="closeEditCommentModal()">ยกเลิก</button>
+            <button type="button" class="btn-edit-post-save" id="btnSaveEditComment" onclick="submitEditComment()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                บันทึกการแก้ไข
+                บันทึกความคิดเห็น
             </button>
         </div>
     </div>
@@ -2148,87 +2231,38 @@ function togglePostMenu(event, reviewId) {
     dropdown.classList.toggle('open');
 }
 
-// Close post dropdowns when clicking outside
+// Close post and comment dropdowns when clicking outside
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.post-menu-wrap')) {
         document.querySelectorAll('.post-dropdown.open').forEach(d => d.classList.remove('open'));
     }
+    if (!e.target.closest('.comment-menu-wrap')) {
+        document.querySelectorAll('.comment-dropdown').forEach(d => d.style.display = 'none');
+    }
 });
 
 function openEditPost(reviewId) {
-    _editingPostId = reviewId;
     // Close dropdown
     const dd = document.getElementById(`post_dropdown_${reviewId}`);
     if (dd) dd.classList.remove('open');
 
     const cached = reviewsDataMap.get(reviewId);
-    const currentContent = cached ? (cached.content || '') : '';
+    if (!cached) return;
 
-    const textarea = document.getElementById('editPostTextarea');
-    if (textarea) textarea.value = currentContent;
+    const postData = {
+        review_id: reviewId,
+        name: cached.place?.name || '',
+        category: cached.place?.category || 'cafe',
+        address: cached.place?.address || cached.place?.location || '',
+        latitude: (cached.place?.latitude !== undefined && cached.place?.latitude !== null) ? cached.place.latitude : null,
+        longitude: (cached.place?.longitude !== undefined && cached.place?.longitude !== null) ? cached.place.longitude : null,
+        image_url: cached.image_url || cached.place?.cover_image_url || '',
+        comment: cached.content || '',
+        rating: cached.rating || 5
+    };
 
-    const overlay = document.getElementById('editPostOverlay');
-    if (overlay) {
-        overlay.classList.add('show');
-        document.body.style.overflow = 'hidden';
-        setTimeout(() => { if (textarea) textarea.focus(); }, 100);
-    }
-}
-
-function closeEditPostModal(event) {
-    if (event && event.target !== document.getElementById('editPostOverlay')) return;
-    const overlay = document.getElementById('editPostOverlay');
-    if (overlay) {
-        overlay.classList.remove('show');
-        document.body.style.overflow = '';
-    }
-    _editingPostId = null;
-}
-
-async function submitEditPost() {
-    if (!_editingPostId) return;
-    const textarea = document.getElementById('editPostTextarea');
-    const content = textarea ? textarea.value.trim() : '';
-    if (!content) { showToast('กรุณากรอกเนื้อหาโพสต์'); return; }
-
-    const btn = document.getElementById('btnSaveEditPost');
-    if (btn) { btn.disabled = true; btn.textContent = 'กำลังบันทึก...'; }
-
-    try {
-        const res = await fetch(`/api/reviews/${_editingPostId}/edit/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getHomeCSRFToken(),
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            body: JSON.stringify({ comment: content }),
-        });
-        const data = await res.json();
-        if (data.success) {
-            // Update content in feed card
-            const contentEl = document.getElementById(`review_content_${_editingPostId}`);
-            if (contentEl) contentEl.textContent = content;
-
-            // Update cache
-            const cached = reviewsDataMap.get(_editingPostId);
-            if (cached) cached.content = content;
-
-            const overlay = document.getElementById('editPostOverlay');
-            if (overlay) { overlay.classList.remove('show'); document.body.style.overflow = ''; }
-            showToast('แก้ไขโพสต์เรียบร้อยแล้ว ✅');
-        } else {
-            showToast(data.error || 'เกิดข้อผิดพลาด');
-        }
-    } catch (err) {
-        console.error('[Zone In] Edit post error:', err);
-        showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> บันทึกการแก้ไข';
-        }
-        _editingPostId = null;
+    if (typeof window.openEditPostModal === 'function') {
+        window.openEditPostModal(postData);
     }
 }
 
@@ -2276,7 +2310,7 @@ function getHomeCSRFToken() {
     return '';
 }
 
-// Close edit post modal on Escape key
+// Close edit post or comment modal on Escape key
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         const overlay = document.getElementById('editPostOverlay');
@@ -2285,8 +2319,206 @@ document.addEventListener('keydown', (e) => {
             document.body.style.overflow = '';
             _editingPostId = null;
         }
+        const commentOverlay = document.getElementById('editCommentOverlay');
+        if (commentOverlay && commentOverlay.classList.contains('show')) {
+            commentOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+            _editingCommentId = null;
+            _editingCommentReviewId = null;
+        }
     }
 });
+
+let _editingCommentId = null;
+let _editingCommentReviewId = null;
+
+function toggleHomeCommentMenu(event, commentId) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    const dropdown = document.getElementById(`home_comment_dropdown_${commentId}`);
+    if (!dropdown) return;
+    document.querySelectorAll('.comment-dropdown').forEach(d => {
+        if (d !== dropdown) d.style.display = 'none';
+    });
+    document.querySelectorAll('.post-dropdown.open').forEach(d => {
+        d.classList.remove('open');
+    });
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+function openEditCommentModal(commentId, content, reviewId) {
+    const dd = document.getElementById(`home_comment_dropdown_${commentId}`);
+    if (dd) dd.style.display = 'none';
+    _editingCommentId = commentId;
+    _editingCommentReviewId = reviewId;
+    const textarea = document.getElementById('editCommentTextarea');
+    if (textarea) textarea.value = content || '';
+    const overlay = document.getElementById('editCommentOverlay');
+    if (overlay) {
+        overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => { if (textarea) textarea.focus(); }, 100);
+    }
+}
+
+function closeEditCommentModal(event) {
+    if (event && event.target !== document.getElementById('editCommentOverlay')) return;
+    const overlay = document.getElementById('editCommentOverlay');
+    if (overlay) {
+        overlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    _editingCommentId = null;
+    _editingCommentReviewId = null;
+}
+
+async function submitEditComment() {
+    if (!_editingCommentId) return;
+    const textarea = document.getElementById('editCommentTextarea');
+    const content = textarea ? textarea.value.trim() : '';
+    if (!content) {
+        showToast('กรุณากรอกความคิดเห็น');
+        return;
+    }
+    const btn = document.getElementById('btnSaveEditComment');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'กำลังบันทึก...';
+    }
+
+    try {
+        const res = await fetch(`/api/comments/${_editingCommentId}/edit/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getHomeCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ content: content })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const textEl = document.getElementById(`comment_text_${_editingCommentId}`);
+            if (textEl) textEl.textContent = content;
+
+            // Also update in reviewsDataMap cache if present
+            if (_editingCommentReviewId) {
+                const cached = reviewsDataMap.get(_editingCommentReviewId);
+                if (cached && cached.comments) {
+                    const c = cached.comments.find(item => item.id === _editingCommentId);
+                    if (c) c.content = content;
+                }
+            }
+
+            const overlay = document.getElementById('editCommentOverlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+            showToast('แก้ไขความคิดเห็นเรียบร้อยแล้ว ✅');
+        } else {
+            showToast(data.error || 'เกิดข้อผิดพลาดในการแก้ไขความคิดเห็น');
+        }
+    } catch (e) {
+        console.error('Edit comment error:', e);
+        showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> บันทึกความคิดเห็น';
+        }
+        _editingCommentId = null;
+        _editingCommentReviewId = null;
+    }
+}
+
+async function confirmDeleteComment(commentId, reviewId) {
+    const dd = document.getElementById(`home_comment_dropdown_${commentId}`);
+    if (dd) dd.style.display = 'none';
+    if (!confirm('คุณต้องการลบความคิดเห็นนี้ใช่หรือไม่?')) return;
+
+    try {
+        const res = await fetch(`/api/comments/${commentId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getHomeCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            const el = document.getElementById(`comment_${commentId}`);
+            if (el) {
+                el.style.transition = 'opacity 0.25s, transform 0.25s';
+                el.style.opacity = '0';
+                el.style.transform = 'scale(0.95)';
+                setTimeout(() => el.remove(), 250);
+            }
+            const countEl = document.getElementById(`comment_count_${reviewId}`);
+            if (countEl) {
+                const currentCount = parseInt(countEl.innerText) || 0;
+                countEl.innerText = Math.max(0, currentCount - 1);
+            }
+            if (reviewId) {
+                const cached = reviewsDataMap.get(reviewId);
+                if (cached && cached.comments) {
+                    cached.comments = cached.comments.filter(item => item.id !== commentId);
+                }
+            }
+            showToast('ลบความคิดเห็นเรียบร้อยแล้ว 🗑️');
+        } else {
+            showToast(data.error || 'เกิดข้อผิดพลาดในการลบความคิดเห็น');
+        }
+    } catch (e) {
+        console.error('Delete comment error:', e);
+        showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    }
+}
+
+function renderSingleCommentHtml(c, reviewId) {
+    const authorUsername = c.author?.username || 'user';
+    const authorInitial = (authorUsername || 'U')[0].toUpperCase();
+    const avatarHtml = c.author?.avatar_url
+        ? `<img src="${c.author.avatar_url}" alt="${authorUsername}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
+        : authorInitial;
+    const timeFormatted = formatDateTimeWithRelative(c.created_at);
+    const isOwner = c.is_author;
+
+    const safeContent = (c.content || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+    return `
+        <div class="comment-item" id="comment_${c.id}" style="text-align: left; position: relative;">
+            <a href="/profile/${encodeURIComponent(authorUsername)}/" style="text-decoration: none; color: inherit; flex-shrink: 0;" title="ดูโปรไฟล์ @${authorUsername}">
+                <div class="comment-avatar">${avatarHtml}</div>
+            </a>
+            <div class="comment-body" style="text-align: left;">
+                <div class="comment-meta" style="text-align: left; justify-content: flex-start; align-items: center; gap: 6px;">
+                    <a href="/profile/${encodeURIComponent(authorUsername)}/" class="comment-author" style="text-decoration: none; color: inherit; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">
+                        ${authorUsername}
+                    </a>
+                    <span class="comment-time" style="text-align: left; margin-left: 2px;">${timeFormatted}</span>
+                    ${isOwner ? `
+                    <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">
+                        <button class="comment-menu-btn" type="button" aria-label="เมนูความคิดเห็น" onclick="toggleHomeCommentMenu(event, ${c.id})">⋯</button>
+                        <div class="comment-dropdown" id="home_comment_dropdown_${c.id}" style="display: none;">
+                            <button type="button" class="comment-dd-item" onclick="openEditCommentModal(${c.id}, '${safeContent}', ${reviewId})">
+                                ✏️ แก้ไขความคิดเห็น
+                            </button>
+                            <button type="button" class="comment-dd-item comment-dd-delete" onclick="confirmDeleteComment(${c.id}, ${reviewId})">
+                                🗑️ ลบความคิดเห็น
+                            </button>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="comment-text" id="comment_text_${c.id}" style="text-align: left;">${c.content}</div>
+            </div>
+        </div>
+    `;
+}
 
 async function toggleFollowAuthor(event, authorId, username) {
     if (event) {
@@ -2491,18 +2723,7 @@ function renderReviewCardHtml(r) {
         `;
     }
 
-    const commentsListHtml = comments.map(c => `
-        <div class="comment-item" id="comment_${c.id}">
-            <div class="comment-avatar">${(c.author?.username || 'U')[0].toUpperCase()}</div>
-            <div class="comment-body" style="text-align: left;">
-                <div class="comment-meta" style="text-align: left; justify-content: flex-start;">
-                    <span class="comment-author" style="text-align: left;">${c.author?.username || 'นักเดินทาง'}</span>
-                    <span class="comment-time" style="text-align: left;">${formatDateTimeWithRelative(c.created_at)}</span>
-                </div>
-                <div class="comment-text" style="text-align: left;">${c.content}</div>
-            </div>
-        </div>
-    `).join("");
+    const commentsListHtml = comments.map(c => renderSingleCommentHtml(c, r.id)).join("");
 
     const authorId = r.author?.id || 0;
     const authorUsername = r.author?.username || 'นักเดินทาง';
@@ -2675,18 +2896,7 @@ async function submitComment(event, reviewId) {
 
         input.value = "";
 
-        const newCommentHtml = `
-            <div class="comment-item" id="comment_${c.id}">
-                <div class="comment-avatar">${(c.author?.username || 'U')[0].toUpperCase()}</div>
-                <div class="comment-body">
-                    <div class="comment-meta">
-                        <span class="comment-author">${c.author?.username || 'นักเดินทาง'}</span>
-                        <span class="comment-time">${formatDateTimeWithRelative(c.created_at)}</span>
-                    </div>
-                    <div class="comment-text">${c.content}</div>
-                </div>
-            </div>
-        `;
+        const newCommentHtml = renderSingleCommentHtml(c, reviewId);
 
         if (list) {
             list.insertAdjacentHTML("beforeend", newCommentHtml);
