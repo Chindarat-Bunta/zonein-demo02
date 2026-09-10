@@ -1477,7 +1477,7 @@
                     
                     <div class="user-handle">
                         <span>@{{ username }}</span>
-                        {% if is_own_profile %}
+                        {% if is_own_profile and email %}
                         <span>•</span>
                         <span>{{ email }}</span>
                         {% endif %}
@@ -1722,19 +1722,19 @@
                             </div>
                         </div>
 
-                        <!-- 2. ฟอร์มแก้ไขชื่อผู้ใช้ / ชื่อเล่น -->
+                        <!-- 2. ฟอร์มแก้ไขชื่อ และ ชื่อผู้ใช้/ชื่อที่แสดง -->
                         <div class="form-group">
                             <label for="inputNickname" class="form-label">
-                                <span>ชื่อเล่น / ชื่อที่แสดง (Nickname)</span>
+                                <span>ชื่อ</span>
                             </label>
-                            <input type="text" id="inputNickname" name="nickname" class="form-input" value="{{ nickname|default:display_name }}" placeholder="กรอกชื่อเล่นหรือชื่อที่ต้องการแสดง" required>
+                            <input type="text" id="inputNickname" name="nickname" class="form-input" value="{{ nickname|default:display_name }}" placeholder="กรอกชื่อของคุณ" required>
                         </div>
 
                         <div class="form-group">
                             <label for="inputUsername" class="form-label">
-                                <span>ชื่อผู้ใช้ (Username)</span>
+                                <span>ชื่อผู้ใช้/ชื่อที่แสดง</span>
                             </label>
-                            <input type="text" id="inputUsername" name="username" class="form-input" value="{{ username }}" placeholder="username" required>
+                            <input type="text" id="inputUsername" name="username" class="form-input" value="{{ username }}" placeholder="กรอกชื่อผู้ใช้หรือชื่อที่แสดง" required>
                         </div>
 
                         <!-- 3. ฟอร์มกรอกข้อความ Bio แนะนำตัว -->

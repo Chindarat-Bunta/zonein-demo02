@@ -76,13 +76,16 @@ def profile_settings_view(request):
                     request, f"อัปโหลดรูปภาพไม่สำเร็จ: {upload_res.get('error')}"
                 )
 
-        # 2. Update nickname & bio
+        # 2. Update nickname (ชื่อ) & bio
         profile.nickname = new_nickname
+        target_user = user
+        if new_nickname:
+            target_user.first_name = new_nickname
+            target_user.save(update_fields=["first_name"])
         profile.bio = new_bio
         profile.save()
 
         # 3. Update username if provided and changed
-        target_user = user if user.is_authenticated else demo_user
         if new_username and new_username != target_user.username:
             if (
                 not User.objects.filter(username__iexact=new_username)
@@ -90,7 +93,7 @@ def profile_settings_view(request):
                 .exists()
             ):
                 target_user.username = new_username
-                target_user.save()
+                target_user.save(update_fields=["username"])
             else:
                 messages.error(request, f"ชื่อผู้ใช้ '{new_username}' มีผู้อื่นใช้งานแล้ว")
 
@@ -143,6 +146,9 @@ def update_profile_api(request):
             )
 
     profile.nickname = new_nickname
+    if new_nickname:
+        target_user.first_name = new_nickname
+        target_user.save(update_fields=["first_name"])
     profile.bio = new_bio
     profile.save()
 
@@ -153,7 +159,7 @@ def update_profile_api(request):
             .exists()
         ):
             target_user.username = new_username
-            target_user.save()
+            target_user.save(update_fields=["username"])
         else:
             return JsonResponse(
                 {"success": False, "error": f"ชื่อผู้ใช้ '{new_username}' ถูกใช้งานแล้ว"}
@@ -203,7 +209,7 @@ def profile_view(request, username=None):
     bio = profile.bio or ""
     avatar_url = profile.avatar_url or ""
     user_username = target_user.username
-    email = target_user.email if target_user.email else f"{user_username}@zonein.app"
+    email = target_user.email if (is_own_profile and target_user.email) else ""
     join_date = (
         target_user.date_joined.strftime("%b %Y")
         if hasattr(target_user, "date_joined") and target_user.date_joined

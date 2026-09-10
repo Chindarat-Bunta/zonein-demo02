@@ -164,10 +164,11 @@ def sync_social_user(provider: str, user_info: dict) -> tuple:
     if email:
         user = User.objects.filter(email__iexact=email).first()
 
-    # 2. If not found, create new user with a clean unique username
+    # 2. If not found, create new user with username matching full_name (ชื่อ)
     if not user:
-        base_username = slugify(full_name, allow_unicode=False) or f"{provider}_{social_id[:6]}"
-        base_username = base_username.replace("-", "_")[:20]
+        clean_name = full_name.strip() if full_name else ""
+        base_username = clean_name if clean_name else f"user_{social_id[:6]}"
+        base_username = base_username[:30]
         username = base_username
 
         # Guarantee unique username in Neon DB
