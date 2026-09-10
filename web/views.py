@@ -911,6 +911,7 @@ def api_recent_reviews(request):
                 "likes_count": likes_count,
                 "comments": comments_data,
                 "comments_count": len(comments_data),
+                "is_author": request.user.is_authenticated and request.user.id == review.user_id,
             }
         )
 
