@@ -1,0 +1,3279 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Zone In — หน้าแรก & ค้นหาสถานที่ท่องเที่ยวยอดนิยม{% endblock %}
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/search_explore.css' %}">
+    <style>
+    :root {
+        --bg-card: rgba(255, 255, 255, 0.85);
+        --bg-card-hover: rgba(255, 255, 255, 0.96);
+        --border-color: rgba(255, 157, 157, 0.28);
+        --border-color-hover: rgba(255, 157, 157, 0.6);
+        --primary: #FF9D9D;
+        --primary-gradient: linear-gradient(135deg, #FF9D9D, #FFC5AA);
+        --accent-mint: #BBF1D2;
+        --star-gold: #f59e0b;
+        --text-main: #1e242b;
+        --text-muted: #57616b;
+        --text-dim: #8c96a0;
+        --radius-sm: 10px;
+        --radius-md: 16px;
+        --radius-lg: 24px;
+        --radius-full: 9999px;
+        --shadow-card: 0 12px 32px -8px rgba(255, 157, 157, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+        --transition-smooth: all 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* Google Maps Button Beside Filter in Search Top Bar */
+    .search-top-bar-row {
+        max-width: 820px !important;
+    }
+
+    .btn-maps-search-top,
+    a.btn-maps-search-top {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        height: 48px !important;
+        padding: 0 18px !important;
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        font-family: inherit !important;
+        color: #374151 !important;
+        background: #ffffff !important;
+        border: 1.5px solid #e5e7eb !important;
+        border-radius: 9999px !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        transition: all 0.25s ease !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+        cursor: pointer !important;
+    }
+
+    .btn-maps-search-top:hover,
+    a.btn-maps-search-top:hover {
+        border-color: #4285F4 !important;
+        color: #1a73e8 !important;
+        background: #f8faff !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(66, 133, 244, 0.18) !important;
+        text-decoration: none !important;
+    }
+
+    .btn-maps-search-top .maps-icon,
+    .btn-maps-search-top i {
+        color: #ea4335 !important;
+        font-size: 1.05rem !important;
+        transition: transform 0.2s ease !important;
+    }
+
+    .btn-maps-search-top:hover .maps-icon,
+    .btn-maps-search-top:hover i {
+        transform: scale(1.15) rotate(8deg) !important;
+    }
+
+    @media (max-width: 640px) {
+        .btn-maps-search-top,
+        a.btn-maps-search-top {
+            height: 44px !important;
+            padding: 0 14px !important;
+            font-size: 0.88rem !important;
+        }
+        .btn-maps-search-top .maps-btn-label {
+            display: none !important;
+        }
+    }
+
+    /* Create Post Modal Scroll & Flexbox Fix */
+    .post-modal-card {
+        max-height: 90vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    #createPostForm {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+    }
+
+    .post-modal-header {
+        flex-shrink: 0 !important;
+    }
+
+    .post-modal-body {
+        padding: 20px 24px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 18px !important;
+    }
+
+    .post-modal-body::-webkit-scrollbar {
+        width: 7px !important;
+    }
+
+    .post-modal-body::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.04) !important;
+        border-radius: 8px !important;
+    }
+
+    .post-modal-body::-webkit-scrollbar-thumb {
+        background: rgba(255, 157, 157, 0.7) !important;
+        border-radius: 8px !important;
+    }
+
+    .post-modal-body::-webkit-scrollbar-thumb:hover {
+        background: #FF9D9D !important;
+    }
+
+    .post-modal-footer {
+        flex-shrink: 0 !important;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+        margin-bottom: 1.25rem;
+        background: linear-gradient(135deg, rgba(255, 157, 157, 0.22) 0%, rgba(255, 197, 170, 0.28) 50%, rgba(187, 241, 210, 0.3) 100%);
+        border: 1px solid rgba(255, 157, 157, 0.35);
+        border-radius: var(--radius-lg);
+        padding: 1.75rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        box-shadow: var(--shadow-card);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+
+    .hero-content h1 {
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: var(--text-main);
+        line-height: 1.3;
+        margin-bottom: 0.4rem;
+        letter-spacing: -0.02em;
+    }
+
+    .hero-content p {
+        color: var(--text-secondary, #57616b);
+        font-size: 0.98rem;
+        max-width: 620px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-main);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Recent Reviews Feed */
+    .feed-container {
+        max-width: 820px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1.35rem;
+        text-align: left;
+    }
+
+    .review-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 1.4rem 1.5rem;
+        transition: var(--transition-smooth);
+        box-shadow: var(--shadow-card);
+        position: relative;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        text-align: left;
+    }
+
+    .post-title-block {
+        text-align: left;
+        margin-top: 0.4rem;
+        margin-bottom: 0.5rem;
+        width: 100%;
+    }
+
+    .post-title-text {
+        text-align: left;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #1e242b;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    .review-card:hover {
+        border-color: var(--border-color-hover);
+        box-shadow: 0 16px 36px -8px rgba(255, 157, 157, 0.25);
+        transform: translateY(-2px);
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.85rem;
+    }
+
+    .review-author {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .author-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(255, 157, 157, 0.4);
+        flex-shrink: 0;
+    }
+
+    .author-name-row {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+    }
+
+    .author-name {
+        font-weight: 700;
+        font-size: 0.98rem;
+        color: var(--text-main);
+    }
+
+    .btn-follow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: rgba(255, 157, 157, 0.16);
+        border: 1px solid rgba(255, 157, 157, 0.45);
+        color: #e25c5c;
+        padding: 0.15rem 0.65rem;
+        border-radius: var(--radius-full);
+        font-size: 0.76rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        font-family: inherit;
+    }
+
+    .btn-follow:hover {
+        background: #FF9D9D;
+        border-color: #FF9D9D;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(255, 157, 157, 0.35);
+    }
+
+    .btn-follow.following {
+        background: rgba(0, 0, 0, 0.05);
+        border-color: rgba(0, 0, 0, 0.12);
+        color: var(--text-muted);
+    }
+
+    .btn-follow.following:hover {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(239, 68, 68, 0.35);
+        color: #dc2626;
+    }
+
+    .review-time {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+    }
+
+    .rating-badge {
+        background: rgba(254, 243, 199, 0.85);
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        color: #b45309;
+        padding: 0.25rem 0.7rem;
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .review-place-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: rgba(187, 241, 210, 0.35);
+        border: 1px solid rgba(187, 241, 210, 0.6);
+        color: #047857;
+        padding: 0.3rem 0.85rem;
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.85rem;
+        text-decoration: none;
+        transition: var(--transition-smooth);
+    }
+
+    .review-place-tag:hover {
+        background: rgba(187, 241, 210, 0.6);
+        color: #065f46;
+        border-color: #34d399;
+    }
+
+    .review-content {
+        font-size: 0.96rem;
+        color: var(--text-main);
+        line-height: 1.65;
+        margin-bottom: 1.15rem;
+        word-break: break-word;
+        white-space: pre-line;
+        text-align: left;
+    }
+
+    .review-image-wrap {
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        max-height: 440px;
+        background: rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.15rem;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .review-image {
+        width: 100%;
+        height: auto;
+        max-height: 440px;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.35s ease, filter 0.35s ease;
+    }
+
+    .review-image-wrap:hover .review-image {
+        transform: scale(1.02);
+        filter: brightness(1.05);
+    }
+
+    .review-image-overlay-hint {
+        position: absolute;
+        bottom: 0.85rem;
+        right: 0.85rem;
+        background: rgba(10, 14, 26, 0.75);
+        backdrop-filter: blur(8px);
+        color: #fff;
+        padding: 0.3rem 0.65rem;
+        border-radius: var(--radius-full);
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        pointer-events: none;
+    }
+
+    .review-image-wrap:hover .review-image-overlay-hint {
+        opacity: 1;
+    }
+
+    /* Lightbox Modal */
+    .lightbox-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 8, 18, 0.92);
+        backdrop-filter: blur(12px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        padding: 1.5rem;
+        cursor: zoom-out;
+    }
+
+    .lightbox-overlay.show {
+        display: flex;
+        animation: lightboxFadeIn 0.25s ease-out;
+    }
+
+    @keyframes lightboxFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .lightbox-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: default;
+    }
+
+    .lightbox-img {
+        max-width: 100%;
+        max-height: 56vh;
+        object-fit: cover;
+        border-radius: var(--radius-lg);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(99, 102, 241, 0.15);
+        animation: lightboxZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes lightboxZoomIn {
+        from { opacity: 0; transform: scale(0.92); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    .lightbox-caption {
+        margin-top: 0.75rem;
+        color: #fff;
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 0.35rem 1rem;
+        border-radius: var(--radius-full);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .lightbox-close-btn {
+        position: absolute;
+        top: -42px;
+        right: 0;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: var(--transition-smooth);
+    }
+
+    .lightbox-close-btn:hover {
+        background: rgba(239, 68, 68, 0.8);
+        border-color: #ef4444;
+        transform: scale(1.08);
+    }
+
+    /* ===================================================
+       Modern Share Modal Styles
+       =================================================== */
+    .share-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.68);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 3000;
+        padding: 1.25rem;
+        opacity: 0;
+        transition: opacity 0.24s ease;
+    }
+
+    .share-modal-overlay.show {
+        display: flex;
+        opacity: 1;
+    }
+
+    .share-modal-card {
+        background: #ffffff;
+        width: 100%;
+        max-width: 440px;
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 157, 157, 0.25);
+        padding: 1.75rem 1.5rem;
+        transform: translateY(20px) scale(0.96);
+        transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .share-modal-overlay.show .share-modal-card {
+        transform: translateY(0) scale(1);
+    }
+
+    .share-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 1.15rem;
+    }
+
+    .share-modal-title-group {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .share-modal-badge {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(255, 157, 157, 0.25), rgba(255, 197, 170, 0.3));
+        color: #e25c5c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .share-modal-title {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #1e242b;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .share-modal-subtitle {
+        font-size: 0.82rem;
+        color: #64748b;
+        margin: 0.15rem 0 0;
+    }
+
+    .share-modal-close {
+        background: #f1f5f9;
+        border: none;
+        color: #64748b;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.25rem;
+        line-height: 1;
+        transition: all 0.2s ease;
+    }
+
+    .share-modal-close:hover {
+        background: #fee2e2;
+        color: #ef4444;
+        transform: rotate(90deg);
+    }
+
+    /* Share Preview Snippet Card */
+    .share-preview-card {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.75rem 0.95rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        margin-bottom: 1.25rem;
+    }
+
+    .share-preview-img-wrap {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #FF9D9D, #FFC5AA);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 1.3rem;
+    }
+
+    .share-preview-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .share-preview-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .share-preview-info h4 {
+        margin: 0 0 0.15rem;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #0f172a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .share-preview-info p {
+        margin: 0 0 0.15rem;
+        font-size: 0.78rem;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .share-preview-url {
+        display: inline-block;
+        font-size: 0.72rem;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    /* Channels Section Label */
+    .share-channels-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    /* Social Share Grid */
+    .share-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .share-grid-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.45rem;
+        background: #f8fafc;
+        border: 1px solid #edf2f7;
+        border-radius: 16px;
+        padding: 0.8rem 0.5rem 0.7rem;
+        cursor: pointer;
+        transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        font-family: inherit;
+    }
+
+    .share-grid-btn:hover {
+        transform: translateY(-3px);
+        background: #ffffff;
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.08);
+        border-color: #e2e8f0;
+    }
+
+    .share-grid-btn span {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .share-icon-wrap {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+        transition: transform 0.2s ease;
+    }
+
+    .share-grid-btn:hover .share-icon-wrap {
+        transform: scale(1.08);
+    }
+
+    .fb-icon {
+        background: #1877F2;
+    }
+
+    .ig-icon {
+        background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+    }
+
+    .line-icon {
+        background: #06C755;
+    }
+
+    .x-icon {
+        background: #000000;
+    }
+
+    .wa-icon {
+        background: #25D366;
+    }
+
+    .more-icon {
+        background: linear-gradient(135deg, #64748b, #475569);
+    }
+
+    /* Copy Link Container */
+    .share-copy-box {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.35rem 0.4rem 0.35rem 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .share-copy-box:focus-within {
+        border-color: #FF9D9D;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(255, 157, 157, 0.15);
+    }
+
+    .share-link-input-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .share-link-icon {
+        color: #94a3b8;
+        flex-shrink: 0;
+    }
+
+    .share-url-input {
+        width: 100%;
+        border: none;
+        background: transparent;
+        font-size: 0.82rem;
+        color: #334155;
+        outline: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-family: inherit;
+    }
+
+    .btn-copy-share {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: linear-gradient(135deg, #FF9D9D, #FF8080);
+        color: #ffffff;
+        border: none;
+        border-radius: 10px;
+        padding: 0.55rem 0.95rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(255, 128, 128, 0.3);
+        font-family: inherit;
+    }
+
+    .btn-copy-share:hover {
+        background: linear-gradient(135deg, #ff8585, #f87171);
+        transform: translateY(-1px);
+    }
+
+    .btn-copy-share.copied {
+        background: #10b981;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .share-modal-hint {
+        margin-top: 0.75rem;
+        font-size: 0.78rem;
+        color: #059669;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        border-radius: 10px;
+        padding: 0.4rem 0.75rem;
+        text-align: center;
+        display: none;
+        animation: fadeInHint 0.2s ease;
+    }
+
+    @keyframes fadeInHint {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Review Card Footer Actions */
+    .review-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-top: 0.85rem;
+        border-top: 1px solid var(--border-color);
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: rgba(255, 157, 157, 0.12);
+        border: 1px solid rgba(255, 157, 157, 0.35);
+        color: var(--text-secondary, #57616b);
+        padding: 0.4rem 0.95rem;
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        font-family: inherit;
+    }
+
+    .action-btn:hover {
+        background: rgba(255, 157, 157, 0.25);
+        color: var(--text-main);
+        border-color: #FF9D9D;
+    }
+
+    .action-btn.liked {
+        background: rgba(255, 157, 157, 0.3);
+        border-color: #FF9D9D;
+        color: #e25c5c;
+    }
+
+    .action-btn.liked svg {
+        fill: #FF9D9D;
+        stroke: #FF9D9D;
+    }
+
+    /* Comments Section */
+    .comments-section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px dashed var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        text-align: left;
+    }
+
+    .comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        text-align: left;
+    }
+
+    .comment-item {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        background: rgba(255, 255, 255, 0.65);
+        padding: 0.75rem 0.85rem;
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(255, 197, 170, 0.4);
+        text-align: left;
+    }
+
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(255, 157, 157, 0.35);
+        flex-shrink: 0;
+    }
+
+    .comment-body {
+        flex: 1;
+        min-width: 0;
+        text-align: left;
+    }
+
+    .comment-meta {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.2rem;
+        flex-wrap: wrap;
+        text-align: left;
+    }
+
+    .comment-author {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-main);
+        text-align: left;
+    }
+
+    .comment-time {
+        font-size: 0.76rem;
+        color: var(--text-dim);
+        text-align: left;
+    }
+
+    .comment-text {
+        font-size: 0.88rem;
+        color: var(--text-main);
+        line-height: 1.45;
+        word-break: break-word;
+        text-align: left;
+    }
+
+    .comment-form {
+        display: flex;
+        gap: 0.65rem;
+        margin-top: 0.35rem;
+        align-items: center;
+        text-align: left;
+    }
+
+    .comment-input {
+        flex: 1;
+        background: #ffffff;
+        border: 1px solid rgba(255, 197, 170, 0.8);
+        border-radius: var(--radius-full);
+        padding: 0.55rem 1rem;
+        color: #1e242b;
+        font-size: 0.88rem;
+        outline: none;
+        transition: var(--transition-smooth);
+        font-family: inherit;
+    }
+
+    .comment-input::placeholder {
+        color: #8c98a4;
+    }
+
+    .comment-input:focus {
+        border-color: #FF9D9D;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(255, 157, 157, 0.25);
+    }
+
+    .comment-submit-btn {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-full);
+        padding: 0.55rem 1.15rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        white-space: nowrap;
+    }
+
+    .comment-submit-btn:hover {
+        background: #4f46e5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    /* Skeleton Loading Placeholder */
+    .skeleton {
+        background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: var(--radius-lg);
+    }
+
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    /* Load More Button */
+    .btn-load-more {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: #fff;
+        padding: 0.85rem 2rem;
+        border-radius: var(--radius-full);
+        font-size: 0.92rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        margin: 2rem auto 0;
+        display: block;
+    }
+
+    .btn-load-more:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 4px 15px var(--primary-glow);
+        transform: translateY(-2px);
+    }
+
+    .state-box {
+        background: var(--bg-card);
+        border: 1px dashed var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 3.5rem 1.5rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    /* Tab Panel Container & Tab Panels Layout */
+    .tab-panel-container {
+        width: 100%;
+        max-width: 100%;
+        margin-top: 0;
+        display: block;
+    }
+
+    .tab-panel {
+        display: none;
+        width: 100%;
+        max-width: 100%;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    .tab-panel.active {
+        display: block;
+        animation: panelFadeIn 0.35s ease;
+    }
+
+    @keyframes panelFadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Popular Places Section on Home Panel */
+    .popular-places-section {
+        margin-bottom: 2rem;
+    }
+
+    .popular-places-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.25rem;
+        margin-top: 0.85rem;
+    }
+
+    .popular-place-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        transition: var(--transition-smooth);
+        box-shadow: var(--shadow-card);
+        display: flex;
+        flex-direction: column;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .popular-place-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--border-color-hover);
+        box-shadow: 0 16px 36px -8px rgba(255, 157, 157, 0.3);
+    }
+
+    .popular-place-image-wrap {
+        position: relative;
+        width: 100%;
+        height: 165px;
+        overflow: hidden;
+        background: #f1f5f9;
+    }
+
+    .popular-place-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+        display: block;
+    }
+
+    .popular-place-card:hover .popular-place-img {
+        transform: scale(1.06);
+    }
+
+    .popular-place-cat-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(187, 241, 210, 0.95);
+        backdrop-filter: blur(6px);
+        color: #065f46;
+        padding: 3px 10px;
+        border-radius: var(--radius-full);
+        font-size: 0.74rem;
+        font-weight: 700;
+        border: 1px solid rgba(187, 241, 210, 0.8);
+    }
+
+    .popular-place-rating-badge {
+        position: absolute;
+        top: 10px;
+        right: 48px;
+        background: rgba(254, 243, 199, 0.95);
+        color: #b45309;
+        padding: 3px 8px;
+        border-radius: var(--radius-full);
+        font-size: 0.78rem;
+        font-weight: 700;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    /* Floating Wishlist Button on Place Cards */
+    .card-wishlist-float-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 197, 170, 0.5);
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 5;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .card-wishlist-float-btn:hover {
+        transform: scale(1.12);
+        background: #ffffff;
+        color: #e05d5d;
+        border-color: #FF9D9D;
+        box-shadow: 0 6px 14px rgba(255, 157, 157, 0.35);
+    }
+
+    .card-wishlist-float-btn.active {
+        background: #ffffff;
+        color: #e05d5d;
+        border-color: #FF9D9D;
+    }
+
+    .card-wishlist-float-btn.active svg {
+        fill: #e05d5d;
+        stroke: #e05d5d;
+    }
+
+    .explore-card-wrapper .card-wishlist-float-btn {
+        top: 10px;
+        left: 10px;
+        right: auto;
+    }
+
+    .popular-place-body {
+        padding: 0.95rem 1.15rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .popular-place-name {
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: var(--text-main);
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .popular-place-loc {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* No Image Explore Card Styling */
+    .explore-card.no-image-explore-card {
+        background: linear-gradient(145deg, #ffffff 0%, #fff3ef 100%) !important;
+        border: 1px solid rgba(255, 197, 170, 0.6);
+    }
+
+    .explore-card-no-image-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+        padding: 1rem;
+        box-sizing: border-box;
+    }
+
+    .no-img-badge-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+        padding-left: 36px;
+    }
+
+    .explore-card-tag.light {
+        background: rgba(255, 157, 157, 0.2);
+        color: #d94646;
+        border: 1px solid rgba(255, 157, 157, 0.4);
+        padding: 3px 10px;
+        border-radius: var(--radius-full);
+        font-size: 0.74rem;
+        font-weight: 700;
+    }
+
+    .explore-card-rating.light {
+        background: rgba(254, 243, 199, 0.95);
+        color: #b45309;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        padding: 2px 8px;
+        border-radius: var(--radius-full);
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .no-img-center-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.4rem;
+        margin: auto 0;
+    }
+
+    .no-img-icon {
+        font-size: 2rem;
+        line-height: 1;
+    }
+
+    .no-img-title {
+        font-size: 1.02rem;
+        font-weight: 700;
+        color: #1e242b;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .no-img-location {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+
+    .no-img-bottom-prompt {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #e05d5d;
+        padding-top: 0.5rem;
+        border-top: 1px dashed rgba(255, 197, 170, 0.5);
+    }
+
+    /* ---- Post 3-dot Menu ---- */
+    .post-menu-wrap { position: relative; }
+    .post-menu-btn {
+        background: none; border: none; cursor: pointer;
+        font-size: 1.2rem; color: var(--text-dim);
+        padding: 2px 7px; border-radius: 6px;
+        transition: background 0.15s, color 0.15s;
+        line-height: 1; display: flex; align-items: center;
+    }
+    .post-menu-btn:hover { background: rgba(255,157,157,0.12); color: #e25c5c; }
+    .post-dropdown {
+        position: absolute; right: 0; top: calc(100% + 6px);
+        background: #fff;
+        border: 1px solid rgba(255,197,170,0.5);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(255,157,157,0.18);
+        min-width: 160px; z-index: 300;
+        overflow: hidden;
+        animation: postMenuFadeIn 0.15s ease;
+        display: none;
+    }
+    .post-dropdown.open { display: block; }
+    @keyframes postMenuFadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+    .post-dd-item {
+        display: flex; align-items: center; gap: 8px;
+        width: 100%; background: none; border: none;
+        padding: 10px 16px; cursor: pointer;
+        font-size: 0.88rem; font-weight: 600;
+        color: #1e242b; text-align: left;
+        transition: background 0.15s;
+        font-family: inherit;
+    }
+    .post-dd-item:hover { background: rgba(255,197,170,0.18); }
+    .post-dd-delete { color: #e05d5d; }
+    .post-dd-delete:hover { background: rgba(224,93,93,0.08); }
+
+    /* ---- Comment 3-dot Dropdown ---- */
+    .comment-menu-wrap { position: relative; display: inline-flex; align-items: center; }
+    .comment-menu-btn {
+        background: none; border: none; cursor: pointer;
+        font-size: 1.15rem; color: #8c98a4;
+        padding: 1px 6px; border-radius: 6px;
+        transition: background 0.15s, color 0.15s;
+        line-height: 1;
+    }
+    .comment-menu-btn:hover { background: rgba(255,157,157,0.18); color: #FF9D9D; }
+    .comment-dropdown {
+        position: absolute; right: 0; top: calc(100% + 4px);
+        background: #fff;
+        border: 1px solid rgba(255,197,170,0.5);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        min-width: 145px; z-index: 350;
+        overflow: hidden;
+        animation: commentMenuFade 0.15s ease;
+    }
+    @keyframes commentMenuFade { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+    .comment-dd-item {
+        display: flex; align-items: center; gap: 8px;
+        width: 100%; background: none; border: none;
+        padding: 9px 14px; cursor: pointer;
+        font-size: 0.82rem; font-weight: 600;
+        color: #1e242b; text-align: left;
+        font-family: inherit;
+        transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .comment-dd-item:hover { background: rgba(255,197,170,0.2); }
+    .comment-dd-delete { color: #e05d5d; }
+    .comment-dd-delete:hover { background: rgba(224,93,93,0.08); }
+
+    /* ---- Edit Post Modal ---- */
+    .edit-post-overlay {
+        position: fixed; inset: 0; z-index: 4000;
+        background: rgba(30,36,43,0.5);
+        backdrop-filter: blur(6px);
+        display: none; align-items: center; justify-content: center;
+        padding: 1.25rem;
+    }
+    .edit-post-overlay.show { display: flex; }
+    .edit-post-card {
+        background: #fff; border-radius: 20px;
+        padding: 28px 28px 24px;
+        width: 100%; max-width: 500px;
+        box-shadow: 0 20px 60px rgba(255,157,157,0.22);
+        animation: editPostSlideUp 0.22s ease;
+    }
+    @keyframes editPostSlideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+    .edit-post-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 18px;
+    }
+    .edit-post-header h3 { font-size: 1.1rem; font-weight: 800; color: #1e242b; margin: 0; }
+    .edit-post-close {
+        background: none; border: none; cursor: pointer;
+        font-size: 1.5rem; color: #8c96a0; line-height: 1; padding: 0 4px;
+        transition: color 0.15s;
+    }
+    .edit-post-close:hover { color: #e25c5c; }
+    .edit-post-textarea {
+        width: 100%; min-height: 110px;
+        border: 1.5px solid rgba(255,197,170,0.7);
+        border-radius: 12px; padding: 12px 14px;
+        font-size: 0.95rem; color: #1e242b;
+        font-family: inherit; resize: vertical; outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
+    }
+    .edit-post-textarea:focus {
+        border-color: #FF9D9D;
+        box-shadow: 0 0 0 3px rgba(255,157,157,0.18);
+    }
+    .edit-post-actions {
+        display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;
+    }
+    .btn-edit-post-cancel {
+        background: #f1f5f9; border: none; border-radius: 10px;
+        padding: 9px 20px; font-size: 0.88rem; font-weight: 600;
+        color: #57616b; cursor: pointer; transition: background 0.15s;
+        font-family: inherit;
+    }
+    .btn-edit-post-cancel:hover { background: #e2e8f0; }
+    .btn-edit-post-save {
+        background: linear-gradient(135deg, #FF9D9D, #FF8080);
+        border: none; border-radius: 10px;
+        padding: 9px 22px; font-size: 0.88rem; font-weight: 700;
+        color: #fff; cursor: pointer; transition: all 0.2s;
+        font-family: inherit; display: flex; align-items: center; gap: 6px;
+    }
+    .btn-edit-post-save:hover { background: linear-gradient(135deg, #ff8585, #f87171); transform: translateY(-1px); }
+    .btn-edit-post-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    </style>
+{% endblock %}
+{% block content %}
+<div class="tab-panel-container">
+
+    <!-- Panel 1: หน้าแรก (Home Feed) -->
+    <div class="tab-panel {% if active_tab != 'search' and active_tab != 'notifications' %}active{% endif %}" id="panel-home">
+        <!-- Hero Banner -->
+        <div class="hero-banner">
+            <div class="hero-content">
+                <h1>สำรวจสถานที่ท่องเที่ยวยอดฮิต & รีวิวจริง</h1>
+                <p>แหล่งรวมจุดเช็คอิน คาเฟ่ ธรรมชาติ และทริปการเดินทางจากเพื่อนนักเดินทางทั่วประเทศไทย</p>
+            </div>
+        </div>
+
+        <!-- Popular Places Preview Cards (มีรูปภาพครบทุกการ์ด + ลิงก์ตรงไปหน้า place_detail) -->
+        <section class="popular-places-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #FF9D9D;">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    จุดเช็คอินแนะนำยอดนิยม
+                </h2>
+                <a href="#search" onclick="switchTab('search')" style="color: #e25c5c; font-size: 0.9rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                    ดูทั้งหมดในหน้าค้นหา ➔
+                </a>
+            </div>
+            <div class="popular-places-grid">
+                {% for p in places|slice:":4" %}
+                <a href="/places/{{ p.id }}/" class="popular-place-card" style="position: relative;" title="ดูรายละเอียดและแผนที่ของ {{ p.name }}">
+                    <button type="button"
+                            class="card-wishlist-float-btn {% if p.id in wishlist_ids %}active{% endif %}"
+                            data-wishlist-place-id="{{ p.id }}"
+                            onclick="quickToggleWishlist(event, {{ p.id }}, this)"
+                            title="{% if p.id in wishlist_ids %}นำออกจากรายการโปรด{% else %}บันทึกในรายการโปรด{% endif %}"
+                            aria-label="บันทึกในรายการโปรด">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="{% if p.id in wishlist_ids %}#e05d5d{% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </button>
+                    {% if p.cover_image_url or p.image_url %}
+                    <div class="popular-place-image-wrap">
+                        <img src="{{ p.cover_image_url|default:p.image_url }}" alt="{{ p.name }}" class="popular-place-img" loading="lazy">
+                        <span class="popular-place-cat-badge">{{ p.get_category_display|default:'สถานที่ยอดนิยม' }}</span>
+                        <span class="popular-place-rating-badge">★ {{ p.average_rating|default:'4.8' }}</span>
+                    </div>
+                    <div class="popular-place-body">
+                        <h3 class="popular-place-name">{{ p.name }}</h3>
+                        <p class="popular-place-loc">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span>{{ p.address|default:p.location|default:'ทั่วไทย' }}</span>
+                        </p>
+                    </div>
+                    {% else %}
+                    <div class="popular-place-body no-image-body" style="padding: 1.2rem 1.15rem 1.1rem; min-height: 145px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 0.65rem; padding-right: 34px;">
+                                <span class="popular-place-cat-badge-inline" style="background: rgba(187, 241, 210, 0.95); color: #065f46; padding: 3px 10px; border-radius: 9999px; font-size: 0.74rem; font-weight: 700; border: 1px solid rgba(187, 241, 210, 0.8);">{{ p.get_category_display|default:'สถานที่ยอดนิยม' }}</span>
+                                <span class="popular-place-rating-badge-inline" style="background: rgba(254, 243, 199, 0.95); color: #b45309; padding: 3px 8px; border-radius: 9999px; font-size: 0.78rem; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.4); flex-shrink: 0;">★ {{ p.average_rating|default:'4.8' }}</span>
+                            </div>
+                            <h3 class="popular-place-name" style="font-size: 1.02rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; line-height: 1.4;">{{ p.name }}</h3>
+                            {% if p.description %}
+                            <p class="popular-place-desc" style="font-size: 0.83rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 0.4rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">{{ p.description }}</p>
+                            {% endif %}
+                        </div>
+                        <p class="popular-place-loc" style="margin-top: 0.4rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span>{{ p.address|default:p.location|default:'ทั่วไทย' }}</span>
+                        </p>
+                    </div>
+                    {% endif %}
+                </a>
+                {% empty %}
+                <div class="empty-popular-state" style="grid-column: 1 / -1; width: 100%; padding: 2.2rem 1.5rem; text-align: center; background: var(--bg-card); border: 1.5px dashed var(--border-color); border-radius: var(--radius-lg); backdrop-filter: blur(12px);">
+                    <div style="font-size: 2.2rem; margin-bottom: 0.4rem;">📍</div>
+                    <h3 style="font-size: 1.08rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">ยังไม่มีโพสต์ไว้ก่อน</h3>
+                    <p style="font-size: 0.86rem; color: var(--text-muted); margin: 0;">ยังไม่มีสถานที่ยอดนิยมในขณะนี้ เมื่อผู้ใช้สร้างโพสต์ใหม่ สถานที่จะแสดงที่นี่</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Recent Reviews Feed (พร้อมรูปภาพประกอบรีวิวขนาดใหญ่) -->
+        <section>
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #FF9D9D;">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    รีวิวล่าสุดจากนักเดินทาง
+                </h2>
+            </div>
+            <div class="feed-container" id="recentReviewsFeed">
+                <!-- Skeleton Slices -->
+                <div class="skeleton" style="height: 200px;"></div>
+                <div class="skeleton" style="height: 200px;"></div>
+                <div class="skeleton" style="height: 200px;"></div>
+            </div>
+            <button type="button"
+                    id="btnLoadMoreReviews"
+                    class="btn-load-more"
+                    onclick="loadMoreReviews()"
+                    style="display: none">โหลดรีวิวเพิ่มเติม</button>
+        </section>
+    </div>
+
+    <!-- Panel 2: ค้นหา (Search & Explore Feed ตามที่ผู้ใช้ต้องการ พร้อมตัวกรองข้างๆ) -->
+    <div class="tab-panel {% if active_tab == 'search' %}active{% endif %}" id="panel-search">
+        <div class="search-explore-wrapper">
+            
+            <!-- Search Top Bar (ช่องค้นหาทรงมน + ปุ่มตัวกรองข้างๆ) -->
+            <div class="search-top-bar-row">
+                <div class="search-pill-input-box">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="exploreSearchInput" class="search-pill-input" placeholder="ค้นหาสถานที่, คาเฟ่, กิจกรรม..." autocomplete="off" aria-label="ค้นหาสถานที่หรือกิจกรรม">
+                    <button type="button" class="btn-clear-search" id="btnClearSearch" title="ล้างคำค้น">✕</button>
+                </div>
+
+                <!-- Side Filter Toggle Button ("ซึ่งตรงค้นหาจะมีการกรองข้างๆ") -->
+                <button type="button" class="btn-side-filter-toggle" id="btnSideFilterToggle" aria-expanded="false" aria-controls="sideFilterPanel">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="21" x2="4" y2="14"></line>
+                        <line x1="4" y1="10" x2="4" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12" y2="3"></line>
+                        <line x1="20" y1="21" x2="20" y2="16"></line>
+                        <line x1="20" y1="12" x2="20" y2="3"></line>
+                        <line x1="1" y1="14" x2="7" y2="14"></line>
+                        <line x1="9" y1="8" x2="15" y2="8"></line>
+                        <line x1="17" y1="16" x2="23" y2="16"></line>
+                    </svg>
+                    <span class="filter-text">ตัวกรอง</span>
+                    <span class="filter-count-badge" id="filterCountBadge" style="display: none;">0</span>
+                </button>
+
+                <!-- Google Maps Button Beside Filter (ดึงจาก components/maps_button.html แบบเปิด Map Picker ปักหมุด) -->
+                {% include 'components/maps_button.html' with mode="picker" target="search" text="Google Maps" variant="outline" size="md" custom_class="btn-maps-search-top" %}
+            </div>
+
+            <!-- Expandable Side Filter Panel -->
+            <div class="side-filter-panel" id="sideFilterPanel">
+                <div class="filter-panel-grid">
+                    <!-- Filter 1: หมวดหมู่ -->
+                    <div class="filter-panel-group">
+                        <h4><span>🏷️</span> หมวดหมู่สถานที่</h4>
+                        <select class="filter-panel-select" id="filterCategorySelect">
+                            <option value="all">ทุกหมวดหมู่ (All)</option>
+                            <option value="cafe">☕ คาเฟ่ & เบเกอรี่ (Cafe)</option>
+                            <option value="restaurant">🍲 ร้านอาหาร & สตรีทฟู้ด (Restaurant)</option>
+                            <option value="nature">🌿 ธรรมชาติ & ฟาร์ม (Nature & Farm)</option>
+                            <option value="travel">✈️ ท่องเที่ยว & จุดเช็คอิน (Travel)</option>
+                            <option value="diy">🧶 งานคราฟต์ & DIY (Craft Workshop)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 2: ทำเล / จังหวัด -->
+                    <div class="filter-panel-group">
+                        <h4><span>📍</span> ทำเล / ย่าน</h4>
+                        <select class="filter-panel-select" id="filterLocationSelect">
+                            <option value="all">ทุกทำเล / ทั่วไทย</option>
+
+                            <optgroup label="📍 ภาคตะวันออกเฉียงเหนือ (อีสาน)">
+                                <option value="ศรีสะเกษ">ศรีสะเกษ (อ.เมือง / กันทรลักษ์ / ขุนหาญ)</option>
+                                <option value="อุบลราชธานี">อุบลราชธานี (ผาแต้ม / สามพันโบก)</option>
+                                <option value="นครราชสีมา">นครราชสีมา (โคราช / ปากช่อง / เขาใหญ่)</option>
+                                <option value="ขอนแก่น">ขอนแก่น</option>
+                                <option value="อุดรธานี">อุดรธานี (คำชะโนด / ทะเลบัวแดง)</option>
+                                <option value="บุรีรัมย์">บุรีรัมย์ (ปราสาทพนมรุ้ง)</option>
+                                <option value="สุรินทร์">สุรินทร์</option>
+                                <option value="ร้อยเอ็ด">ร้อยเอ็ด</option>
+                                <option value="เลย">เลย (เชียงคาน / ภูกระดึง)</option>
+                                <option value="สกลนคร">สกลนคร</option>
+                                <option value="นครพนม">นครพนม (พระธาตุพนม)</option>
+                                <option value="หนองคาย">หนองคาย</option>
+                                <option value="ชัยภูมิ">ชัยภูมิ</option>
+                                <option value="มหาสารคาม">มหาสารคาม</option>
+                                <option value="กาฬสินธุ์">กาฬสินธุ์</option>
+                                <option value="ยโสธร">ยโสธร</option>
+                                <option value="มุกดาหาร">มุกดาหาร</option>
+                                <option value="อำนาจเจริญ">อำนาจเจริญ</option>
+                                <option value="บึงกาฬ">บึงกาฬ (หินสามวาฬ)</option>
+                                <option value="หนองบัวลำภู">หนองบัวลำภู</option>
+                            </optgroup>
+
+                            <optgroup label="📍 ภาคเหนือ">
+                                <option value="เชียงใหม่">เชียงใหม่ (แม่ริม / นิมมานฯ / ดอยอินทนนท์)</option>
+                                <option value="เชียงราย">เชียงราย (ภูชี้ดาว / แม่สาย / วัดร่องขุ่น)</option>
+                                <option value="น่าน">น่าน (ปัว / บ่อเกลือ)</option>
+                                <option value="แม่ฮ่องสอน">แม่ฮ่องสอน (ปาย / บ้านรักไทย)</option>
+                                <option value="ลำปาง">ลำปาง</option>
+                                <option value="ลำพูน">ลำพูน</option>
+                                <option value="พะเยา">พะเยา (กว๊านพะเยา)</option>
+                                <option value="แพร่">แพร่</option>
+                                <option value="สุโขทัย">สุโขทัย (อุทยานประวัติศาสตร์)</option>
+                                <option value="พิษณุโลก">พิษณุโลก</option>
+                                <option value="ตาก">ตาก (อุ้มผาง / แม่สอด)</option>
+                                <option value="เพชรบูรณ์">เพชรบูรณ์ (เขาค้อ / ภูทับเบิก)</option>
+                                <option value="อุตรดิตถ์">อุตรดิตถ์</option>
+                                <option value="พิจิตร">พิจิตร</option>
+                                <option value="กำแพงเพชร">กำแพงเพชร</option>
+                                <option value="นครสวรรค์">นครสวรรค์</option>
+                                <option value="อุทัยธานี">อุทัยธานี</option>
+                            </optgroup>
+
+                            <optgroup label="📍 ภาคกลาง & กรุงเทพมหานคร">
+                                <option value="กรุงเทพ">กรุงเทพมหานคร (สยาม / พระนคร / สวนเบญจกิติ)</option>
+                                <option value="อยุธยา">พระนครศรีอยุธยา (วัดมหาธาตุ / เรือนริมน้ำ)</option>
+                                <option value="นนทบุรี">นนทบุรี</option>
+                                <option value="ปทุมธานี">ปทุมธานี</option>
+                                <option value="สมุทรปราการ">สมุทรปราการ (บางปู)</option>
+                                <option value="สมุทรสาคร">สมุทรสาคร</option>
+                                <option value="สมุทรสงคราม">สมุทรสงคราม (ตลาดน้ำอัมพวา)</option>
+                                <option value="นครปฐม">นครปฐม</option>
+                                <option value="สุพรรณบุรี">สุพรรณบุรี</option>
+                                <option value="ลพบุรี">ลพบุรี</option>
+                                <option value="สระบุรี">สระบุรี</option>
+                                <option value="อ่างทอง">อ่างทอง</option>
+                                <option value="สิงห์บุรี">สิงห์บุรี</option>
+                                <option value="ชัยนาท">ชัยนาท</option>
+                                <option value="นครนายก">นครนายก (เขื่อนขุนด่าน)</option>
+                            </optgroup>
+
+                            <optgroup label="📍 ภาคใต้">
+                                <option value="ภูเก็ต">ภูเก็ต (หาดป่าตอง / ย่านเมืองเก่า)</option>
+                                <option value="กระบี่">กระบี่ (หาดไร่เลย์ / อ่าวนาง / เกาะพีพี)</option>
+                                <option value="สุราษฎร์ธานี">สุราษฎร์ธานี (เกาะสมุย / เกาะพะงัน / เขาสก)</option>
+                                <option value="พังงา">พังงา (เสม็ดนางชี / เกาะสิมิลัน)</option>
+                                <option value="สงขลา">สงขลา (หาดใหญ่)</option>
+                                <option value="ตรัง">ตรัง</option>
+                                <option value="นครศรีธรรมราช">นครศรีธรรมราช (คีรีวง)</option>
+                                <option value="ชุมพร">ชุมพร</option>
+                                <option value="ระนอง">ระนอง</option>
+                                <option value="พัทลุง">พัทลุง</option>
+                                <option value="สตูล">สตูล (เกาะหลีเป๊ะ)</option>
+                                <option value="ปัตตานี">ปัตตานี</option>
+                                <option value="ยะลา">ยะลา (เบตง)</option>
+                                <option value="นราธิวาส">นราธิวาส</option>
+                            </optgroup>
+
+                            <optgroup label="📍 ภาคตะวันออก">
+                                <option value="ชลบุรี">ชลบุรี (พัทยา / บางแสน / สัตหีบ)</option>
+                                <option value="ระยอง">ระยอง (เกาะเสม็ด)</option>
+                                <option value="ตราด">ตราด (เกาะช้าง / เกาะกูด)</option>
+                                <option value="จันทบุรี">จันทบุรี</option>
+                                <option value="ฉะเชิงเทรา">ฉะเชิงเทรา (วัดหลวงพ่อโสธร)</option>
+                                <option value="ปราจีนบุรี">ปราจีนบุรี</option>
+                                <option value="สระแก้ว">สระแก้ว</option>
+                            </optgroup>
+
+                            <optgroup label="📍 ภาคตะวันตก">
+                                <option value="กาญจนบุรี">กาญจนบุรี (สังขละบุรี / สะพานข้ามแม่น้ำแคว)</option>
+                                <option value="ประจวบคีรีขันธ์">ประจวบคีรีขันธ์ (หัวหิน / ปราณบุรี)</option>
+                                <option value="เพชรบุรี">เพชรบุรี (ชะอำ / แก่งกระจาน)</option>
+                                <option value="ราชบุรี">ราชบุรี (สวนผึ้ง)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- Filter 3: คะแนนรีวิว -->
+                    <div class="filter-panel-group">
+                        <h4><span>⭐</span> คะแนนรีวิว</h4>
+                        <select class="filter-panel-select" id="filterRatingSelect">
+                            <option value="0">ทุกคะแนน</option>
+                            <option value="4.8">★ 4.8 ดาวขึ้นไป (ยอดเยี่ยม)</option>
+                            <option value="4.5">★ 4.5 ดาวขึ้นไป (ดีมาก)</option>
+                            <option value="4.0">★ 4.0 ดาวขึ้นไป (ดี)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 4: การจัดเรียง -->
+                    <div class="filter-panel-group">
+                        <h4><span>🔄</span> จัดเรียงผลลัพธ์</h4>
+                        <select class="filter-panel-select" id="filterSortSelect">
+                            <option value="recommended">แนะนำสำหรับคุณ</option>
+                            <option value="rating">คะแนนรีวิวสูงสุด</option>
+                            <option value="reviews">รีวิวมากที่สุด</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-panel-actions">
+                    <button type="button" class="btn-reset-filters" id="btnResetFilters">ล้างตัวกรอง</button>
+                    <button type="button" class="btn-apply-filters" id="btnApplyFilters">นำตัวกรองไปใช้</button>
+                </div>
+            </div>
+
+            <!-- Quick Category Chips Scroll Bar -->
+            <div class="filter-chips-scroll-wrap" id="filterQuickChips">
+                <button type="button" class="filter-quick-chip active" data-category="all">✨ ทั้งหมด</button>
+                <button type="button" class="filter-quick-chip" data-category="cafe">☕ คาเฟ่</button>
+                <button type="button" class="filter-quick-chip" data-category="restaurant">🍲 ร้านอาหาร</button>
+                <button type="button" class="filter-quick-chip" data-category="nature">🌿 ธรรมชาติ</button>
+                <button type="button" class="filter-quick-chip" data-category="travel">✈️ ท่องเที่ยว</button>
+                <button type="button" class="filter-quick-chip" data-category="diy">🧶 งานคราฟต์ & DIY</button>
+            </div>
+
+            <!-- Explore Media Grid (เชื่อมต่อกับหน้า place-details โดยตรงผ่าน detail_url) -->
+            <div class="explore-media-grid" id="exploreMediaGrid">
+                {% for item in explore_items %}
+                <a href="{{ item.detail_url }}" class="explore-card {% if not item.image_url %}no-image-explore-card{% endif %}" data-category="{{ item.category }}" data-location="{{ item.location }}" data-rating="{{ item.rating }}" data-title="{{ item.title }}" data-place-id="{{ item.id }}" title="คลิกดูแผนที่และรีวิวของ {{ item.title }}">
+                    <button type="button"
+                            class="card-wishlist-float-btn {% if item.is_wishlisted %}active{% endif %}"
+                            data-wishlist-place-id="{{ item.id }}"
+                            onclick="quickToggleWishlist(event, {{ item.id }}, this)"
+                            title="{% if item.is_wishlisted %}นำออกจากรายการโปรด{% else %}บันทึกในรายการโปรด{% endif %}"
+                            aria-label="บันทึกในรายการโปรด">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="{% if item.is_wishlisted %}#e05d5d{% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </button>
+                    {% if item.image_url %}
+                    <!-- Video Play Badge -->
+                    {% if item.is_video %}
+                    <div class="explore-card-video-badge" title="วิดีโอแนะนำ">
+                        <svg viewBox="0 0 24 24">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </div>
+                    {% endif %}
+
+                    <!-- Media Thumbnail -->
+                    <img src="{{ item.image_url }}" alt="{{ item.title }}" class="explore-card-media" loading="lazy">
+
+                    <!-- Hover Prompt -->
+                    <div class="explore-card-hover-prompt">
+                        <span>ดูแผนที่ & รีวิว</span>
+                        <span>➔</span>
+                    </div>
+
+                    <!-- Bottom Gradient & Information Overlay -->
+                    <div class="explore-card-overlay">
+                        <div class="explore-card-title">{{ item.title }}</div>
+                        <div class="explore-card-meta">
+                            <span class="explore-card-tag">{{ item.category_name }}</span>
+                            <span class="explore-card-rating">★ {{ item.rating }}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="explore-card-no-image-content">
+                        <div class="no-img-badge-row">
+                            <span class="explore-card-tag light">{{ item.category_name }}</span>
+                            <span class="explore-card-rating light">★ {{ item.rating }}</span>
+                        </div>
+                        <div class="no-img-center-info">
+                            <div class="no-img-icon">📍</div>
+                            <div class="no-img-title">{{ item.title }}</div>
+                            <div class="no-img-location">{{ item.location }}</div>
+                        </div>
+                        <div class="no-img-bottom-prompt">
+                            <span>ดูแผนที่ & รีวิว</span>
+                            <span>➔</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </a>
+                {% endfor %}
+
+                <!-- Dynamic Filter Empty State Notice -->
+                <div class="explore-empty-state" id="emptyExploreState" style="display: none; grid-column: 1 / -1; width: 100%;">
+                    <div style="background: rgba(255, 255, 255, 0.85); border: 1.5px dashed rgba(255, 197, 170, 0.8); border-radius: var(--radius-lg); padding: 42px 20px; text-align: center; box-shadow: var(--shadow-card); backdrop-filter: blur(12px); margin: 10px 0;">
+                        <div style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, rgba(255, 157, 157, 0.2), rgba(255, 197, 170, 0.3)); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.6rem;">
+                            🏝️
+                        </div>
+                        <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">ยังไม่มีรายการ หรือยังไม่มีโพสต์ในพื้นที่นี้</h3>
+                        <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 440px; margin: 0 auto 20px; line-height: 1.55;">
+                            ยังไม่มีสถานที่หรือโพสต์ในทำเลที่คุณเลือกขณะนี้ ลองเลือกทำเลอื่น หรือกดล้างตัวกรองเพื่อดูสถานที่ทั้งหมดได้เลยครับ
+                        </p>
+                        <button type="button" onclick="if(document.getElementById('btnResetFilters')) document.getElementById('btnResetFilters').click();" style="padding: 9px 24px; border-radius: 9999px; background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #ffffff; font-weight: 700; font-size: 0.88rem; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(255, 157, 157, 0.35); transition: transform 0.2s;">
+                            ล้างตัวกรอง
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 3: การแจ้งเตือน (Notifications) -->
+    <div class="tab-panel {% if active_tab == 'notifications' %}active{% endif %}" id="panel-notifications">
+        <div style="max-width: 820px; margin: 0 auto; padding: 0 4px;">
+            <div class="section-header" style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, rgba(255, 157, 157, 0.2), rgba(255, 197, 170, 0.3)); display: flex; align-items: center; justify-content: center; color: #FF9D9D;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="section-title" style="margin-bottom: 2px; font-size: 1.35rem; font-weight: 800;">
+                            การแจ้งเตือน
+                        </h2>
+                        <span style="font-size: 0.82rem; color: var(--text-muted);">
+                            กิจกรรมและการมีส่วนร่วมกับคุณ
+                        </span>
+                    </div>
+                </div>
+                {% if user.is_authenticated and notifications and unread_notifications_count > 0 %}
+                <button type="button" id="btnMarkAllRead" onclick="markAllNotificationsAsRead()" style="background: rgba(255, 157, 157, 0.12); border: 1px solid rgba(255, 157, 157, 0.35); color: #e56d6d; padding: 6px 14px; border-radius: 9999px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    อ่านแล้วทั้งหมด
+                </button>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.85rem;" id="notificationListContainer">
+                {% if not user.is_authenticated %}
+                    <!-- กล่องข้อความแจ้งเตือนสำหรับผู้ที่ยังไม่ได้เข้าสู่ระบบตามเงื่อนไข -->
+                    <div class="unauth-notification-card" style="background: var(--bg-card); border: 1.5px dashed rgba(255, 197, 170, 0.7); border-radius: var(--radius-md); padding: 48px 24px; text-align: center; box-shadow: var(--shadow-card); backdrop-filter: blur(12px);">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, rgba(255, 157, 157, 0.25), rgba(255, 197, 170, 0.35)); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #e56d6d;">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                        </div>
+                        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">ต้องเข้าสู่ระบบหรือลงทะเบียน</h3>
+                        <p style="font-size: 0.92rem; color: var(--text-muted); max-width: 440px; margin: 0 auto 24px; line-height: 1.6;">
+                            กรุณาเข้าสู่ระบบหรือสร้างบัญชีเพื่อดูการแจ้งเตือนและกิจกรรมต่างๆ ในระบบ
+                        </p>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                            <a href="/signin/?next=/#notifications" class="btn-notif-signin" style="padding: 10px 24px; border-radius: 9999px; background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #ffffff; font-weight: 700; font-size: 0.92rem; text-decoration: none; box-shadow: 0 4px 14px rgba(255, 157, 157, 0.4); transition: transform 0.2s;">
+                                เข้าสู่ระบบ
+                            </a>
+                            <a href="/signup/" class="btn-notif-signup" style="padding: 10px 24px; border-radius: 9999px; background: #ffffff; border: 1.5px solid rgba(255, 197, 170, 0.7); color: #2D3748; font-weight: 700; font-size: 0.92rem; text-decoration: none; transition: background 0.2s;">
+                                ลงทะเบียน
+                            </a>
+                        </div>
+                    </div>
+                {% elif notifications %}
+                    {% for notif in notifications %}
+                    <a href="{{ notif.target_url }}" class="notif-card-link" id="notif_link_{{ notif.id }}" onclick="handleNotificationClick(event, {{ notif.id }}, {{ notif.is_read|yesno:'true,false' }})" style="text-decoration: none; color: inherit; display: block;">
+                        <div class="notif-item-card {% if not notif.is_read %}notif-unread{% endif %}" id="notif_card_{{ notif.id }}" style="background: var(--bg-card); border: 1px solid {% if not notif.is_read %}rgba(255, 157, 157, 0.6){% else %}var(--border-color){% endif %}; border-radius: var(--radius-md); padding: 1.1rem 1.35rem; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: {% if not notif.is_read %}0 6px 20px rgba(255, 157, 157, 0.18){% else %}var(--shadow-card){% endif %}; backdrop-filter: blur(12px); transition: all 0.25s ease; position: relative;">
+                            
+                            <div style="display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1;">
+                                <!-- User Avatar with Action Icon Overlay -->
+                                <div style="position: relative; flex-shrink: 0;">
+                                    {% if notif.actor_avatar %}
+                                        <img src="{{ notif.actor_avatar }}" alt="{{ notif.actor.username }}" style="width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                                    {% else %}
+                                        <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #FF9D9D, #FFB095); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 1.1rem; border: 2px solid #ffffff; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                                            {{ notif.actor.username|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <!-- Action Icon Mini Badge -->
+                                    <span style="position: absolute; bottom: -2px; right: -3px; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; border: 1.5px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.15); background: {% if notif.action_type == 'like' %}#fff0f0; color: #ef4444;{% elif notif.action_type == 'comment' or notif.action_type == 'review' %}#f0fdf4; color: #10b981;{% elif notif.action_type == 'follow' %}#eff6ff; color: #3b82f6;{% else %}#f8fafc; color: #64748b;{% endif %}">
+                                        {% if notif.action_type == 'like' %}❤️{% elif notif.action_type == 'comment' %}💬{% elif notif.action_type == 'review' %}⭐{% elif notif.action_type == 'follow' %}👤{% else %}🔔{% endif %}
+                                    </span>
+                                </div>
+
+                                <!-- Text Information -->
+                                <div style="min-width: 0; flex: 1;">
+                                    <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); line-height: 1.4; word-break: break-word;">
+                                        {{ notif.summary_text }}
+                                    </div>
+                                    {% if notif.post and notif.action_type != 'follow' %}
+                                    <div style="font-size: 0.83rem; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #FF9D9D; flex-shrink: 0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                        <span style="overflow: hidden; text-overflow: ellipsis;">{{ notif.post.name }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Timestamp and Status -->
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0;">
+                                <span style="font-size: 0.78rem; color: var(--text-dim); white-space: nowrap;">
+                                    {{ notif.created_at|timesince }} ที่แล้ว
+                                </span>
+                                {% if not notif.is_read %}
+                                <span class="notif-pill-new" id="notif_pill_{{ notif.id }}" style="background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #ffffff; font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(255, 157, 157, 0.4);">
+                                    ใหม่
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 2.5rem 1.5rem; text-align: center; box-shadow: var(--shadow-card); backdrop-filter: blur(12px);">
+                        <div style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, rgba(255, 157, 157, 0.2), rgba(255, 197, 170, 0.25)); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.5rem;">
+                            🔔
+                        </div>
+                        <h4 style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">ยังไม่มีการแจ้งเตือนในขณะนี้</h4>
+                        <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 400px; margin: 0 auto;">เมื่อมีเพื่อนสมาชิกมากดถูกใจ แสดงความคิดเห็น หรือเริ่มติดตามคุณ ข้อมูลจะปรากฏที่นี่</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function handleNotificationClick(event, notifId, isRead) {
+        if (!isRead) {
+            // Optimistically update card style to read
+            const card = document.getElementById(`notif_card_${notifId}`);
+            if (card) {
+                card.classList.remove('notif-unread');
+                card.style.borderColor = 'var(--border-color)';
+                card.style.boxShadow = 'var(--shadow-card)';
+            }
+            const pill = document.getElementById(`notif_pill_${notifId}`);
+            if (pill) pill.remove();
+
+            // Decrement badge count on navbar
+            ['notifBadgeDesktop', 'notifBadgeMobile'].forEach(id => {
+                const badge = document.getElementById(id);
+                if (badge) {
+                    const count = parseInt(badge.textContent.trim()) || 0;
+                    if (count <= 1) {
+                        badge.remove();
+                    } else {
+                        badge.textContent = count - 1;
+                    }
+                }
+            });
+
+            // Check if any unread cards remain
+            const remaining = document.querySelectorAll('.notif-item-card.notif-unread').length;
+            if (remaining === 0) {
+                const btn = document.getElementById('btnMarkAllRead');
+                if (btn) btn.remove();
+            }
+
+            // Fire async POST to mark single notification as read
+            try {
+                fetch(`/api/notifications/${notifId}/read/`, {
+                    method: 'POST',
+                    keepalive: true,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).catch(e => console.error("Error marking notification as read:", e));
+            } catch (e) {
+                console.error("Error marking notification read:", e);
+            }
+        }
+    }
+
+    async function markAllNotificationsAsRead() {
+        try {
+            const res = await fetch('/api/notifications/read-all/', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Remove all unread styles and badges
+                document.querySelectorAll('.notif-item-card.notif-unread').forEach(card => {
+                    card.classList.remove('notif-unread');
+                    card.style.borderColor = 'var(--border-color)';
+                    card.style.boxShadow = 'var(--shadow-card)';
+                });
+                document.querySelectorAll('.notif-pill-new').forEach(pill => pill.remove());
+                const btn = document.getElementById('btnMarkAllRead');
+                if (btn) btn.remove();
+                
+                // Clear badges on nav
+                const badgeD = document.getElementById('notifBadgeDesktop');
+                if (badgeD) badgeD.remove();
+                const badgeM = document.getElementById('notifBadgeMobile');
+                if (badgeM) badgeM.remove();
+            }
+        } catch (e) {
+            console.error("Error marking notifications read:", e);
+        }
+    }
+    </script>
+
+
+</div>
+
+<!-- Lightbox Image Modal -->
+<div class="lightbox-overlay"
+     id="imageLightbox"
+     onclick="closeImageLightbox(event)">
+    <div class="lightbox-container" onclick="event.stopPropagation()">
+        <button type="button"
+                class="lightbox-close-btn"
+                onclick="closeImageLightbox()"
+                title="ปิด">&times;</button>
+        <img src="" alt="ขยายรูปภาพ" class="lightbox-img" id="lightboxImage">
+        <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+</div>
+
+<!-- Modern Share Modal -->
+<div class="share-modal-overlay" id="shareModalOverlay" onclick="closeShareModal(event)">
+    <div class="share-modal-card" onclick="event.stopPropagation()">
+        <div class="share-modal-header">
+            <div class="share-modal-title-group">
+                <div class="share-modal-badge">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="share-modal-title">แชร์โพสต์นี้</h3>
+                    <p class="share-modal-subtitle">เลือกช่องทางที่คุณต้องการแชร์เรื่องราว</p>
+                </div>
+            </div>
+            <button type="button" class="share-modal-close" onclick="closeShareModal()" title="ปิด">&times;</button>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="share-preview-card" id="sharePreviewCard">
+            <div class="share-preview-img-wrap" id="sharePreviewImgWrap">
+                <img id="sharePreviewImg" src="" alt="พรีวิว">
+            </div>
+            <div class="share-preview-info">
+                <h4 id="sharePreviewTitle">ZoneIn Review</h4>
+                <p id="sharePreviewDesc">ดูรีวิวสถานที่ท่องเที่ยวนี้บน ZoneIn</p>
+                <span class="share-preview-url" id="sharePreviewUrlText">zonein.app</span>
+            </div>
+        </div>
+
+        <!-- Social Share Channels -->
+        <div class="share-channels-label">แชร์ไปยังโซเชียลมีเดีย</div>
+        <div class="share-grid">
+            <!-- Facebook -->
+            <button type="button" class="share-grid-btn" onclick="shareToPlatform('facebook')" title="แชร์ไปที่ Facebook">
+                <div class="share-icon-wrap fb-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </div>
+                <span>Facebook</span>
+            </button>
+
+            <!-- Instagram -->
+            <button type="button" class="share-grid-btn" onclick="shareToPlatform('instagram')" title="แชร์ไปที่ Instagram">
+                <div class="share-icon-wrap ig-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                </div>
+                <span>Instagram</span>
+            </button>
+
+            <!-- Line -->
+            <button type="button" class="share-grid-btn" onclick="shareToPlatform('line')" title="แชร์ไปที่ LINE">
+                <div class="share-icon-wrap line-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738-6.616 0-12 4.369-12 9.738 0 4.814 4.269 8.846 10.019 9.607.391.084.922.258 1.057.592.121.303.079.778.039 1.085l-.171 1.028c-.053.303-.242 1.186 1.039.645 1.281-.54 6.911-4.069 9.428-6.967 1.739-1.909 2.589-3.844 2.589-5.99zm-13.882 3.018h-2.148c-.378 0-.685-.307-.685-.685v-4.666c0-.378.307-.685.685-.685.378 0 .685.307.685.685v3.981h1.463c.378 0 .685.307.685.685 0 .378-.307.685-.685.685zm2.871-.685c0 .378-.307.685-.685.685s-.685-.307-.685-.685v-4.666c0-.378.307-.685.685-.685s.685.307.685.685v4.666zm5.176 0c0 .378-.307.685-.685.685-.246 0-.472-.133-.59-.345l-2.023-2.9v2.56c0 .378-.307.685-.685.685s-.685-.307-.685-.685v-4.666c0-.378.307-.685.685-.685.245 0 .47.132.589.344l2.024 2.903v-2.562c0-.378.307-.685.685-.685s.685.307.685.685v4.666zm3.328-3.296h-1.464v1.148h1.464c.378 0 .685.307.685.685 0 .378-.307.685-.685.685h-2.149c-.378 0-.685-.307-.685-.685v-4.666c0-.378.307-.685.685-.685h2.149c.378 0 .685.307.685.685 0 .378-.307.685-.685.685h-1.464v1.178h1.464c.378 0 .685.307.685.685 0 .378-.307.685-.685.685z"/>
+                    </svg>
+                </div>
+                <span>LINE</span>
+            </button>
+
+            <!-- X (Twitter) -->
+            <button type="button" class="share-grid-btn" onclick="shareToPlatform('x')" title="แชร์ไปที่ X">
+                <div class="share-icon-wrap x-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </div>
+                <span>X</span>
+            </button>
+
+            <!-- WhatsApp -->
+            <button type="button" class="share-grid-btn" onclick="shareToPlatform('whatsapp')" title="แชร์ไปที่ WhatsApp">
+                <div class="share-icon-wrap wa-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.071.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.164.576 4.195 1.583 5.952l-1.683 6.148 6.294-1.651c1.7 1.016 3.693 1.551 5.806 1.551 6.627 0 12-5.373 12-12s-5.373-12-12-12z"/>
+                    </svg>
+                </div>
+                <span>WhatsApp</span>
+            </button>
+
+            <!-- Native / More -->
+            <button type="button" class="share-grid-btn" onclick="shareToPlatform('native')" title="ตัวเลือกแชร์เพิ่มเติม">
+                <div class="share-icon-wrap more-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1.5"></circle>
+                        <circle cx="19" cy="12" r="1.5"></circle>
+                        <circle cx="5" cy="12" r="1.5"></circle>
+                    </svg>
+                </div>
+                <span>เพิ่มเติม</span>
+            </button>
+        </div>
+
+        <!-- Copy Link Section -->
+        <div class="share-copy-box">
+            <div class="share-link-input-wrap">
+                <svg class="share-link-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+                <input type="text" id="shareUrlInput" class="share-url-input" readonly value="">
+            </div>
+            <button type="button" class="btn-copy-share" id="btnCopyShareLink" onclick="copyShareLink()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="copyShareIcon">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span id="copyShareText">คัดลอกลิงก์</span>
+            </button>
+        </div>
+
+        <div class="share-modal-hint" id="shareModalHint"></div>
+    </div>
+</div>
+
+
+<!-- Edit Comment Modal -->
+<div class="edit-post-overlay" id="editCommentOverlay" onclick="closeEditCommentModal(event)">
+    <div class="edit-post-card" onclick="event.stopPropagation()">
+        <div class="edit-post-header">
+            <h3>✏️ แก้ไขความคิดเห็น</h3>
+            <button type="button" class="edit-post-close" onclick="closeEditCommentModal()" title="ปิด">×</button>
+        </div>
+        <textarea class="edit-post-textarea" id="editCommentTextarea" placeholder="เขียนความคิดเห็นของคุณ..."></textarea>
+        <div class="edit-post-actions">
+            <button type="button" class="btn-edit-post-cancel" onclick="closeEditCommentModal()">ยกเลิก</button>
+            <button type="button" class="btn-edit-post-save" id="btnSaveEditComment" onclick="submitEditComment()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                บันทึกความคิดเห็น
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+    <script>
+const IS_AUTHENTICATED = {{ user.is_authenticated|yesno:"true,false" }};
+window.IS_AUTHENTICATED = IS_AUTHENTICATED;
+const CURRENT_USER_INITIAL = "{{ user.username|default:'U'|slice:':1'|upper }}";
+let currentReviewPage = 1;
+let hasNextReviewPage = false;
+let isLoadingReviews = false;
+const likedReviewsMap = new Map();
+const reviewsDataMap = new Map();
+const INITIAL_FOLLOWED_USER_IDS = {{ followed_user_ids|safe|default:"[]" }};
+const followedAuthorsSet = new Set(INITIAL_FOLLOWED_USER_IDS);
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadRecentReviews(1);
+    const initialTab = "{{ active_tab|default:'home' }}";
+    const hash = window.location.hash.replace('#', '').toLowerCase();
+    if (hash === 'search' || hash === 'notifications' || hash === 'home') {
+        if (typeof switchTab === 'function') switchTab(hash);
+    } else if (initialTab && initialTab !== 'home') {
+        if (typeof switchTab === 'function') switchTab(initialTab);
+    }
+});
+
+// ===================================================
+// Post 3-dot Menu Functions
+// ===================================================
+let _editingPostId = null;
+
+function togglePostMenu(event, reviewId) {
+    event.stopPropagation();
+    const dropdown = document.getElementById(`post_dropdown_${reviewId}`);
+    if (!dropdown) return;
+    // Close all other open dropdowns
+    document.querySelectorAll('.post-dropdown.open').forEach(d => {
+        if (d !== dropdown) d.classList.remove('open');
+    });
+    dropdown.classList.toggle('open');
+}
+
+// Close post and comment dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.post-menu-wrap')) {
+        document.querySelectorAll('.post-dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+    if (!e.target.closest('.comment-menu-wrap')) {
+        document.querySelectorAll('.comment-dropdown').forEach(d => d.style.display = 'none');
+    }
+});
+
+function openEditPost(reviewId) {
+    // Close dropdown
+    const dd = document.getElementById(`post_dropdown_${reviewId}`);
+    if (dd) dd.classList.remove('open');
+
+    const cached = reviewsDataMap.get(reviewId);
+    if (!cached) return;
+
+    const postData = {
+        review_id: reviewId,
+        name: cached.place?.name || '',
+        category: cached.place?.category || 'cafe',
+        address: cached.place?.address || cached.place?.location || '',
+        latitude: (cached.place?.latitude !== undefined && cached.place?.latitude !== null) ? cached.place.latitude : null,
+        longitude: (cached.place?.longitude !== undefined && cached.place?.longitude !== null) ? cached.place.longitude : null,
+        image_url: cached.image_url || cached.place?.cover_image_url || '',
+        comment: cached.content || '',
+        rating: cached.rating || 5
+    };
+
+    if (typeof window.openEditPostModal === 'function') {
+        window.openEditPostModal(postData);
+    }
+}
+
+async function confirmDeletePost(reviewId) {
+    // Close dropdown
+    const dd = document.getElementById(`post_dropdown_${reviewId}`);
+    if (dd) dd.classList.remove('open');
+
+    if (!confirm('ต้องการลบโพสต์นี้หรือไม่?')) return;
+
+    try {
+        const res = await fetch(`/api/reviews/${reviewId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getHomeCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        const data = await res.json();
+        if (data.success) {
+            const card = document.getElementById(`review_${reviewId}`);
+            if (card) {
+                card.style.transition = 'opacity 0.3s, transform 0.3s';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.97)';
+                setTimeout(() => card.remove(), 300);
+            }
+            reviewsDataMap.delete(reviewId);
+            showToast('ลบโพสต์เรียบร้อยแล้ว 🗑️');
+        } else {
+            showToast(data.error || 'เกิดข้อผิดพลาด');
+        }
+    } catch (err) {
+        console.error('[Zone In] Delete post error:', err);
+        showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    }
+}
+
+function getHomeCSRFToken() {
+    const name = 'csrftoken';
+    for (const cookie of document.cookie.split(';')) {
+        const c = cookie.trim();
+        if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+    }
+    return '';
+}
+
+// Close edit post or comment modal on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const overlay = document.getElementById('editPostOverlay');
+        if (overlay && overlay.classList.contains('show')) {
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+            _editingPostId = null;
+        }
+        const commentOverlay = document.getElementById('editCommentOverlay');
+        if (commentOverlay && commentOverlay.classList.contains('show')) {
+            commentOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+            _editingCommentId = null;
+            _editingCommentReviewId = null;
+        }
+    }
+});
+
+let _editingCommentId = null;
+let _editingCommentReviewId = null;
+
+function toggleHomeCommentMenu(event, commentId) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    const dropdown = document.getElementById(`home_comment_dropdown_${commentId}`);
+    if (!dropdown) return;
+    document.querySelectorAll('.comment-dropdown').forEach(d => {
+        if (d !== dropdown) d.style.display = 'none';
+    });
+    document.querySelectorAll('.post-dropdown.open').forEach(d => {
+        d.classList.remove('open');
+    });
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+function openEditCommentModal(commentId, content, reviewId) {
+    const dd = document.getElementById(`home_comment_dropdown_${commentId}`);
+    if (dd) dd.style.display = 'none';
+    _editingCommentId = commentId;
+    _editingCommentReviewId = reviewId;
+    const textarea = document.getElementById('editCommentTextarea');
+    if (textarea) textarea.value = content || '';
+    const overlay = document.getElementById('editCommentOverlay');
+    if (overlay) {
+        overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => { if (textarea) textarea.focus(); }, 100);
+    }
+}
+
+function closeEditCommentModal(event) {
+    if (event && event.target !== document.getElementById('editCommentOverlay')) return;
+    const overlay = document.getElementById('editCommentOverlay');
+    if (overlay) {
+        overlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    _editingCommentId = null;
+    _editingCommentReviewId = null;
+}
+
+async function submitEditComment() {
+    if (!_editingCommentId) return;
+    const textarea = document.getElementById('editCommentTextarea');
+    const content = textarea ? textarea.value.trim() : '';
+    if (!content) {
+        showToast('กรุณากรอกความคิดเห็น');
+        return;
+    }
+    const btn = document.getElementById('btnSaveEditComment');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'กำลังบันทึก...';
+    }
+
+    try {
+        const res = await fetch(`/api/comments/${_editingCommentId}/edit/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getHomeCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ content: content })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const textEl = document.getElementById(`comment_text_${_editingCommentId}`);
+            if (textEl) textEl.textContent = content;
+
+            // Also update in reviewsDataMap cache if present
+            if (_editingCommentReviewId) {
+                const cached = reviewsDataMap.get(_editingCommentReviewId);
+                if (cached && cached.comments) {
+                    const c = cached.comments.find(item => item.id === _editingCommentId);
+                    if (c) c.content = content;
+                }
+            }
+
+            const overlay = document.getElementById('editCommentOverlay');
+            if (overlay) {
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+            showToast('แก้ไขความคิดเห็นเรียบร้อยแล้ว ✅');
+        } else {
+            showToast(data.error || 'เกิดข้อผิดพลาดในการแก้ไขความคิดเห็น');
+        }
+    } catch (e) {
+        console.error('Edit comment error:', e);
+        showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> บันทึกความคิดเห็น';
+        }
+        _editingCommentId = null;
+        _editingCommentReviewId = null;
+    }
+}
+
+async function confirmDeleteComment(commentId, reviewId) {
+    const dd = document.getElementById(`home_comment_dropdown_${commentId}`);
+    if (dd) dd.style.display = 'none';
+    if (!confirm('คุณต้องการลบความคิดเห็นนี้ใช่หรือไม่?')) return;
+
+    try {
+        const res = await fetch(`/api/comments/${commentId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getHomeCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            const el = document.getElementById(`comment_${commentId}`);
+            if (el) {
+                el.style.transition = 'opacity 0.25s, transform 0.25s';
+                el.style.opacity = '0';
+                el.style.transform = 'scale(0.95)';
+                setTimeout(() => el.remove(), 250);
+            }
+            const countEl = document.getElementById(`comment_count_${reviewId}`);
+            if (countEl) {
+                const currentCount = parseInt(countEl.innerText) || 0;
+                countEl.innerText = Math.max(0, currentCount - 1);
+            }
+            if (reviewId) {
+                const cached = reviewsDataMap.get(reviewId);
+                if (cached && cached.comments) {
+                    cached.comments = cached.comments.filter(item => item.id !== commentId);
+                }
+            }
+            showToast('ลบความคิดเห็นเรียบร้อยแล้ว 🗑️');
+        } else {
+            showToast(data.error || 'เกิดข้อผิดพลาดในการลบความคิดเห็น');
+        }
+    } catch (e) {
+        console.error('Delete comment error:', e);
+        showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    }
+}
+
+function renderSingleCommentHtml(c, reviewId) {
+    const authorUsername = c.author?.username || 'user';
+    const authorInitial = (authorUsername || 'U')[0].toUpperCase();
+    const avatarHtml = c.author?.avatar_url
+        ? `<img src="${c.author.avatar_url}" alt="${authorUsername}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
+        : authorInitial;
+    const timeFormatted = formatDateTimeWithRelative(c.created_at);
+    const isOwner = c.is_author;
+
+    const safeContent = (c.content || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+    return `
+        <div class="comment-item" id="comment_${c.id}" style="text-align: left; position: relative;">
+            <a href="/profile/${encodeURIComponent(authorUsername)}/" style="text-decoration: none; color: inherit; flex-shrink: 0;" title="ดูโปรไฟล์ @${authorUsername}">
+                <div class="comment-avatar">${avatarHtml}</div>
+            </a>
+            <div class="comment-body" style="text-align: left;">
+                <div class="comment-meta" style="text-align: left; justify-content: flex-start; align-items: center; gap: 6px;">
+                    <a href="/profile/${encodeURIComponent(authorUsername)}/" class="comment-author" style="text-decoration: none; color: inherit; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">
+                        ${authorUsername}
+                    </a>
+                    <span class="comment-time" style="text-align: left; margin-left: 2px;">${timeFormatted}</span>
+                    ${isOwner ? `
+                    <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">
+                        <button class="comment-menu-btn" type="button" aria-label="เมนูความคิดเห็น" onclick="toggleHomeCommentMenu(event, ${c.id})">⋯</button>
+                        <div class="comment-dropdown" id="home_comment_dropdown_${c.id}" style="display: none;">
+                            <button type="button" class="comment-dd-item" onclick="openEditCommentModal(${c.id}, '${safeContent}', ${reviewId})">
+                                ✏️ แก้ไขความคิดเห็น
+                            </button>
+                            <button type="button" class="comment-dd-item comment-dd-delete" onclick="confirmDeleteComment(${c.id}, ${reviewId})">
+                                🗑️ ลบความคิดเห็น
+                            </button>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="comment-text" id="comment_text_${c.id}" style="text-align: left;">${c.content}</div>
+            </div>
+        </div>
+    `;
+}
+
+async function toggleFollowAuthor(event, authorId, username) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    if (!IS_AUTHENTICATED) {
+        showToast("กรุณาเข้าสู่ระบบเพื่อติดตามนักเดินทาง 👥");
+        return;
+    }
+    const isCurrentlyFollowing = followedAuthorsSet.has(authorId);
+    const newFollowingState = !isCurrentlyFollowing;
+
+    if (newFollowingState) {
+        followedAuthorsSet.add(authorId);
+        showToast(`ติดตาม @${username} เรียบร้อยแล้ว 👥`);
+    } else {
+        followedAuthorsSet.delete(authorId);
+        showToast(`ยกเลิกการติดตาม @${username} แล้ว`);
+    }
+    updateFollowButtons(authorId, newFollowingState);
+
+    try {
+        const res = await fetch(`/api/users/${authorId}/follow/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await res.json();
+        if (!data.success) {
+            if (isCurrentlyFollowing) {
+                followedAuthorsSet.add(authorId);
+            } else {
+                followedAuthorsSet.delete(authorId);
+            }
+            updateFollowButtons(authorId, isCurrentlyFollowing);
+            showToast(data.message || 'เกิดข้อผิดพลาดในการติดตาม');
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function updateFollowButtons(authorId, isFollowing) {
+    const buttons = document.querySelectorAll(`.btn-follow[data-author-id="${authorId}"]`);
+    buttons.forEach(btn => {
+        if (isFollowing) {
+            btn.classList.add("following");
+            btn.innerText = "กำลังติดตาม";
+        } else {
+            btn.classList.remove("following");
+            btn.innerText = "ติดตาม";
+        }
+    });
+}
+
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    if (!toast) return;
+    toast.innerText = message;
+    toast.style.display = "block";
+    setTimeout(() => { toast.style.display = "none"; }, 3500);
+}
+
+function formatRelativeTime(dateString) {
+    if (!dateString) return "";
+    const now = new Date();
+    const past = new Date(dateString);
+    const diffSeconds = Math.max(0, Math.floor((now - past) / 1000));
+
+    if (diffSeconds < 60) return "เมื่อสักครู่";
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    if (diffMinutes < 60) return `เมื่อ ${diffMinutes} นาทีที่แล้ว`;
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `เมื่อ ${diffHours} ชั่วโมงที่แล้ว`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return "เมื่อวานนี้";
+    if (diffDays < 30) return `เมื่อ ${diffDays} วันที่แล้ว`;
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths < 12) return `เมื่อ ${diffMonths} เดือนที่แล้ว`;
+    return `เมื่อ ${Math.floor(diffDays / 365)} ปีที่แล้ว`;
+}
+
+function formatDateTimeWithRelative(dateString) {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+    const day = d.getDate();
+    const month = months[d.getMonth()];
+    const year = d.getFullYear() + 543;
+    const relative = formatRelativeTime(dateString);
+    return `${day} ${month} ${year} • ${relative}`;
+}
+
+// Fetch & Render Recent Reviews Feed
+async function loadRecentReviews(page = 1, append = false) {
+    if (isLoadingReviews) return;
+    isLoadingReviews = true;
+
+    const container = document.getElementById("recentReviewsFeed");
+    const loadMoreBtn = document.getElementById("btnLoadMoreReviews");
+
+    if (!append) {
+        container.innerHTML = `
+            <div class="skeleton" style="height: 180px;"></div>
+            <div class="skeleton" style="height: 180px;"></div>
+        `;
+    } else {
+        if (loadMoreBtn) {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.innerText = "กำลังโหลด...";
+        }
+    }
+
+    try {
+        const res = await fetch(`/api/reviews/recent/?page=${page}&limit=5`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const reviews = data.reviews || [];
+        hasNextReviewPage = data.has_next;
+        currentReviewPage = data.page;
+
+        reviews.forEach(r => {
+            reviewsDataMap.set(r.id, r);
+            if (typeof r.is_liked !== 'undefined') {
+                likedReviewsMap.set(r.id, r.is_liked);
+            }
+            if (r.author && r.author.is_following) {
+                followedAuthorsSet.add(r.author.id);
+            }
+        });
+
+        if (!append && reviews.length === 0) {
+            container.innerHTML = `
+                <div class="state-box" style="padding: 2.5rem 1.5rem; text-align: center; background: var(--bg-card); border: 1.5px dashed var(--border-color); border-radius: var(--radius-lg); backdrop-filter: blur(12px);">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📝</div>
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">ยังไม่มีโพสต์ไว้ก่อน</h3>
+                    <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">ร่วมแชร์ประสบการณ์ท่องเที่ยวคนแรกได้เลย!</p>
+                </div>
+            `;
+            if (loadMoreBtn) loadMoreBtn.style.display = "none";
+            return;
+        }
+
+        const cardsHtml = reviews.map(r => renderReviewCardHtml(r)).join("");
+
+        if (append) {
+            container.insertAdjacentHTML("beforeend", cardsHtml);
+        } else {
+            container.innerHTML = cardsHtml;
+        }
+
+        if (loadMoreBtn) {
+            loadMoreBtn.style.display = hasNextReviewPage ? "block" : "none";
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.innerText = "โหลดรีวิวเพิ่มเติม";
+        }
+
+    } catch (err) {
+        console.error(err);
+        if (!append) {
+            container.innerHTML = `
+                <div class="state-box">
+                    <h3 style="color: #fff; margin-bottom: 0.5rem;">เกิดข้อผิดพลาดในการโหลดรีวิว</h3>
+                    <button type="button" class="btn-load-more" onclick="loadRecentReviews(1)" style="margin-top: 1rem;">ลองใหม่อีกครั้ง</button>
+                </div>
+            `;
+        }
+    } finally {
+        isLoadingReviews = false;
+    }
+}
+
+function renderReviewCardHtml(r) {
+    const authorInitial = (r.author?.username || "T")[0].toUpperCase();
+    const stars = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
+    const dateFormatted = formatDateTimeWithRelative(r.created_at);
+    const isLiked = (typeof r.is_liked !== 'undefined') ? r.is_liked : (likedReviewsMap.get(r.id) || false);
+    const likesCount = (typeof r.likes_count !== 'undefined') ? r.likes_count : (isLiked ? 1 : 0);
+    const comments = r.comments || [];
+    const commentsCount = comments.length;
+
+    let imgHtml = "";
+    const displayImage = r.image_url || r.place?.image_url || r.place?.cover_image_url;
+    if (displayImage) {
+        const placeName = (r.place?.name || 'รูปรีวิว').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const safeImageUrl = displayImage.replace(/'/g, "\\'");
+        imgHtml = `
+            <div class="review-image-wrap" onclick="openImageLightbox('${safeImageUrl}', '${placeName}')" title="คลิกเพื่อดูรูปภาพขนาดใหญ่">
+                <img src="${displayImage}" alt="${r.place?.name || 'รูปรีวิว'}" class="review-image" loading="lazy">
+                <div class="review-image-overlay-hint">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        <line x1="11" y1="8" x2="11" y2="14"></line>
+                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                    <span>คลิกเพื่อดูรูป</span>
+                </div>
+            </div>
+        `;
+    }
+
+    const commentsListHtml = comments.map(c => renderSingleCommentHtml(c, r.id)).join("");
+
+    const authorId = r.author?.id || 0;
+    const authorUsername = r.author?.username || 'นักเดินทาง';
+    const isFollowing = followedAuthorsSet.has(authorId);
+
+    return `
+        <article class="review-card" id="review_${r.id}" style="text-align: left; position: relative;">
+            ${r.is_author ? `
+            <div class="post-menu-wrap" style="position: absolute; top: 1.1rem; right: 1.1rem; z-index: 10;">
+                <button type="button" class="post-menu-btn" aria-label="เมนูโพสต์" onclick="togglePostMenu(event, ${r.id})" title="ตัวเลือกโพสต์">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                        <circle cx="12" cy="5" r="1.8"></circle>
+                        <circle cx="12" cy="12" r="1.8"></circle>
+                        <circle cx="12" cy="19" r="1.8"></circle>
+                    </svg>
+                </button>
+                <div class="post-dropdown" id="post_dropdown_${r.id}">
+                    <button type="button" class="post-dd-item" onclick="openEditPost(${r.id})">
+                        ✏️ แก้ไขโพสต์
+                    </button>
+                    <button type="button" class="post-dd-item post-dd-delete" onclick="confirmDeletePost(${r.id})">
+                        🗑️ ลบโพสต์
+                    </button>
+                </div>
+            </div>
+            ` : ''}
+            <div class="review-header" style="text-align: left;">
+                <div class="review-author" style="text-align: left;">
+                    <a href="/profile/${authorUsername}/" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; text-align: left;">
+                        <div class="author-avatar">${authorInitial}</div>
+                        <div style="text-align: left;">
+                            <div class="author-name-row" style="text-align: left; justify-content: flex-start;">
+                                <span class="author-name" style="cursor: pointer; transition: color 0.2s; text-align: left;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">${authorUsername}</span>
+                                <button type="button" class="btn-follow ${isFollowing ? 'following' : ''}" data-author-id="${authorId}" onclick="toggleFollowAuthor(event, ${authorId}, '${authorUsername}')">
+                                    ${isFollowing ? 'กำลังติดตาม' : 'ติดตาม'}
+                                </button>
+                            </div>
+                            <div class="review-time" style="text-align: left;">${dateFormatted}</div>
+                        </div>
+                    </a>
+                </div>
+                <span class="rating-badge" id="rating_badge_${r.id}" style="margin-right: ${r.is_author ? '2rem' : '0'}">${stars} ${r.rating}.0</span>
+            </div>
+
+            ${r.place ? `
+                <div class="post-title-block" style="text-align: left; margin-top: 0.4rem; margin-bottom: 0.5rem; width: 100%;">
+                    <h3 class="post-title-text" style="text-align: left; font-size: 1.05rem; font-weight: 700; color: #1e242b; line-height: 1.4; margin: 0;">${r.place.name}</h3>
+                </div>
+            ` : ''}
+
+            <p class="review-content" id="review_content_${r.id}" style="text-align: left; width: 100%;">${r.content || ''}</p>
+
+            ${imgHtml}
+
+            ${r.place ? `
+                <div class="post-map-link-row" style="text-align: left; display: flex; justify-content: flex-start; margin-top: 0.75rem; margin-bottom: 0.35rem; width: 100%;">
+                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.place.name + ' ' + (r.place.location || ''))}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="btn-post-map-location"
+                       style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(255, 157, 157, 0.12); border: 1px solid rgba(255, 157, 157, 0.35); border-radius: 9999px; color: #d94646; font-size: 0.82rem; font-weight: 600; text-decoration: none; transition: all 0.2s ease;"
+                       onmouseover="this.style.background='rgba(255, 157, 157, 0.22)'; this.style.borderColor='#FF9D9D';"
+                       onmouseout="this.style.background='rgba(255, 157, 157, 0.12)'; this.style.borderColor='rgba(255, 157, 157, 0.35)';"
+                       title="เปิดนำทางบน Google Maps">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span>📍 ${r.place.name} (${r.place.location || 'ศรีสะเกษ'})</span>
+                        <span style="font-size: 0.75rem; opacity: 0.85;">➔</span>
+                    </a>
+                </div>
+            ` : ''}
+
+            <div class="review-actions" style="text-align: left; display: flex; justify-content: flex-start;">
+                <button type="button" class="action-btn ${isLiked ? 'liked' : ''}" id="like_btn_${r.id}" onclick="toggleLikeReview(${r.id}, ${r.place ? r.place.id : 0})">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="${isLiked ? '#FF9D9D' : 'none'}" stroke="${isLiked ? '#FF9D9D' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <span id="like_count_${r.id}">${likesCount}</span>
+                </button>
+
+                <button type="button" class="action-btn" onclick="toggleCommentsSection(${r.id})">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>ความคิดเห็น (<span id="comment_count_${r.id}">${commentsCount}</span>)</span>
+                </button>
+
+                <button type="button" class="action-btn" onclick="shareReview(${r.id})">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                    <span>แชร์</span>
+                </button>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="comments-section" id="comments_section_${r.id}" style="text-align: left;">
+                <div class="comments-list" id="comments_list_${r.id}" style="text-align: left;">
+                    ${commentsListHtml}
+                </div>
+                <form class="comment-form" onsubmit="submitComment(event, ${r.id})" style="text-align: left; display: flex; align-items: center;">
+                    <div class="comment-avatar">${IS_AUTHENTICATED ? CURRENT_USER_INITIAL : '🔒'}</div>
+                    <input type="text" class="comment-input" id="comment_input_${r.id}" placeholder="${IS_AUTHENTICATED ? 'เขียนความคิดเห็นของคุณ...' : 'กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น...'}" ${IS_AUTHENTICATED ? 'required' : 'readonly style="cursor: pointer;" onclick="submitComment(event, ' + r.id + ')"'}>
+                    <button type="submit" class="comment-submit-btn">${IS_AUTHENTICATED ? 'ส่ง' : 'เข้าสู่ระบบ'}</button>
+                </form>
+            </div>
+        </article>
+    `;
+}
+
+function loadMoreReviews() {
+    if (hasNextReviewPage && !isLoadingReviews) {
+        loadRecentReviews(currentReviewPage + 1, true);
+    }
+}
+
+function toggleCommentsSection(reviewId) {
+    const sec = document.getElementById(`comments_section_${reviewId}`);
+    if (!sec) return;
+    const input = document.getElementById(`comment_input_${reviewId}`);
+    if (sec.style.display === "none") {
+        sec.style.display = "flex";
+        if (input) input.focus();
+    } else {
+        if (input) input.focus();
+    }
+}
+
+async function submitComment(event, reviewId) {
+    if (event) event.preventDefault();
+    if (!IS_AUTHENTICATED) {
+        showToast("กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น 💬");
+        setTimeout(() => {
+            window.location.href = `/signin/?next=${encodeURIComponent(window.location.pathname + window.location.hash)}`;
+        }, 800);
+        return;
+    }
+
+    const input = document.getElementById(`comment_input_${reviewId}`);
+    const list = document.getElementById(`comments_list_${reviewId}`);
+    const countEl = document.getElementById(`comment_count_${reviewId}`);
+    if (!input || !input.value.trim()) return;
+
+    const content = input.value.trim();
+
+    try {
+        const res = await fetch(`/api/reviews/${reviewId}/comments/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: content }),
+        });
+
+        if (res.status === 401) {
+            showToast("กรุณาเข้าสู่ระบบก่อนแสดงความคิดเห็น");
+            setTimeout(() => {
+                window.location.href = `/signin/?next=${encodeURIComponent(window.location.pathname + window.location.hash)}`;
+            }, 800);
+            return;
+        }
+
+        if (!res.ok) throw new Error("Failed to post comment");
+        const data = await res.json();
+        const c = data.comment;
+
+        input.value = "";
+
+        const newCommentHtml = renderSingleCommentHtml(c, reviewId);
+
+        if (list) {
+            list.insertAdjacentHTML("beforeend", newCommentHtml);
+        }
+        if (countEl) {
+            countEl.innerText = parseInt(countEl.innerText || 0) + 1;
+        }
+
+        const cached = reviewsDataMap.get(reviewId);
+        if (cached) {
+            if (!cached.comments) cached.comments = [];
+            cached.comments.push(c);
+        }
+
+        showToast("เพิ่มความคิดเห็นเรียบร้อยแล้ว 💬");
+    } catch (err) {
+        console.error(err);
+        showToast("เกิดข้อผิดพลาดในการส่งความคิดเห็น");
+    }
+}
+
+async function toggleLikeReview(reviewId, placeId) {
+    if (!IS_AUTHENTICATED) {
+        showToast("กรุณาเข้าสู่ระบบเพื่อกดไลก์ ❤️");
+        setTimeout(() => {
+            window.location.href = `/signin/?next=${encodeURIComponent(window.location.pathname + window.location.hash)}`;
+        }, 800);
+        return;
+    }
+
+    if (!placeId) {
+        const cached = reviewsDataMap.get(reviewId);
+        placeId = cached?.place?.id;
+    }
+
+    const btn = document.getElementById(`like_btn_${reviewId}`);
+    const countEl = document.getElementById(`like_count_${reviewId}`);
+    if (!btn || !countEl) return;
+
+    const wasLiked = btn.classList.contains("liked");
+    const currentCount = parseInt(countEl.innerText) || 0;
+    const newLiked = !wasLiked;
+    const newCount = Math.max(0, currentCount + (newLiked ? 1 : -1));
+
+    // Optimistic UI update
+    btn.classList.toggle("liked", newLiked);
+    const svg = btn.querySelector("svg");
+    if (svg) {
+        svg.setAttribute("fill", newLiked ? "#FF9D9D" : "none");
+        svg.setAttribute("stroke", newLiked ? "#FF9D9D" : "currentColor");
+    }
+    countEl.innerText = newCount;
+    likedReviewsMap.set(reviewId, newLiked);
+
+    const targetUrl = placeId ? `/api/places/${placeId}/like/` : `/api/reviews/${reviewId}/like/`;
+
+    try {
+        const res = await fetch(targetUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+            }
+        });
+
+        if (res.status === 401) {
+            showToast("กรุณาเข้าสู่ระบบก่อนกดไลก์");
+            setTimeout(() => {
+                window.location.href = `/signin/?next=${encodeURIComponent(window.location.pathname + window.location.hash)}`;
+            }, 800);
+            return;
+        }
+
+        const data = await res.json();
+        if (data.success || data.liked !== undefined) {
+            const isNowLiked = (data.is_liked !== undefined) ? data.is_liked : data.liked;
+            const totalLikes = (data.total_likes !== undefined) ? data.total_likes : (data.likes_count !== undefined ? data.likes_count : newCount);
+
+            likedReviewsMap.set(reviewId, isNowLiked);
+            countEl.innerText = totalLikes;
+            btn.classList.toggle("liked", isNowLiked);
+            if (svg) {
+                svg.setAttribute("fill", isNowLiked ? "#FF9D9D" : "none");
+                svg.setAttribute("stroke", isNowLiked ? "#FF9D9D" : "currentColor");
+            }
+            showToast(isNowLiked ? "ถูกใจโพสต์นี้แล้ว ❤️" : "ยกเลิกการถูกใจแล้ว");
+
+            // Sync other cards for the same place in the feed if any
+            if (placeId) {
+                reviewsDataMap.forEach((rev, rId) => {
+                    if (rev.place && rev.place.id === placeId && rId !== reviewId) {
+                        rev.is_liked = isNowLiked;
+                        rev.likes_count = totalLikes;
+                        likedReviewsMap.set(rId, isNowLiked);
+                        const otherBtn = document.getElementById(`like_btn_${rId}`);
+                        const otherCount = document.getElementById(`like_count_${rId}`);
+                        if (otherBtn) {
+                            otherBtn.classList.toggle("liked", isNowLiked);
+                            const otherSvg = otherBtn.querySelector("svg");
+                            if (otherSvg) {
+                                otherSvg.setAttribute("fill", isNowLiked ? "#FF9D9D" : "none");
+                                otherSvg.setAttribute("stroke", isNowLiked ? "#FF9D9D" : "currentColor");
+                            }
+                        }
+                        if (otherCount) {
+                            otherCount.innerText = totalLikes;
+                        }
+                    }
+                });
+            }
+        } else {
+            throw new Error(data.message || "Failed");
+        }
+    } catch (err) {
+        console.error("Like toggle error:", err);
+        // Rollback on error
+        btn.classList.toggle("liked", wasLiked);
+        if (svg) {
+            svg.setAttribute("fill", wasLiked ? "#FF9D9D" : "none");
+            svg.setAttribute("stroke", wasLiked ? "#FF9D9D" : "currentColor");
+        }
+        countEl.innerText = currentCount;
+        likedReviewsMap.set(reviewId, wasLiked);
+        showToast("เกิดข้อผิดพลาดในการกดไลก์");
+    }
+}
+
+// ===================================================
+// Modern Multi-Platform Sharing System
+// ===================================================
+let currentSharePayload = {
+    title: 'ZoneIn - รีวิวสถานที่ท่องเที่ยว',
+    text: 'ดูรีวิวและสถานที่ท่องเที่ยวยอดนิยมบน ZoneIn!',
+    url: window.location.href,
+    imageUrl: '',
+    placeName: ''
+};
+
+function shareReview(reviewId) {
+    const review = reviewsDataMap.get(reviewId);
+    let title = 'ZoneIn - รีวิวสถานที่ท่องเที่ยว';
+    let text = 'ดูรีวิวสถานที่ท่องเที่ยวนี้บน ZoneIn!';
+    let url = `${window.location.origin}/#review-${reviewId}`;
+    let imageUrl = '';
+    let placeName = 'ZoneIn รีวิวสถานที่ท่องเที่ยว';
+
+    if (review) {
+        if (review.place && review.place.name) {
+            placeName = review.place.name;
+            title = `${review.place.name} — รีวิวท่องเที่ยวบน ZoneIn`;
+            if (review.place.id) {
+                url = `${window.location.origin}/places/${review.place.id}/`;
+            }
+        }
+        if (review.content) {
+            text = review.content.length > 110 ? review.content.substring(0, 110) + '...' : review.content;
+        }
+        imageUrl = review.image_url || (review.place && (review.place.image_url || review.place.cover_image_url)) || '';
+    }
+
+    currentSharePayload = {
+        title: title,
+        text: text,
+        url: url,
+        imageUrl: imageUrl,
+        placeName: placeName
+    };
+
+    openShareModal(currentSharePayload);
+}
+
+function openShareModal(data) {
+    const modal = document.getElementById('shareModalOverlay');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('sharePreviewTitle');
+    const descEl = document.getElementById('sharePreviewDesc');
+    const urlTextEl = document.getElementById('sharePreviewUrlText');
+    const imgEl = document.getElementById('sharePreviewImg');
+    const imgWrap = document.getElementById('sharePreviewImgWrap');
+    const inputEl = document.getElementById('shareUrlInput');
+    const hintEl = document.getElementById('shareModalHint');
+
+    if (titleEl) titleEl.innerText = data.placeName || data.title;
+    if (descEl) descEl.innerText = data.text;
+    if (inputEl) inputEl.value = data.url;
+    if (urlTextEl) {
+        try {
+            const parsedUrl = new URL(data.url);
+            urlTextEl.innerText = parsedUrl.host + (parsedUrl.pathname !== '/' ? parsedUrl.pathname : '');
+        } catch {
+            urlTextEl.innerText = data.url;
+        }
+    }
+
+    if (hintEl) {
+        hintEl.style.display = 'none';
+        hintEl.innerText = '';
+    }
+
+    resetCopyShareButton();
+
+    if (imgWrap) {
+        if (data.imageUrl) {
+            imgWrap.innerHTML = `<img id="sharePreviewImg" src="${data.imageUrl}" alt="พรีวิว" style="width:100%;height:100%;object-fit:cover;">`;
+        } else {
+            imgWrap.innerHTML = '<span style="font-size: 1.4rem;">📍</span>';
+        }
+    }
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeShareModal(event) {
+    if (event && event.target && event.target.closest('.share-modal-card')) return;
+    const modal = document.getElementById('shareModalOverlay');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+}
+
+function resetCopyShareButton() {
+    const btn = document.getElementById('btnCopyShareLink');
+    const text = document.getElementById('copyShareText');
+    const icon = document.getElementById('copyShareIcon');
+    if (!btn || !text) return;
+    btn.classList.remove('copied');
+    text.innerText = 'คัดลอกลิงก์';
+    if (icon) {
+        icon.innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>';
+    }
+}
+
+function copyShareLink() {
+    const url = currentSharePayload.url || window.location.href;
+    const btn = document.getElementById('btnCopyShareLink');
+    const text = document.getElementById('copyShareText');
+    const icon = document.getElementById('copyShareIcon');
+
+    const markCopied = () => {
+        if (btn && text) {
+            btn.classList.add('copied');
+            text.innerText = 'คัดลอกแล้ว! ✓';
+            if (icon) {
+                icon.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+            }
+            setTimeout(() => {
+                resetCopyShareButton();
+            }, 2500);
+        }
+        showToast('คัดลอกลิงก์เรียบร้อยแล้ว 🔗');
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(markCopied).catch(() => {
+            fallbackCopy(url);
+            markCopied();
+        });
+    } else {
+        fallbackCopy(url);
+        markCopied();
+    }
+}
+
+function fallbackCopy(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    textArea.style.top = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        document.execCommand('copy');
+    } catch (e) {
+        console.error('Fallback copy failed', e);
+    }
+    document.body.removeChild(textArea);
+}
+
+function shareToPlatform(platform) {
+    const { title, text, url, placeName } = currentSharePayload;
+    const encodedUrl = encodeURIComponent(url);
+    const shareHeading = placeName ? `${placeName} — ZoneIn` : title;
+    const encodedTitle = encodeURIComponent(`${shareHeading}: ${text}`);
+    const popupOpts = 'width=620,height=560,toolbar=no,menubar=no,location=no,status=no';
+
+    switch (platform) {
+        case 'facebook': {
+            const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedTitle}`;
+            window.open(fbUrl, '_blank', popupOpts);
+            break;
+        }
+        case 'instagram': {
+            // Instagram web doesn't support direct URL pre-fill sharing
+            // Auto copy link to clipboard, show instruction, and launch Instagram
+            copyShareLink();
+            const hintEl = document.getElementById('shareModalHint');
+            if (hintEl) {
+                hintEl.innerHTML = '📸 คัดลอกลิงก์เรียบร้อยแล้ว! กำลังเปิด Instagram เพื่อแชร์ในสตอรี่หรือแชท...';
+                hintEl.style.display = 'block';
+            }
+            showToast('คัดลอกลิงก์แล้ว! เปิด Instagram เพื่อแชร์ได้เลย 📸');
+            setTimeout(() => {
+                window.open('https://www.instagram.com/', '_blank');
+            }, 500);
+            break;
+        }
+        case 'line': {
+            const lineUrl = `https://social-plugins.line.me/lineit/share?url=${encodedUrl}&text=${encodedTitle}`;
+            window.open(lineUrl, '_blank', popupOpts);
+            break;
+        }
+        case 'x': {
+            const xUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+            window.open(xUrl, '_blank', popupOpts);
+            break;
+        }
+        case 'whatsapp': {
+            const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareHeading + '\n' + text + '\n' + url)}`;
+            window.open(waUrl, '_blank', popupOpts);
+            break;
+        }
+        case 'native': {
+            if (navigator.share) {
+                navigator.share({
+                    title: shareHeading,
+                    text: text,
+                    url: url
+                }).catch(() => {});
+            } else {
+                copyShareLink();
+            }
+            break;
+        }
+        default:
+            copyShareLink();
+    }
+}
+
+function openImageLightbox(imageUrl, caption = '') {
+    if (!imageUrl) return;
+    const lightbox = document.getElementById("imageLightbox");
+    const img = document.getElementById("lightboxImage");
+    const cap = document.getElementById("lightboxCaption");
+    if (!lightbox || !img) return;
+
+    img.src = imageUrl;
+    if (cap) {
+        if (caption) {
+            cap.innerText = caption;
+            cap.style.display = "block";
+        } else {
+            cap.style.display = "none";
+        }
+    }
+    lightbox.classList.add("show");
+    document.body.style.overflow = "hidden";
+}
+
+function closeImageLightbox(event) {
+    if (event && event.target && event.target.closest(".lightbox-img")) return;
+    const lightbox = document.getElementById("imageLightbox");
+    if (lightbox) {
+        lightbox.classList.remove("show");
+        document.body.style.overflow = "";
+    }
+}
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        closeImageLightbox();
+        closeShareModal();
+    }
+});
+    </script>
+{% endblock %}

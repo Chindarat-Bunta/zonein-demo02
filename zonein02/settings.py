@@ -43,11 +43,14 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "t")
 
 ALLOWED_HOSTS = [
+    "*",
     ".vercel.app",
     ".now.sh",
     "localhost",
     "127.0.0.1",
     "[::1]",
+    "testserver",
+    "*",
 ]
 if "ALLOWED_HOSTS" in os.environ:
     ALLOWED_HOSTS.extend(
@@ -78,7 +81,23 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # django-allauth
+    "django.contrib.sites",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    # Local app
     "web",
+]
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    # Django default (username/password login)
+    "django.contrib.auth.backends.ModelBackend",
+    # allauth-specific (email/social login)
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 MIDDLEWARE = [
@@ -89,6 +108,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Required by django-allauth
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "zonein02.urls"
@@ -96,7 +117,7 @@ ROOT_URLCONF = "zonein02.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -114,19 +135,15 @@ WSGI_APPLICATION = "zonein02.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-if os.environ.get("DATABASE_URL"):
-    import urllib.parse
+import dj_database_url
 
-    url = urllib.parse.urlparse(os.environ["DATABASE_URL"])
+if os.environ.get("DATABASE_URL"):
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": url.path.lstrip("/"),
-            "USER": url.username,
-            "PASSWORD": url.password,
-            "HOST": url.hostname,
-            "PORT": url.port,
-        }
+        "default": dj_database_url.config(
+            default=os.environ["DATABASE_URL"],
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
 else:
     DATABASES = {
@@ -173,3 +190,70 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STATICFILES_DIRS = [
+    BASE_DIR / "statics",
+]
+
+# ==============================================================================
+# Cloudinary Configuration (Central Image & Media Upload Service)
+# ==============================================================================
+import cloudinary
+
+CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
+CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY", "")
+CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET", "")
+CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "")
+
+if CLOUDINARY_URL:
+    cloudinary.config(
+        cloudinary_url=CLOUDINARY_URL,
+        secure=True,
+    )
+elif CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True,
+    )
+else:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME or "zonein",
+        api_key=CLOUDINARY_API_KEY or "demo_key",
+        api_secret=CLOUDINARY_API_SECRET or "demo_secret",
+        secure=True,
+    )
+
+# ==============================================================================
+# Social Authentication — Google OAuth 2.0
+# ==============================================================================
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
+
+# ==============================================================================
+# django-allauth Configuration
+# ==============================================================================
+ACCOUNT_SIGNUP_FIELDS = ["username*", "password1*", "password2*"]  # email ไม่บังคับ
+ACCOUNT_EMAIL_VERIFICATION = "none"  # ไม่บังคับยืนยัน email สำหรับ social login
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if not DEBUG else "http"
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APP": {
+            "client_id": GOOGLE_CLIENT_ID,
+            "secret": GOOGLE_CLIENT_SECRET,
+            "key": "",
+        },
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        "OAUTH_PKCE_ENABLED": True,
+    },
+}

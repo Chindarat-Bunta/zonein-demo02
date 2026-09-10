@@ -1,0 +1,112 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ข้อกำหนดและเงื่อนไขการใช้งาน — Zone In</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        :root {
+            --primary: #FF9D9D;
+            --text-main: #2D3748;
+            --text-muted: #718096;
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --card-border: rgba(255, 197, 170, 0.45);
+            --radius-card: 24px;
+            --font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #FFF7F3 0%, #FFFDF7 50%, #F4FBF7 100%);
+            padding: 50px 20px;
+            font-family: var(--font-family);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+        }
+        .terms-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 40px 36px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+        }
+        .terms-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+        .terms-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        .terms-section {
+            margin-bottom: 24px;
+        }
+        .terms-section h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+        .terms-section p, .terms-section ul {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+        .terms-section ul { padding-left: 20px; }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #f08383;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.92rem;
+            margin-top: 10px;
+        }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="terms-container">
+    <div style="margin-bottom: 24px;">
+        <a href="{% url 'web:index' %}" class="back-link">← กลับสู่หน้าแรก Zone In</a>
+    </div>
+
+    <h1 class="terms-title">ข้อกำหนดและเงื่อนไขการใช้งาน (Terms of Service)</h1>
+    <div class="terms-date">อัปเดตล่าสุด: 1 มกราคม 2026</div>
+
+    <div class="terms-section">
+        <h2>1. การยอมรับข้อกำหนด</h2>
+        <p>การสมัครสมาชิก หรือเข้าใช้งานแพลตฟอร์ม Zone In ถือว่าท่านตกลงที่จะปฏิบัติตามข้อกำหนดและเงื่อนไขนี้ รวมถึงนโยบายความเป็นส่วนตัวของแพลตฟอร์ม</p>
+    </div>
+
+    <div class="terms-section">
+        <h2>2. บัญชีผู้ใช้งานและความปลอดภัย</h2>
+        <p>ผู้ใช้บริการมีหน้าที่ดูแลรักษาความปลอดภัยของบัญชี ไม่เปิดเผยรหัสผ่านแก่ผู้อื่น และรับผิดชอบต่อกิจกรรมทั้งหมดที่เกิดขึ้นภายใต้บัญชีของท่าน</p>
+    </div>
+
+    <div class="terms-section">
+        <h2>3. เนื้อหาและการเผยแพร่รีวิว</h2>
+        <p>เนื้อหา รูปภาพ และรีวิวที่เผยแพร่บน Zone In จะต้องเป็นข้อมูลจริง ไม่ละเมิดลิขสิทธิ์ของบุคคลอื่น และไม่ขัดต่อกฎหมายหรือศีลธรรมอันดี</p>
+    </div>
+
+    <a href="{% url 'web:index' %}" class="back-link">← กลับสู่หน้าแรก Zone In</a>
+</div>
+
+</body>
+</html>

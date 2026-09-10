@@ -1,0 +1,17 @@
+<!-- Empty State Component -->
+<div class="empty-state-card {% if places %}hidden{% endif %}"
+     id="empty-state-view">
+    <div class="empty-icon-bubble">
+        <i class="fa-solid fa-compass-drafting"></i>
+    </div>
+    <h3 class="empty-title">ไม่พบสถานที่ที่ตรงกับเงื่อนไข</h3>
+    <p class="empty-description">ลองปรับเปลี่ยนคำค้นหา คีย์เวิร์ด หรือเลือกหมวดหมู่และย่านทำเลใหม่อีกครั้ง</p>
+    <div class="empty-tips">
+        <span class="tip-item"><i class="fa-solid fa-lightbulb"></i> แนะนำ: ตรวจสอบตัวสะกด หรือใช้คำค้นที่สั้นลง</span>
+    </div>
+    <div class="empty-action">
+        <button type="button" class="btn-empty-reset" id="btn-empty-reset">
+            <i class="fa-solid fa-rotate-left"></i> ล้างตัวกรองทั้งหมด
+        </button>
+    </div>
+</div>

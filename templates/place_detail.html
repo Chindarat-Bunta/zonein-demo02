@@ -1,0 +1,1066 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ place.name }} — รายละเอียดสถานที่ &amp; แผนที่นำทาง | Zone In</title>
+        <!-- Google Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+              rel="stylesheet">
+        <!-- Base & Place Detail Stylesheets -->
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        <link rel="stylesheet" href="{% static 'css/place_detail.css' %}">
+    </head>
+    <body>
+        <!-- ==========================================================================
+         TOP FLOATING MODERN NAVBAR
+         ========================================================================== -->
+        {% include 'components/navbar.html' %}
+
+        <!-- ==========================================================================
+         MAIN PLACE DETAIL CONTAINER
+         ========================================================================== -->
+        <main class="place-detail-container">
+            <!-- Top Bar: Back Button & Quick Actions -->
+            <div class="detail-top-bar">
+                <a href="/#search" class="btn-back-link" id="btnBackToSearch">
+                    <svg width="18"
+                         height="18"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2.2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    <span>ย้อนกลับไปหน้าค้นหา</span>
+                </a>
+                <div class="detail-actions-group">
+                    <!-- Like Button -->
+                    <button type="button"
+                            class="action-chip-btn {% if is_liked %}active{% endif %}"
+                            id="btnPlaceLike"
+                            data-place-id="{{ place.id }}"
+                            title="ถูกใจสถานที่นี้">
+                        <svg width="18"
+                             height="18"
+                             viewBox="0 0 24 24"
+                             fill="{% if is_liked %}#ef4444{% else %}none{% endif %}"
+                             stroke="currentColor"
+                             stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                            </path>
+                        </svg>
+                        <span id="likeCount">{{ place.likes_count }}</span>
+                    </button>
+                    <!-- Wishlist Bookmark Button -->
+                    <button type="button"
+                            class="action-chip-btn {% if is_wishlisted %}active{% endif %}"
+                            id="btnPlaceWishlist"
+                            data-place-id="{{ place.id }}"
+                            title="{% if is_wishlisted %}นำออกจากรายการโปรด{% else %}บันทึกในรายการโปรด{% endif %}">
+                        <svg width="18"
+                             height="18"
+                             viewBox="0 0 24 24"
+                             fill="{% if is_wishlisted %}#e05d5d{% else %}none{% endif %}"
+                             stroke="currentColor"
+                             stroke-width="2">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <span id="wishlistBtnText">{% if is_wishlisted %}บันทึกแล้วในรายการโปรด{% else %}บันทึกสถานที่{% endif %}</span>
+                    </button>
+                    <!-- Share Button -->
+                    <button type="button"
+                            class="action-chip-btn"
+                            id="btnPlaceShare"
+                            title="แชร์ลิงก์สถานที่">
+                        <svg width="18"
+                             height="18"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                        <span>แชร์</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Place Header Card -->
+            <div class="place-header-card">
+                <div class="place-badge-row">
+                    <span class="category-tag">
+                        <span>✨</span>
+                        <span>{{ place.get_category_display|default:"สถานที่ยอดนิยม" }}</span>
+                    </span>
+                    <span class="rating-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        <span>{{ place.average_rating|default:"4.8" }}</span>
+                        <span style="color: var(--text-muted); font-weight: 500;">({{ place.review_count|default:"28" }} รีวิว)</span>
+                    </span>
+                </div>
+                <h1 class="place-main-title">{{ place.name }}</h1>
+                <div class="place-location-snippet">
+                    <svg width="18"
+                         height="18"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <span>{{ place.address|default:"อำเภอแม่ริม จังหวัดเชียงใหม่" }}</span>
+                </div>
+                {% if place_author %}
+                <div class="place-post-author-row" style="display: flex; align-items: center; gap: 10px; margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px dashed rgba(255, 197, 170, 0.45);">
+                    <a href="/profile/{{ place_author.username }}/" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;" title="ดูโปรไฟล์เจ้าของโพสต์">
+                        <div class="comment-avatar" style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #FF9D9D, #FFB095); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.95rem; flex-shrink: 0; box-shadow: 0 2px 8px rgba(255, 157, 157, 0.35);">
+                            {% if place_author_avatar %}
+                                <img src="{{ place_author_avatar }}" alt="{{ place_author_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                {{ place_author_name|slice:":1"|upper }}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">
+                                โพสต์โดย <span style="color: #FF9D9D;">{{ place_author_name }}</span> 
+                                {% if place_author_name != place_author.username %}
+                                    <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">(@{{ place_author.username }})</span>
+                                {% endif %}
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">เจ้าของโพสต์สถานที่แรกเริ่ม</div>
+                        </div>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            <!-- Photo Gallery Showcase (แสดงเมื่อมีรูปภาพเท่านั้น) -->
+            {% if place.cover_image_url %}
+            <div class="place-gallery-grid">
+                <div class="gallery-main-photo">
+                    <img src="{{ place.cover_image_url }}"
+                         alt="{{ place.name }}">
+                </div>
+                {% if gallery_images %}
+                <div class="gallery-side-thumbs">
+                    {% for img in gallery_images|slice:":2" %}
+                        <div class="thumb-photo-box">
+                            <img src="{{ img.image_url }}" alt="{{ img.caption|default:place.name }}">
+                            {% if img.caption %}
+                                <div class="thumb-caption">{{ img.caption }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% elif gallery_images %}
+            <div class="place-gallery-grid">
+                <div class="gallery-main-photo">
+                    {% for img in gallery_images|slice:":1" %}
+                    <img src="{{ img.image_url }}"
+                         alt="{{ place.name }}">
+                    {% endfor %}
+                </div>
+                {% if gallery_images|length > 1 %}
+                <div class="gallery-side-thumbs">
+                    {% for img in gallery_images|slice:"1:3" %}
+                        <div class="thumb-photo-box">
+                            <img src="{{ img.image_url }}" alt="{{ img.caption|default:place.name }}">
+                            {% if img.caption %}
+                                <div class="thumb-caption">{{ img.caption }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            <!-- Content Layout: 2 Columns (Main Content + Sidebar Map) -->
+            <div class="place-content-layout">
+                <!-- LEFT COLUMN: Description & Reviews Section -->
+                <div class="place-main-column">
+                    <!-- Card 1: เกี่ยวกับสถานที่ (แสดงเมื่อมีรายละเอียด) -->
+                    {% if place.description %}
+                    <section class="content-card">
+                        <div class="card-title-row">
+                            <div class="card-icon">🌿</div>
+                            <h2>เกี่ยวกับสถานที่และบรรยากาศ</h2>
+                        </div>
+                        <p class="place-desc-text">
+                            {{ place.description }}
+                        </p>
+                    </section>
+                    {% endif %}
+                    <!-- Card 2: พื้นที่สำหรับดึงคอมเมนต์รีวิวมาแสดง (Reviews & Comments Section) -->
+                    <section class="content-card" id="reviewsSection">
+                        <div class="card-title-row">
+                            <div class="card-icon">💬</div>
+                            <h2>ความคิดเห็นและรีวิวจากผู้ใช้งาน</h2>
+                            <span style="margin-left: auto;
+                                         font-size: 0.88rem;
+                                         color: var(--text-muted);
+                                         font-weight: 600">{{ place.review_count|default:"28" }} ความคิดเห็น</span>
+                        </div>
+                        <!-- Rating Overview Scorecard -->
+                        <div class="rating-overview-box">
+                            <div class="score-card-big">
+                                <div class="score-number">{{ place.average_rating|default:"4.8" }}</div>
+                                <div class="score-stars-row">★★★★★</div>
+                                <div class="score-total-reviews">จาก {{ place.review_count|default:"28" }} นักเดินทาง</div>
+                            </div>
+                            <!-- 5 to 1 Star Progress Breakdown -->
+                            <div class="rating-bars-list">
+                                {% for b in rating_breakdown %}
+                                    <div class="star-bar-item">
+                                        <span class="star-bar-label">{{ b.star }} ดาว</span>
+                                        <div class="star-progress-track">
+                                            <div class="star-progress-fill" style="width: {{ b.percentage }}%;"></div>
+                                        </div>
+                                        <span class="star-bar-count">{{ b.count }}</span>
+                                    </div>
+                                {% empty %}
+                                    <div class="star-bar-item">
+                                        <span class="star-bar-label">5 ดาว</span>
+                                        <div class="star-progress-track">
+                                            <div class="star-progress-fill" style="width: 78%;"></div>
+                                        </div>
+                                        <span class="star-bar-count">22</span>
+                                    </div>
+                                    <div class="star-bar-item">
+                                        <span class="star-bar-label">4 ดาว</span>
+                                        <div class="star-progress-track">
+                                            <div class="star-progress-fill" style="width: 18%;"></div>
+                                        </div>
+                                        <span class="star-bar-count">5</span>
+                                    </div>
+                                    <div class="star-bar-item">
+                                        <span class="star-bar-label">3 ดาว</span>
+                                        <div class="star-progress-track">
+                                            <div class="star-progress-fill" style="width: 4%;"></div>
+                                        </div>
+                                        <span class="star-bar-count">1</span>
+                                    </div>
+                                    <div class="star-bar-item">
+                                        <span class="star-bar-label">2 ดาว</span>
+                                        <div class="star-progress-track">
+                                            <div class="star-progress-fill" style="width: 0%;"></div>
+                                        </div>
+                                        <span class="star-bar-count">0</span>
+                                    </div>
+                                    <div class="star-bar-item">
+                                        <span class="star-bar-label">1 ดาว</span>
+                                        <div class="star-progress-track">
+                                            <div class="star-progress-fill" style="width: 0%;"></div>
+                                        </div>
+                                        <span class="star-bar-count">0</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <!-- Write a Review Box (ฟอร์มเขียนรีวิวใหม่) -->
+                        <div class="write-review-card">
+                            <h4>✍️ เขียนรีวิวและให้คะแนนสถานที่นี้</h4>
+                            {% if not user.is_authenticated %}
+                                <div style="background: rgba(255, 247, 243, 0.7); border: 1.5px dashed rgba(255, 197, 170, 0.7); border-radius: var(--radius-sm); padding: 32px 20px; text-align: center; margin-top: 14px;">
+                                    <div style="font-size: 2rem; margin-bottom: 8px;">🔒</div>
+                                    <h5 style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">กรุณาเข้าสู่ระบบเพื่อเขียนรีวิว</h5>
+                                    <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 380px; margin: 0 auto 16px;">
+                                        ร่วมแบ่งปันประสบการณ์การท่องเที่ยวและให้คะแนนสถานที่นี้กับเพื่อนๆ นักเดินทาง
+                                    </p>
+                                    <a href="/signin/?next={{ request.path }}" style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 22px; border-radius: var(--radius-pill); background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #fff; font-weight: 700; text-decoration: none; font-size: 0.88rem; box-shadow: 0 4px 12px rgba(255, 157, 157, 0.35);">
+                                        เข้าสู่ระบบเพื่อเขียนรีวิว
+                                    </a>
+                                </div>
+                            {% else %}
+                                <form id="reviewForm">
+                                    <!-- Interactive Star Picker -->
+                                    <div class="star-picker-row">
+                                        <div id="starPicker">
+                                            <span class="star-picker-star selected" data-value="1">★</span>
+                                            <span class="star-picker-star selected" data-value="2">★</span>
+                                            <span class="star-picker-star selected" data-value="3">★</span>
+                                            <span class="star-picker-star selected" data-value="4">★</span>
+                                            <span class="star-picker-star selected" data-value="5">★</span>
+                                        </div>
+                                        <input type="hidden" id="selectedRatingInput" name="rating" value="5">
+                                        <span class="star-picker-hint" id="starPickerHint">5 ดาว — ยอดเยี่ยม ประทับใจมาก</span>
+                                    </div>
+                                    <textarea id="reviewTextarea"
+                                              class="review-textarea"
+                                              placeholder="บอกเล่าความประทับใจ บรรยากาศ รสชาติเครื่องดื่ม หรือคำแนะนำสำหรับนักเดินทางคนอื่นๆ..."
+                                              required></textarea>
+                                    <div class="review-form-actions">
+                                        <button type="submit" class="btn-submit-review" id="btnSubmitReview">
+                                            <svg width="18"
+                                                 height="18"
+                                                 viewBox="0 0 24 24"
+                                                 fill="none"
+                                                 stroke="currentColor"
+                                                 stroke-width="2">
+                                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                            </svg>
+                                            <span>ส่งรีวิวของคุณ</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            {% endif %}
+                        </div>
+                        <!-- Review Filter Bar -->
+                        <div class="reviews-filter-bar">
+                            <button type="button" class="filter-btn active" data-filter="all">รีวิวทั้งหมด</button>
+                            <button type="button" class="filter-btn" data-filter="5star">5 ดาว</button>
+                            <button type="button" class="filter-btn" data-filter="4star">4 ดาว</button>
+                        </div>
+                        <!-- Reviews List Container -->
+                        <div id="reviewsList" data-place-id="{{ place.id|default:'2' }}" data-place-author-id="{{ place.author.id|default:'' }}">
+                            {% for r in reviews %}
+                                <div class="review-item-card"
+                                     data-review-id="{{ r.review_id }}"
+                                     data-review-comment="{{ r.comment|escapejs }}"
+                                     data-review-rating="{{ r.rating }}">
+                                    <div class="review-author-row">
+                                        <div class="author-profile-box">
+                                            <a href="{% if r.username %}/profile/{{ r.username }}/{% else %}#{% endif %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;" title="ดูโปรไฟล์ @{{ r.username }}">
+                                                <img src="{{ r.user_avatar|default:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' }}"
+                                                     class="author-avatar"
+                                                     alt="{{ r.user_name }}">
+                                                <div class="author-meta">
+                                                    <span class="author-name" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">{{ r.user_name }}</span>
+                                                    <span class="author-date">{{ r.created_at }}</span>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div style="display:flex;align-items:center;gap:10px;">
+                                            <div class="review-stars-score" title="{{ r.rating }} ดาว">
+                                                {% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+                                            </div>
+                                            {% if user.is_authenticated and user.username == r.username or user == place.author or user.is_staff %}
+                                            <!-- 3-dot menu (เจ้าของรีวิว / เจ้าของโพสต์ / ผู้ดูแล) -->
+                                            <div class="review-menu-wrap">
+                                                <button class="review-menu-btn" type="button" aria-label="เมนูรีวิว" onclick="toggleReviewMenu(this)">⋯</button>
+                                                <div class="review-dropdown" style="display:none;">
+                                                    <button type="button" class="review-dd-item" onclick="openEditReview(this.closest('.review-item-card'))">
+                                                        ✏️ แก้ไขรีวิว
+                                                    </button>
+                                                    <button type="button" class="review-dd-item review-dd-delete" onclick="confirmDeleteReview(this.closest('.review-item-card'))">
+                                                        🗑️ ลบรีวิว
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="review-body-text">{{ r.comment }}</div>
+
+                                    <!-- Comments on this Review (ไม่ต้องให้ดาว) -->
+                                    <div class="review-comments-box" style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255, 197, 170, 0.35);">
+                                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.6rem;">
+                                            <span>💬 ความคิดเห็น (<span id="detail_comment_count_{{ r.review_id }}">{{ r.comments_count|default:0 }}</span>)</span>
+                                        </div>
+                                        <div class="detail-comments-list" id="detail_comments_list_{{ r.review_id }}" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 0.75rem;">
+                                            {% for c in r.comments %}
+                                            <div class="comment-item" id="comment_{{ c.id }}" style="display: flex; gap: 0.75rem; align-items: flex-start; background: rgba(255, 255, 255, 0.7); padding: 0.65rem 0.85rem; border-radius: 12px; border: 1px solid rgba(255, 197, 170, 0.35);">
+                                                <a href="/profile/{{ c.author.username|default:c.username }}/" style="text-decoration: none; color: inherit; flex-shrink: 0;" title="ดูโปรไฟล์ @{{ c.author.username|default:c.username }}">
+                                                    <div style="width: 30px; height: 30px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #FF9D9D, #FFB095); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.82rem;">
+                                                        {% if c.author.avatar or c.avatar %}
+                                                            <img src="{{ c.author.avatar|default:c.avatar }}" alt="{{ c.author.name|default:c.user_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                                        {% else %}
+                                                            {{ c.author.name|default:c.user_name|slice:":1"|upper }}
+                                                        {% endif %}
+                                                    </div>
+                                                </a>
+                                                <div style="flex: 1; min-width: 0;">
+                                                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px;">
+                                                        <a href="/profile/{{ c.author.username|default:c.username }}/" style="text-decoration: none; color: inherit; font-size: 0.85rem; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">
+                                                            {{ c.author.username|default:c.username }}
+                                                        </a>
+                                                        <span style="font-size: 0.74rem; color: var(--text-muted); margin-left: 2px;">{{ c.created_at }}</span>
+                                                        {% if c.is_author %}
+                                                        <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">
+                                                            <button class="comment-menu-btn" type="button" aria-label="เมนูความคิดเห็น" onclick="toggleDetailCommentMenu(event, {{ c.id }})">⋯</button>
+                                                            <div class="comment-dropdown" id="detail_comment_dropdown_{{ c.id }}" style="display: none;">
+                                                                <button type="button" class="comment-dd-item" onclick="openDetailEditComment({{ c.id }}, '{{ c.content|escapejs }}', {{ r.review_id }})">
+                                                                    ✏️ แก้ไขความคิดเห็น
+                                                                </button>
+                                                                <button type="button" class="comment-dd-item comment-dd-delete" onclick="confirmDetailDeleteComment({{ c.id }}, {{ r.review_id }})">
+                                                                    🗑️ ลบความคิดเห็น
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div id="comment_text_{{ c.id }}" style="font-size: 0.86rem; color: var(--text-main); line-height: 1.4; word-break: break-word;">{{ c.content }}</div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        <!-- Simple Comment Input Form (ไม่ต้องมีดาว) -->
+                                        <form class="detail-comment-form" onsubmit="submitDetailComment(event, {{ r.review_id }})" style="display: flex; gap: 8px; align-items: center;">
+                                            <input type="text" id="detail_comment_input_{{ r.review_id }}" placeholder="{% if user.is_authenticated %}เขียนความคิดเห็นของคุณ...{% else %}เข้าสู่ระบบเพื่อแสดงความคิดเห็น...{% endif %}" {% if not user.is_authenticated %}readonly onclick="window.location.href='/signin/?next={{ request.path }}'"{% endif %} style="flex: 1; padding: 7px 14px; border-radius: 9999px; border: 1px solid rgba(255, 197, 170, 0.7); font-size: 0.84rem; background: #fff; outline: none; font-family: inherit; transition: border-color 0.2s;" onfocus="this.style.borderColor='#FF9D9D'" onblur="this.style.borderColor='rgba(255, 197, 170, 0.7)'" required>
+                                            <button type="submit" style="padding: 7px 16px; border-radius: 9999px; background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #fff; border: none; font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                                                {% if user.is_authenticated %}ส่งความคิดเห็น{% else %}เข้าสู่ระบบ{% endif %}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="review-item-card">
+                                    <p style="color: var(--text-muted); text-align: center; padding: 20px;">ยังไม่มีรีวิวสำหรับสถานที่นี้ เป็นคนแรกที่เริ่มเขียนรีวิวเลย!</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    </section>
+                </div>
+                <!-- RIGHT COLUMN: Map & Navigation Sticky Sidebar (สำคัญมาก) -->
+                <aside class="place-sidebar-column">
+                    <div class="sidebar-sticky-wrapper">
+                        <!-- Card: แผนที่และการนำทาง (Map & Navigation Card) -->
+                        <div class="map-card-box">
+                            <div class="card-title-row" style="margin-bottom: 14px;">
+                                <div class="card-icon">🧭</div>
+                                <h3>แผนที่และการนำทาง</h3>
+                            </div>
+                            <!-- 1. ปุ่มนำทาง Google Maps ขนาดใหญ่ (PROMINENT NAVIGATION BUTTON) -->
+                            <a href="{{ maps_navigation_url }}"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="btn-navigate-google-maps"
+                               id="btnGoogleMapsNav">
+                                <div class="nav-btn-icon">
+                                    <svg viewBox="0 0 24 24"
+                                         width="22"
+                                         height="22"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="2.4"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round">
+                                        <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                                    </svg>
+                                </div>
+                                <div class="nav-btn-text">
+                                    <span class="nav-btn-title">นำทางด้วย Google Maps</span>
+                                    <span class="nav-btn-subtitle">เปิด GPS นำทางไปยังสถานที่ทันที</span>
+                                </div>
+                                <div class="nav-btn-arrow">➔</div>
+                            </a>
+                            <!-- 2. ปุ่มค้นหาตำแหน่งบน Google Maps -->
+                            <a href="{{ maps_search_url }}"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="btn-search-google-maps"
+                               id="btnGoogleMapsSearch">
+                                <svg viewBox="0 0 24 24"
+                                     width="18"
+                                     height="18"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span>ดูตำแหน่งบนแผนที่ Google Maps</span>
+                            </a>
+                            <!-- 3. พื้นที่แสดงแผนที่ (Interactive Map Preview Frame) -->
+                            <div class="map-frame-container" id="mapPreviewContainer">
+                                <iframe id="mapsEmbedFrame"
+                                        src="{{ maps_embed_url }}"
+                                        title="Google Maps Preview of {{ place.name }}"
+                                        allowfullscreen=""
+                                        loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade">
+                                </iframe>
+                            </div>
+                            <!-- 4. ข้อมูลพิกัดและที่อยู่ (Coordinates & Address info panel) -->
+                            <div class="location-info-panel">
+                                <!-- พิกัดละติจูด ลองจิจูด -->
+                                <div class="info-item-row">
+                                    <div class="info-item-label">
+                                        <span>🌐</span>
+                                        <span>พิกัด GPS:</span>
+                                    </div>
+                                    <div class="info-item-value"
+                                         style="display: flex;
+                                                align-items: center;
+                                                gap: 6px">
+                                        <span>{{ place.latitude|default:"18.8954" }}, {{ place.longitude|default:"98.8682" }}</span>
+                                        <button type="button"
+                                                class="btn-copy-small"
+                                                onclick="copyCoordinates('{{ place.latitude|default:18.8954 }}, {{ place.longitude|default:98.8682 }}')">คัดลอก</button>
+                                    </div>
+                                </div>
+                                <!-- ที่อยู่สถานที่ -->
+                                <div class="info-item-row" style="flex-direction: column; gap: 4px;">
+                                    <div class="info-item-label">
+                                        <span>📍</span>
+                                        <span>ที่อยู่สถานที่:</span>
+                                    </div>
+                                    <div class="info-item-value"
+                                         style="text-align: left;
+                                                font-size: 0.84rem;
+                                                color: var(--text-secondary)">
+                                        {{ place.address|default:"88/1 หมู่ 3 ต.โป่งแยง อ.แม่ริม จ.เชียงใหม่" }}
+                                        <button type="button"
+                                                class="btn-copy-small"
+                                                style="margin-left: 6px"
+                                                onclick="copyAddress('{{ place.address|default:place.name }}')">คัดลอกที่อยู่</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </main>
+        <!-- Interactive Scripts -->
+        <!-- Modern Share Modal -->
+        <div class="share-modal-overlay" id="shareModalOverlay" onclick="closeShareModal(event)">
+            <div class="share-modal-card" onclick="event.stopPropagation()">
+                <div class="share-modal-header">
+                    <div class="share-modal-title-group">
+                        <div class="share-modal-badge">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="18" cy="5" r="3"></circle>
+                                <circle cx="6" cy="12" r="3"></circle>
+                                <circle cx="18" cy="19" r="3"></circle>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="share-modal-title">แชร์สถานที่นี้</h3>
+                            <p class="share-modal-subtitle">เลือกช่องทางที่คุณต้องการแชร์</p>
+                        </div>
+                    </div>
+                    <button type="button" class="share-modal-close" onclick="closeShareModal()" title="ปิด">&times;</button>
+                </div>
+
+                <!-- Preview Card -->
+                <div class="share-preview-card" id="sharePreviewCard">
+                    <div class="share-preview-img-wrap" id="sharePreviewImgWrap">
+                        {% if place.cover_image_url %}
+                            <img id="sharePreviewImg" src="{{ place.cover_image_url }}" alt="{{ place.name }}" style="width:100%;height:100%;object-fit:cover;">
+                        {% elif gallery_images %}
+                            <img id="sharePreviewImg" src="{{ gallery_images.0.image_url }}" alt="{{ place.name }}" style="width:100%;height:100%;object-fit:cover;">
+                        {% else %}
+                            <span style="font-size: 1.4rem;">📍</span>
+                        {% endif %}
+                    </div>
+                    <div class="share-preview-info">
+                        <h4 id="sharePreviewTitle">{{ place.name }}</h4>
+                        <p id="sharePreviewDesc">{{ place.address|default:"สถานที่ท่องเที่ยวบน ZoneIn" }}</p>
+                        <span class="share-preview-url" id="sharePreviewUrlText">zonein.app</span>
+                    </div>
+                </div>
+
+                <!-- Social Share Channels -->
+                <div class="share-channels-label">แชร์ไปยังโซเชียลมีเดีย</div>
+                <div class="share-grid">
+                    <!-- Facebook -->
+                    <button type="button" class="share-grid-btn" onclick="shareToPlatform('facebook')" title="แชร์ไปที่ Facebook">
+                        <div class="share-icon-wrap fb-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                        </div>
+                        <span>Facebook</span>
+                    </button>
+
+                    <!-- Instagram -->
+                    <button type="button" class="share-grid-btn" onclick="shareToPlatform('instagram')" title="แชร์ไปที่ Instagram">
+                        <div class="share-icon-wrap ig-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                            </svg>
+                        </div>
+                        <span>Instagram</span>
+                    </button>
+
+                    <!-- LINE -->
+                    <button type="button" class="share-grid-btn" onclick="shareToPlatform('line')" title="แชร์ไปที่ LINE">
+                        <div class="share-icon-wrap line-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738-6.616 0-12 4.369-12 9.738 0 4.814 4.269 8.846 10.019 9.607.391.084.922.258 1.057.592.121.303.079.778.039 1.085l-.171 1.028c-.053.303-.242 1.186 1.039.645 1.281-.54 6.911-4.069 9.428-6.967 1.739-1.909 2.589-3.844 2.589-5.99zm-13.882 3.018h-2.148c-.378 0-.685-.307-.685-.685v-4.666c0-.378.307-.685.685-.685.378 0 .685.307.685.685v3.981h1.463c.378 0 .685.307.685.685 0 .378-.307.685-.685.685zm2.871-.685c0 .378-.307.685-.685.685s-.685-.307-.685-.685v-4.666c0-.378.307-.685.685-.685s.685.307.685.685v4.666zm5.176 0c0 .378-.307.685-.685.685-.246 0-.472-.133-.59-.345l-2.023-2.9v2.56c0 .378-.307.685-.685.685s-.685-.307-.685-.685v-4.666c0-.378.307-.685.685-.685.245 0 .47.132.589.344l2.024 2.903v-2.562c0-.378.307-.685.685-.685s.685.307.685.685v4.666zm3.328-3.296h-1.464v1.148h1.464c.378 0 .685.307.685.685 0 .378-.307.685-.685.685h-2.149c-.378 0-.685-.307-.685-.685v-4.666c0-.378.307-.685.685-.685h2.149c.378 0 .685.307.685.685 0 .378-.307.685-.685.685h-1.464v1.178h1.464c.378 0 .685.307.685.685 0 .378-.307.685-.685.685z"/>
+                            </svg>
+                        </div>
+                        <span>LINE</span>
+                    </button>
+
+                    <!-- X (Twitter) -->
+                    <button type="button" class="share-grid-btn" onclick="shareToPlatform('x')" title="แชร์ไปที่ X">
+                        <div class="share-icon-wrap x-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                        </div>
+                        <span>X</span>
+                    </button>
+
+                    <!-- WhatsApp -->
+                    <button type="button" class="share-grid-btn" onclick="shareToPlatform('whatsapp')" title="แชร์ไปที่ WhatsApp">
+                        <div class="share-icon-wrap wa-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.071.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.164.576 4.195 1.583 5.952l-1.683 6.148 6.294-1.651c1.7 1.016 3.693 1.551 5.806 1.551 6.627 0 12-5.373 12-12s-5.373-12-12-12z"/>
+                            </svg>
+                        </div>
+                        <span>WhatsApp</span>
+                    </button>
+
+                    <!-- Native / More -->
+                    <button type="button" class="share-grid-btn" onclick="shareToPlatform('native')" title="ตัวเลือกแชร์เพิ่มเติม">
+                        <div class="share-icon-wrap more-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="1.5"></circle>
+                                <circle cx="19" cy="12" r="1.5"></circle>
+                                <circle cx="5" cy="12" r="1.5"></circle>
+                            </svg>
+                        </div>
+                        <span>เพิ่มเติม</span>
+                    </button>
+                </div>
+
+                <!-- Copy Link Section -->
+                <div class="share-copy-box">
+                    <div class="share-link-input-wrap">
+                        <svg class="share-link-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                        </svg>
+                        <input type="text" id="shareUrlInput" class="share-url-input" readonly value="">
+                    </div>
+                    <button type="button" class="btn-copy-share" id="btnCopyShareLink" onclick="copyShareLink()">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="copyShareIcon">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span id="copyShareText">คัดลอกลิงก์</span>
+                    </button>
+                </div>
+
+                <div class="share-modal-hint" id="shareModalHint"></div>
+            </div>
+        </div>
+        <script src="{% static 'js/navbar.js' %}"></script>
+        <script src="{% static 'js/place_detail.js' %}"></script>
+
+        <!-- ======================================================
+             Edit Review Modal
+             ====================================================== -->
+        <div id="editReviewModal" class="edit-review-overlay" style="display:none;" onclick="closeEditReviewModal(event)">
+            <div class="edit-review-card" onclick="event.stopPropagation()">
+                <div class="edit-review-header">
+                    <h3>✏️ แก้ไขรีวิว</h3>
+                    <button type="button" class="edit-review-close" onclick="closeEditReviewModal()">&times;</button>
+                </div>
+                <!-- Star picker inside modal -->
+                <div class="star-picker-row" style="margin-bottom:14px;">
+                    <div id="editStarPicker">
+                        <span class="star-picker-star" data-value="1">★</span>
+                        <span class="star-picker-star" data-value="2">★</span>
+                        <span class="star-picker-star" data-value="3">★</span>
+                        <span class="star-picker-star" data-value="4">★</span>
+                        <span class="star-picker-star" data-value="5">★</span>
+                    </div>
+                    <input type="hidden" id="editRatingInput" value="5">
+                    <span class="star-picker-hint" id="editStarHint">5 ดาว — ยอดเยี่ยม</span>
+                </div>
+                <textarea id="editReviewTextarea" class="review-textarea" rows="4" placeholder="แก้ไขข้อความรีวิว..."></textarea>
+                <div class="edit-review-actions">
+                    <button type="button" class="btn-cancel-edit" onclick="closeEditReviewModal()">ยกเลิก</button>
+                    <button type="button" class="btn-save-edit" id="btnSaveEdit" onclick="submitEditReview()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        บันทึกการแก้ไข
+                    </button>
+                </div>
+        </div>
+
+        <!-- ======================================================
+             Edit Comment Modal
+             ====================================================== -->
+        <div id="editDetailCommentModal" class="edit-review-overlay" style="display:none;" onclick="closeDetailEditCommentModal(event)">
+            <div class="edit-review-card" onclick="event.stopPropagation()">
+                <div class="edit-review-header">
+                    <h3>✏️ แก้ไขความคิดเห็น</h3>
+                    <button type="button" class="edit-review-close" onclick="closeDetailEditCommentModal()">&times;</button>
+                </div>
+                <textarea id="editDetailCommentTextarea" class="review-textarea" rows="3" placeholder="แก้ไขความคิดเห็นของคุณ..."></textarea>
+                <div class="edit-review-actions">
+                    <button type="button" class="btn-cancel-edit" onclick="closeDetailEditCommentModal()">ยกเลิก</button>
+                    <button type="button" class="btn-save-edit" id="btnSaveDetailCommentEdit" onclick="submitDetailEditComment()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        บันทึกความคิดเห็น
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3-dot menu & Edit Modal Styles -->
+        <style>
+        /* ---- 3-dot menu button ---- */
+        .review-menu-wrap { position: relative; }
+        .review-menu-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 1.25rem; color: var(--text-muted);
+            padding: 2px 8px; border-radius: 6px;
+            transition: background 0.15s, color 0.15s;
+            line-height: 1;
+        }
+        .review-menu-btn:hover { background: rgba(255,157,157,0.12); color: var(--color-coral-dark); }
+
+        /* ---- Dropdown ---- */
+        .review-dropdown {
+            position: absolute; right: 0; top: calc(100% + 6px);
+            background: #fff;
+            border: 1px solid rgba(255,197,170,0.5);
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(255,157,157,0.18);
+            min-width: 150px; z-index: 200;
+            overflow: hidden;
+            animation: fadeInDown 0.15s ease;
+        }
+        @keyframes fadeInDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+        .review-dd-item {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; background: none; border: none;
+            padding: 10px 16px; cursor: pointer;
+            font-size: 0.88rem; font-weight: 600;
+            color: var(--text-primary); text-align: left;
+            transition: background 0.15s;
+        }
+        .review-dd-item:hover { background: rgba(255,197,170,0.18); }
+        .review-dd-delete { color: #e05d5d; }
+        .review-dd-delete:hover { background: rgba(224,93,93,0.08); }
+
+        /* ---- Comment 3-dot Dropdown ---- */
+        .comment-menu-wrap { position: relative; display: inline-flex; align-items: center; }
+        .comment-menu-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 1.15rem; color: var(--text-muted, #718096);
+            padding: 1px 6px; border-radius: 6px;
+            transition: background 0.15s, color 0.15s;
+            line-height: 1;
+        }
+        .comment-menu-btn:hover { background: rgba(255,157,157,0.18); color: var(--color-coral-dark, #FF9D9D); }
+        .comment-dropdown {
+            position: absolute; right: 0; top: calc(100% + 4px);
+            background: #fff;
+            border: 1px solid rgba(255,197,170,0.5);
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            min-width: 145px; z-index: 250;
+            overflow: hidden;
+            animation: fadeInDown 0.15s ease;
+        }
+        .comment-dd-item {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; background: none; border: none;
+            padding: 9px 14px; cursor: pointer;
+            font-size: 0.82rem; font-weight: 600;
+            color: var(--text-primary, #2d3748); text-align: left;
+            font-family: inherit;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .comment-dd-item:hover { background: rgba(255,197,170,0.2); }
+        .comment-dd-delete { color: #e05d5d; }
+        .comment-dd-delete:hover { background: rgba(224,93,93,0.08); }
+
+        /* ---- Edit Review Modal ---- */
+        .edit-review-overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(30,36,43,0.45);
+            backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .edit-review-card {
+            background: #fff; border-radius: 20px;
+            padding: 28px 28px 24px;
+            width: 100%; max-width: 480px;
+            box-shadow: 0 20px 60px rgba(255,157,157,0.22);
+            animation: slideUp 0.2s ease;
+        }
+        @keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+        .edit-review-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 18px;
+        }
+        .edit-review-header h3 { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); }
+        .edit-review-close {
+            background: none; border: none; cursor: pointer;
+            font-size: 1.5rem; color: var(--text-muted);
+            line-height: 1; padding: 0 4px;
+            transition: color 0.15s;
+        }
+        .edit-review-close:hover { color: var(--color-coral-dark); }
+        .edit-review-actions {
+            display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;
+        }
+        .btn-cancel-edit {
+            padding: 9px 20px; border-radius: var(--radius-pill);
+            border: 1.5px solid rgba(255,197,170,0.6);
+            background: transparent; color: var(--text-secondary);
+            font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-cancel-edit:hover { background: rgba(255,197,170,0.12); }
+        .btn-save-edit {
+            display: flex; align-items: center; gap: 7px;
+            padding: 9px 22px; border-radius: var(--radius-pill);
+            background: linear-gradient(135deg, #FF9D9D, #FFB095);
+            color: #fff; border: none; font-size: 0.9rem;
+            font-weight: 700; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(255,157,157,0.35);
+            transition: all 0.2s;
+        }
+        .btn-save-edit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,157,157,0.45); }
+        .btn-save-edit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        </style>
+
+        <script>
+        let _editingDetailCommentId = null;
+        let _editingDetailCommentReviewId = null;
+
+        function getDetailCsrf() {
+            if (typeof getCsrfToken === 'function') return getCsrfToken();
+            const name = 'csrftoken';
+            for (const cookie of document.cookie.split(';')) {
+                const c = cookie.trim();
+                if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+            }
+            return '';
+        }
+
+        function toggleDetailCommentMenu(event, commentId) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            const dropdown = document.getElementById(`detail_comment_dropdown_${commentId}`);
+            if (!dropdown) return;
+            document.querySelectorAll('.comment-dropdown').forEach(d => {
+                if (d !== dropdown) d.style.display = 'none';
+            });
+            document.querySelectorAll('.review-dropdown').forEach(d => {
+                d.style.display = 'none';
+            });
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close comment dropdowns on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.comment-menu-wrap')) {
+                document.querySelectorAll('.comment-dropdown').forEach(d => d.style.display = 'none');
+            }
+            if (!e.target.closest('.review-menu-wrap')) {
+                document.querySelectorAll('.review-dropdown').forEach(d => d.style.display = 'none');
+            }
+        });
+
+        function openDetailEditComment(commentId, content, reviewId) {
+            const dd = document.getElementById(`detail_comment_dropdown_${commentId}`);
+            if (dd) dd.style.display = 'none';
+            _editingDetailCommentId = commentId;
+            _editingDetailCommentReviewId = reviewId;
+            const textarea = document.getElementById('editDetailCommentTextarea');
+            if (textarea) textarea.value = content || '';
+            const modal = document.getElementById('editDetailCommentModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => { if (textarea) textarea.focus(); }, 100);
+            }
+        }
+
+        function closeDetailEditCommentModal(event) {
+            if (event && event.target !== document.getElementById('editDetailCommentModal')) return;
+            const modal = document.getElementById('editDetailCommentModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+            _editingDetailCommentId = null;
+            _editingDetailCommentReviewId = null;
+        }
+
+        async function submitDetailEditComment() {
+            if (!_editingDetailCommentId) return;
+            const textarea = document.getElementById('editDetailCommentTextarea');
+            const content = textarea ? textarea.value.trim() : '';
+            if (!content) {
+                if (typeof showDetailToast === 'function') showDetailToast('กรุณากรอกความคิดเห็น');
+                return;
+            }
+            const btn = document.getElementById('btnSaveDetailCommentEdit');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'กำลังบันทึก...';
+            }
+
+            try {
+                const res = await fetch(`/api/comments/${_editingDetailCommentId}/edit/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getDetailCsrf(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ content: content })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const textEl = document.getElementById(`comment_text_${_editingDetailCommentId}`);
+                    if (textEl) textEl.textContent = content;
+                    closeDetailEditCommentModal();
+                    if (typeof showDetailToast === 'function') showDetailToast('แก้ไขความคิดเห็นเรียบร้อยแล้ว ✅');
+                } else {
+                    if (typeof showDetailToast === 'function') showDetailToast(data.error || 'เกิดข้อผิดพลาดในการแก้ไขความคิดเห็น');
+                }
+            } catch (e) {
+                console.error('Edit detail comment error:', e);
+                if (typeof showDetailToast === 'function') showDetailToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> บันทึกความคิดเห็น';
+                }
+                _editingDetailCommentId = null;
+                _editingDetailCommentReviewId = null;
+            }
+        }
+
+        async function confirmDetailDeleteComment(commentId, reviewId) {
+            const dd = document.getElementById(`detail_comment_dropdown_${commentId}`);
+            if (dd) dd.style.display = 'none';
+            if (!confirm('คุณต้องการลบความคิดเห็นนี้ใช่หรือไม่?')) return;
+
+            try {
+                const res = await fetch(`/api/comments/${commentId}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getDetailCsrf(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const el = document.getElementById(`comment_${commentId}`);
+                    if (el) {
+                        el.style.transition = 'opacity 0.25s, transform 0.25s';
+                        el.style.opacity = '0';
+                        el.style.transform = 'scale(0.95)';
+                        setTimeout(() => el.remove(), 250);
+                    }
+                    const countEl = document.getElementById(`detail_comment_count_${reviewId}`);
+                    if (countEl) {
+                        const currentCount = parseInt(countEl.innerText) || 0;
+                        countEl.innerText = Math.max(0, currentCount - 1);
+                    }
+                    if (typeof showDetailToast === 'function') showDetailToast('ลบความคิดเห็นเรียบร้อยแล้ว 🗑️');
+                } else {
+                    if (typeof showDetailToast === 'function') showDetailToast(data.error || 'เกิดข้อผิดพลาดในการลบความคิดเห็น');
+                }
+            } catch (e) {
+                console.error('Delete detail comment error:', e);
+                if (typeof showDetailToast === 'function') showDetailToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            }
+        }
+
+        async function submitDetailComment(event, reviewId) {
+            if (event) event.preventDefault();
+            const isAuth = {{ user.is_authenticated|yesno:"true,false" }};
+            if (!isAuth) {
+                window.location.href = `/signin/?next=${encodeURIComponent(window.location.pathname)}`;
+                return;
+            }
+
+            const input = document.getElementById(`detail_comment_input_${reviewId}`);
+            const content = input ? input.value.trim() : '';
+            if (!content) return;
+
+            try {
+                const res = await fetch(`/api/reviews/${reviewId}/comments/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getDetailCsrf(),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ content: content })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const c = data.comment;
+                    input.value = '';
+                    const list = document.getElementById(`detail_comments_list_${reviewId}`);
+                    const countEl = document.getElementById(`detail_comment_count_${reviewId}`);
+                    if (countEl) {
+                        countEl.innerText = (parseInt(countEl.innerText) || 0) + 1;
+                    }
+
+                    const authorUsername = c.author?.username || 'user';
+                    const authorInitial = (authorUsername || 'U')[0].toUpperCase();
+                    const avatarHtml = c.author?.avatar_url
+                        ? `<img src="${c.author.avatar_url}" alt="${authorUsername}" style="width: 100%; height: 100%; object-fit: cover;">`
+                        : authorInitial;
+
+                    const safeContent = (c.content || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                    const commentHtml = `
+                        <div class="comment-item" id="comment_${c.id}" style="display: flex; gap: 0.75rem; align-items: flex-start; background: rgba(255, 255, 255, 0.7); padding: 0.65rem 0.85rem; border-radius: 12px; border: 1px solid rgba(255, 197, 170, 0.35); animation: fadeIn 0.3s ease;">
+                            <a href="/profile/${encodeURIComponent(authorUsername)}/" style="text-decoration: none; color: inherit; flex-shrink: 0;" title="ดูโปรไฟล์ @${authorUsername}">
+                                <div style="width: 30px; height: 30px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg, #FF9D9D, #FFB095); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.82rem;">
+                                    ${avatarHtml}
+                                </div>
+                            </a>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 2px;">
+                                    <a href="/profile/${encodeURIComponent(authorUsername)}/" style="text-decoration: none; color: inherit; font-size: 0.85rem; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">
+                                        ${authorUsername}
+                                    </a>
+                                    <span style="font-size: 0.74rem; color: var(--text-muted); margin-left: 2px;">เมื่อสักครู่นี้</span>
+                                    <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">
+                                        <button class="comment-menu-btn" type="button" aria-label="เมนูความคิดเห็น" onclick="toggleDetailCommentMenu(event, ${c.id})">⋯</button>
+                                        <div class="comment-dropdown" id="detail_comment_dropdown_${c.id}" style="display: none;">
+                                            <button type="button" class="comment-dd-item" onclick="openDetailEditComment(${c.id}, '${safeContent}', ${reviewId})">
+                                                ✏️ แก้ไขความคิดเห็น
+                                            </button>
+                                            <button type="button" class="comment-dd-item comment-dd-delete" onclick="confirmDetailDeleteComment(${c.id}, ${reviewId})">
+                                                🗑️ ลบความคิดเห็น
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="comment_text_${c.id}" style="font-size: 0.86rem; color: var(--text-main); line-height: 1.4; word-break: break-word;">${c.content}</div>
+                            </div>
+                        </div>
+                    `;
+                    if (list) {
+                        list.insertAdjacentHTML('beforeend', commentHtml);
+                    }
+                    if (typeof showDetailToast === 'function') showDetailToast('เพิ่มความคิดเห็นเรียบร้อยแล้ว 💬');
+                } else {
+                    if (typeof showDetailToast === 'function') showDetailToast(data.error || 'เกิดข้อผิดพลาดในการส่งความคิดเห็น');
+                }
+            } catch (e) {
+                console.error('Submit detail comment error:', e);
+                if (typeof showDetailToast === 'function') showDetailToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            }
+        }
+        </script>
+
+    </body>
+</html>

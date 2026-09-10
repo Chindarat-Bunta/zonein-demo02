@@ -1,0 +1,2255 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรไฟล์ส่วนตัว (My Profile) — Zone In</title>
+    <meta name="description" content="หน้าโปรไฟล์ส่วนตัว ประวัติการรีวิว และ Wishlist ของคุณบน Zone In">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Design System Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        :root {
+            --primary: #FF9D9D;
+            --primary-dark: #f08383;
+            --primary-light: #FFF0F0;
+            --secondary: #BEE3F8;
+            --accent: #FFB095;
+            --bg-base: #FAF9F6;
+            --text-main: #2D3748;
+            --text-muted: #718096;
+            --card-bg: rgba(255, 255, 255, 0.94);
+            --card-border: rgba(255, 197, 170, 0.4);
+            --radius-pill: 9999px;
+            --radius-card: 24px;
+            --radius-sm: 14px;
+            --shadow-card: 0 16px 40px -10px rgba(255, 157, 157, 0.16), 0 8px 24px rgba(45, 55, 72, 0.04);
+            --font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background: 
+                radial-gradient(circle at 10% 15%, rgba(255, 157, 157, 0.2) 0%, transparent 35%),
+                radial-gradient(circle at 90% 85%, rgba(187, 241, 210, 0.22) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(238, 248, 205, 0.25) 0%, transparent 55%),
+                linear-gradient(135deg, #FFF7F3 0%, #FFFDF7 50%, #F4FBF7 100%);
+            background-attachment: fixed;
+            font-family: var(--font-family);
+            color: var(--text-main);
+            padding-bottom: 60px;
+        }
+
+        /* Flash Messages */
+        .alert-messages {
+            margin-bottom: 22px;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 0.92rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .alert-success {
+            background: rgba(240, 253, 244, 0.95);
+            border: 1px solid rgba(74, 222, 128, 0.4);
+            color: #15803d;
+        }
+
+        .alert-error {
+            background: rgba(254, 242, 242, 0.95);
+            border: 1px solid rgba(248, 113, 113, 0.4);
+            color: #b91c1c;
+        }
+
+        /* Container */
+        .page-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 105px 20px 60px;
+        }
+
+        /* ==========================================================================
+           POPUP / MODAL (แก้ไขข้อมูลส่วนตัว)
+           ========================================================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(45, 55, 72, 0.45);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: var(--radius-card);
+            border: 1px solid rgba(255, 197, 170, 0.5);
+            box-shadow: 0 24px 60px -12px rgba(255, 157, 157, 0.35), 0 12px 32px rgba(0, 0, 0, 0.12);
+            width: 100%;
+            max-width: 540px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.92) translateY(10px);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 28px 16px 28px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .modal-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-close-modal {
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-close-modal:hover {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 24px 28px 30px 28px;
+        }
+
+        /* Avatar Picker Section */
+        .avatar-upload-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .avatar-preview-box {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .avatar-preview-img, .avatar-preview-fallback {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 8px 24px rgba(255, 157, 157, 0.35);
+            border: 3.5px solid #ffffff;
+            outline: 2px solid #FF9D9D;
+            transition: all 0.25s ease;
+        }
+
+        .avatar-preview-fallback {
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 2.6rem;
+            font-weight: 800;
+        }
+
+        .avatar-preview-box:hover .avatar-preview-img,
+        .avatar-preview-box:hover .avatar-preview-fallback {
+            transform: scale(1.03);
+            outline-color: #f08383;
+        }
+
+        .avatar-camera-overlay {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 34px;
+            height: 34px;
+            background: #ffffff;
+            border: 1.5px solid #FF9D9D;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e56d6d;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+        }
+
+        .cloudinary-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.76rem;
+            color: #4A5568;
+            background: rgba(0, 0, 0, 0.04);
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+            margin-top: 4px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            font-family: inherit;
+            font-size: 0.94rem;
+            color: var(--text-main);
+            background: #FAF9F6;
+            border: 1.5px solid rgba(255, 197, 170, 0.55);
+            border-radius: var(--radius-sm);
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            background: #ffffff;
+            border-color: #FF9D9D;
+            box-shadow: 0 0 0 4px rgba(255, 157, 157, 0.22);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 90px;
+            line-height: 1.5;
+        }
+
+        .char-counter {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .btn-cancel {
+            padding: 11px 20px;
+            border-radius: var(--radius-pill);
+            background: #f1f5f9;
+            border: none;
+            font-family: inherit;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-cancel:hover {
+            background: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .btn-submit-save {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 24px;
+            border-radius: var(--radius-pill);
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 20px -4px rgba(255, 157, 157, 0.55);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-submit-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px -4px rgba(255, 157, 157, 0.7);
+        }
+
+        .hidden-file-input {
+            display: none;
+        }
+
+        /* Profile Hero Card */
+        .profile-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card);
+            padding: 36px 32px;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-card-glow {
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 157, 157, 0.25) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .profile-header-layout {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            flex-wrap: wrap;
+        }
+
+        /* Avatar Point (จุดรูปโปรไฟล์) */
+        .avatar-wrapper {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .avatar-circle {
+            width: 104px;
+            height: 104px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 50%, #f9846b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 2.5rem;
+            font-weight: 800;
+            box-shadow: 
+                0 12px 28px -6px rgba(255, 157, 157, 0.5),
+                0 0 0 5px #ffffff,
+                0 0 0 7.5px rgba(255, 157, 157, 0.35);
+            user-select: none;
+        }
+
+        .avatar-online-dot {
+            position: absolute;
+            bottom: 4px;
+            right: 6px;
+            width: 20px;
+            height: 20px;
+            background: #48BB78;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        }
+
+        .avatar-camera-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 30px;
+            height: 30px;
+            background: #ffffff;
+            border: 1px solid rgba(255, 157, 157, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e56d6d;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .avatar-camera-btn:hover {
+            transform: scale(1.1);
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        /* Avatar Column & Follow Status Under Avatar */
+        .avatar-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .avatar-follow-stats {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(255, 197, 170, 0.45);
+            border-radius: var(--radius-pill);
+            box-shadow: 0 2px 8px rgba(255, 157, 157, 0.12);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .avatar-follow-stats:hover {
+            background: #ffffff;
+            border-color: #FF9D9D;
+            box-shadow: 0 4px 14px rgba(255, 157, 157, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .avatar-follow-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: transparent;
+            border: none;
+            padding: 1px 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-radius: 4px;
+            transition: all 0.18s ease;
+            text-decoration: none;
+            line-height: 1.2;
+        }
+
+        .avatar-follow-link:hover {
+            color: #e56d6d;
+        }
+
+        .avatar-follow-text {
+            font-weight: 500;
+        }
+
+        .avatar-follow-count {
+            font-weight: 700;
+            color: var(--text-main);
+            transition: color 0.18s ease;
+        }
+
+        .avatar-follow-link:hover .avatar-follow-count {
+            color: #e56d6d;
+        }
+
+        .avatar-follow-divider {
+            color: rgba(255, 157, 157, 0.6);
+            font-size: 0.75rem;
+            font-weight: 600;
+            user-select: none;
+        }
+
+        /* User Info (ชื่อของ user) */
+        .profile-info {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .profile-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+
+        .btn-edit-profile {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            border-radius: var(--radius-pill);
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(255, 157, 157, 0.4);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-edit-profile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 157, 157, 0.55);
+            color: #ffffff;
+        }
+
+        .btn-edit-profile:active {
+            transform: translateY(0);
+        }
+
+        .btn-edit-profile svg {
+            flex-shrink: 0;
+        }
+
+        .user-name-title {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            background: rgba(255, 157, 157, 0.15);
+            color: #e56d6d;
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .user-handle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-meta-chips {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .meta-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Stats Bar (รีวิวทั้งหมด, รายการโปรด, ไลก์) */
+        .profile-stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+            margin-top: 26px;
+            padding-top: 22px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px 8px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 197, 170, 0.35);
+            border-radius: var(--radius-sm);
+            transition: all 0.25s ease;
+        }
+
+        .stat-item.stat-item-clickable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            background: #ffffff;
+            box-shadow: 0 6px 18px rgba(255, 157, 157, 0.2);
+            border-color: #FF9D9D;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Follow Button on Profile */
+        .btn-profile-follow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #FF9D9D, #FFB095);
+            color: #ffffff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: var(--radius-pill);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 14px rgba(255, 157, 157, 0.4);
+            font-family: inherit;
+        }
+
+        .btn-profile-follow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(255, 157, 157, 0.55);
+        }
+
+        .btn-profile-follow.following {
+            background: rgba(255, 157, 157, 0.15);
+            color: #e25c5c;
+            border: 1.5px solid rgba(255, 157, 157, 0.5);
+            box-shadow: none;
+        }
+
+        .btn-profile-follow.following:hover {
+            background: #fee2e2;
+            color: #ef4444;
+            border-color: #fca5a5;
+        }
+
+        /* ==========================================================================
+           Followers / Following Modal Styles
+           ========================================================================== */
+        .follow-modal-card {
+            max-width: 480px;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+        }
+
+        .follow-modal-header {
+            padding: 18px 22px 14px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .follow-modal-nav-tabs {
+            display: flex;
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: var(--radius-pill);
+            flex: 1;
+        }
+
+        .follow-tab-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: var(--radius-pill);
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+
+        .follow-tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .follow-tab-btn.active {
+            background: #ffffff;
+            color: #e25c5c;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .follow-tab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1px 7px;
+            font-size: 0.72rem;
+            border-radius: var(--radius-pill);
+            background: rgba(0, 0, 0, 0.06);
+            color: inherit;
+            min-width: 20px;
+        }
+
+        .follow-tab-btn.active .follow-tab-badge {
+            background: rgba(255, 157, 157, 0.2);
+            color: #e25c5c;
+        }
+
+        .follow-modal-body {
+            padding: 18px 22px 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .follow-search-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 9px 14px;
+            margin-bottom: 14px;
+            transition: all 0.2s ease;
+            color: #94a3b8;
+        }
+
+        .follow-search-box:focus-within {
+            background: #ffffff;
+            border-color: #FF9D9D;
+            box-shadow: 0 0 0 3px rgba(255, 157, 157, 0.15);
+            color: #FF9D9D;
+        }
+
+        .follow-search-input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-family: inherit;
+            font-size: 0.86rem;
+            color: var(--text-main);
+            width: 100%;
+        }
+
+        .follow-list-panel {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .follow-list-panel.active {
+            display: flex;
+        }
+
+        .follow-user-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+        }
+
+        .follow-user-item:hover {
+            background: #fafafa;
+            border-color: #e2e8f0;
+            transform: translateX(2px);
+        }
+
+        .follow-user-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            flex: 1;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .follow-user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, #FF9D9D, #FFB095);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .follow-user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .follow-user-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .follow-user-name {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+
+        .follow-user-handle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-follow-pill {
+            padding: 6px 14px;
+            border-radius: var(--radius-pill);
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: var(--text-main);
+            font-size: 0.78rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-follow-pill:hover {
+            border-color: #FF9D9D;
+            background: rgba(255, 157, 157, 0.1);
+            color: #e25c5c;
+        }
+
+        .btn-follow-pill.following {
+            background: rgba(255, 157, 157, 0.15);
+            border-color: rgba(255, 157, 157, 0.4);
+            color: #e25c5c;
+        }
+
+        .btn-follow-pill.following:hover {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #ef4444;
+        }
+
+        .badge-self {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-weight: 600;
+            padding: 4px 10px;
+            background: #f1f5f9;
+            border-radius: var(--radius-pill);
+        }
+
+        .follow-empty-state {
+            padding: 36px 16px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .follow-empty-icon {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+
+        .follow-empty-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .follow-empty-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* Tab Navigation with Sliding Glider */
+        .profile-tabs-nav {
+            position: relative;
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 6px;
+            border-radius: var(--radius-pill);
+            border: 1px solid rgba(255, 197, 170, 0.45);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            width: 100%;
+        }
+
+        .profile-tab-glider {
+            position: absolute;
+            top: 6px;
+            bottom: 6px;
+            left: 0;
+            width: 50%;
+            border-radius: var(--radius-pill);
+            background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%);
+            box-shadow: 0 8px 20px -4px rgba(255, 157, 157, 0.55);
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .tab-btn {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 13px 20px;
+            border-radius: var(--radius-pill);
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.25s ease;
+        }
+
+        .tab-btn.active {
+            color: #ffffff;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .tab-count-badge {
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+            font-size: 0.78rem;
+            font-weight: 800;
+            background: rgba(0, 0, 0, 0.06);
+            color: inherit;
+            transition: all 0.25s ease;
+        }
+
+        .tab-btn.active .tab-count-badge {
+            background: rgba(255, 255, 255, 0.28);
+            color: #ffffff;
+        }
+
+        /* Tab Content Panels - Override style.css 780px limit to fill full 100% of container */
+        .tab-panel {
+            display: none;
+            width: 100% !important;
+            max-width: 100% !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-panel.active {
+            display: block !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Clean Empty State Box - Full width aligned with profile card */
+        .empty-state-box {
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1.5px dashed rgba(255, 197, 170, 0.55);
+            border-radius: var(--radius-card);
+            padding: 64px 32px;
+            text-align: center;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-icon-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .empty-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .empty-desc {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        /* Wishlist Grid & Cards in Profile */
+        .wishlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 22px;
+        }
+
+        .profile-place-card {
+            background: #ffffff;
+            border: 1px solid rgba(255, 197, 170, 0.45);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .profile-place-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 36px rgba(255, 157, 157, 0.22);
+            border-color: rgba(255, 157, 157, 0.65);
+        }
+
+        .place-card-img-wrap {
+            position: relative;
+            width: 100%;
+            height: 190px;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+
+        .place-card-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .profile-place-card:hover .place-card-img-wrap img {
+            transform: scale(1.05);
+        }
+
+        .place-card-badges {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            display: flex;
+            gap: 6px;
+            z-index: 2;
+        }
+
+        .card-cat-badge {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(8px);
+            color: #2d3748;
+            font-size: 0.76rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-remove-wishlist {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 157, 157, 0.4);
+            color: #ef4444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            transition: all 0.2s ease;
+            z-index: 2;
+        }
+
+        .btn-remove-wishlist:hover {
+            transform: scale(1.12);
+            background: #ef4444;
+            color: #ffffff;
+            border-color: #ef4444;
+        }
+
+        .place-card-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .place-card-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            line-height: 1.35;
+        }
+
+        .place-card-title a {
+            text-decoration: none;
+            color: inherit;
+            transition: color 0.2s;
+        }
+
+        .place-card-title a:hover {
+            color: #FF9D9D;
+        }
+
+        .place-card-address {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .place-card-footer {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .place-rating-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #d97706;
+            background: #fffbeb;
+            padding: 3px 8px;
+            border-radius: var(--radius-pill);
+        }
+
+        .btn-view-detail {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #ffffff;
+            background: linear-gradient(135deg, #FF9D9D, #FFB095);
+            padding: 6px 14px;
+            border-radius: var(--radius-pill);
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(255, 157, 157, 0.35);
+        }
+
+        .btn-view-detail:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(255, 157, 157, 0.5);
+        }
+
+        /* Reviews in Profile */
+        .reviews-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .profile-review-card {
+            background: #ffffff;
+            border: 1px solid rgba(255, 197, 170, 0.45);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.03);
+            transition: all 0.25s ease;
+        }
+
+        .profile-review-card:hover {
+            box-shadow: 0 12px 30px rgba(255, 157, 157, 0.15);
+            border-color: rgba(255, 157, 157, 0.5);
+        }
+
+        .review-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .review-place-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .review-place-title a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .review-place-title a:hover {
+            color: #FF9D9D;
+        }
+
+        .review-rating-stars {
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .review-date-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-left: 6px;
+        }
+
+        .review-comment-body {
+            font-size: 0.92rem;
+            color: var(--text-main);
+            line-height: 1.6;
+            background: rgba(255, 247, 243, 0.5);
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 197, 170, 0.25);
+        }
+
+        .btn-card-view-sm {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 197, 170, 0.5);
+            padding: 5px 12px;
+            border-radius: var(--radius-pill);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-card-view-sm:hover {
+            border-color: #FF9D9D;
+            color: #FF9D9D;
+        }
+
+        @media (max-width: 640px) {
+            .profile-card {
+                padding: 24px 20px;
+            }
+            .profile-header-layout {
+                flex-direction: column;
+                text-align: center;
+                gap: 18px;
+            }
+            .profile-title-row {
+                justify-content: center;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .user-name-title {
+                justify-content: center;
+            }
+            .user-handle {
+                justify-content: center;
+            }
+            .user-meta-chips {
+                justify-content: center;
+            }
+            .profile-tabs-nav {
+                flex-direction: column;
+                border-radius: var(--radius-card);
+                padding: 8px;
+            }
+            .profile-tab-glider {
+                display: none;
+            }
+            .tab-btn.active {
+                background: linear-gradient(135deg, #FF9D9D 0%, #FFB095 100%) !important;
+                color: #ffffff !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Unified Top Navbar -->
+    {% include 'components/navbar.html' %}
+
+    <!-- Main Container -->
+    <main class="page-container">
+
+        <!-- Flash Messages -->
+        {% if messages %}
+        <div class="alert-messages">
+            {% for message in messages %}
+            <div class="alert-item alert-{{ message.tags }}">
+                <span>{% if message.tags == 'success' %}✓{% else %}⚠️{% endif %}</span>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- User Profile Hero Card -->
+        <section class="profile-card">
+            <div class="profile-card-glow"></div>
+            
+            <div class="profile-header-layout">
+                <!-- จุดรูปโปรไฟล์และสถานะผู้ติดตาม (Profile Avatar & Follow Status) -->
+                <div class="avatar-column">
+                    <div class="avatar-wrapper">
+                        {% if avatar_url %}
+                        <img src="{{ avatar_url }}" alt="{{ display_name }}" class="avatar-circle" style="object-fit: cover; border: 2.5px solid #FF9D9D;">
+                        {% else %}
+                        <div class="avatar-circle" title="รูปโปรไฟล์ {{ display_name }}">
+                            {{ display_name|slice:":1"|upper }}
+                        </div>
+                        {% endif %}
+                        <!-- Online indicator dot -->
+                        <div class="avatar-online-dot" title="สถานะ: กำลังออนไลน์"></div>
+                        
+                        {% if is_own_profile %}
+                        <!-- Edit camera button (Opens Modal) - เฉพาะเจ้าของโปรไฟล์ -->
+                        <button type="button" class="avatar-camera-btn" onclick="openEditModal()" title="เปลี่ยนรูปโปรไฟล์ / แก้ไขข้อมูล">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- สถานะผู้ติดตาม | กำลังติดตาม ใต้รูปโปรไฟล์ (คลิกเพื่อเปิดป๊อปอัป) -->
+                    <div class="avatar-follow-stats">
+                        <button type="button" class="avatar-follow-link" onclick="openFollowModal('followers')" title="คลิกเพื่อดูผู้ติดตาม">
+                            <span class="avatar-follow-text">ผู้ติดตาม</span>
+                            <span class="avatar-follow-count followers-count-val" id="profileFollowersCount">{{ followers_count }}</span>
+                        </button>
+                        <span class="avatar-follow-divider">|</span>
+                        <button type="button" class="avatar-follow-link" onclick="openFollowModal('following')" title="คลิกเพื่อดูกำลังติดตาม">
+                            <span class="avatar-follow-text">กำลังติดตาม</span>
+                            <span class="avatar-follow-count following-count-val" id="profileFollowingCount">{{ following_count }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ชื่อของ User & ข้อมูลโปรไฟล์ -->
+                <div class="profile-info">
+                    <div class="profile-title-row">
+                        <h1 class="user-name-title">
+                            <span>{{ display_name }}</span>
+                            <span class="user-badge">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                                สมาชิก Zone In
+                            </span>
+                        </h1>
+                        {% if is_own_profile %}
+                        <button type="button" class="btn-edit-profile" id="btnEditProfile" onclick="openEditModal()" title="แก้ไขโปรไฟล์">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            <span>แก้ไขโปรไฟล์</span>
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn-profile-follow {% if is_following_target %}following{% endif %}" id="btnProfileFollow" onclick="handleProfileToggleFollow({{ target_user_id }})">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                            <span id="btnProfileFollowText">{% if is_following_target %}กำลังติดตาม{% else %}ติดตาม{% endif %}</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="user-handle">
+                        <span>@{{ username }}</span>
+                        {% if is_own_profile and email %}
+                        <span>•</span>
+                        <span>{{ email }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="user-meta-chips">
+                        <div class="meta-chip">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            <span>สมาชิกตั้งแต่ {{ join_date }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Bar (รีวิวทั้งหมด, รายการโปรด, ไลก์) -->
+            <div class="profile-stats-row">
+                <div class="stat-item" onclick="switchProfileTab('reviews')" style="cursor: pointer;" title="คลิกเพื่อดูประวัติการรีวิว">
+                    <div class="stat-value reviews-count-val">{{ reviews_count }}</div>
+                    <div class="stat-label">📝 รีวิวทั้งหมด</div>
+                </div>
+                {% if is_own_profile %}
+                <div class="stat-item" onclick="switchProfileTab('wishlist')" style="cursor: pointer;" title="คลิกเพื่อดูรายการโปรด (Wishlist)">
+                    <div class="stat-value wishlist-count-val">{{ wishlist_count }}</div>
+                    <div class="stat-label">❤️ รายการโปรด</div>
+                </div>
+                {% endif %}
+                <div class="stat-item" title="การกดไลก์">
+                    <div class="stat-value">{{ likes_count }}</div>
+                    <div class="stat-label">👍 การกดไลก์</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs: Reviews, Wishlist -->
+        <nav class="profile-tabs-nav" id="profileTabsNav" aria-label="Profile Tabs">
+            <!-- Animated Sliding Glider Pill -->
+            <div class="profile-tab-glider" id="profileTabGlider"></div>
+
+            <button type="button" class="tab-btn active" id="btnTabReviews" onclick="switchProfileTab('reviews')" data-tab="reviews">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span>{% if is_own_profile %}ประวัติการรีวิว (My Reviews){% else %}รีวิวทั้งหมด (Reviews){% endif %}</span>
+                <span class="tab-count-badge reviews-count-val">{{ reviews_count }}</span>
+            </button>
+
+            {% if is_own_profile %}
+            <button type="button" class="tab-btn" id="btnTabWishlist" onclick="switchProfileTab('wishlist')" data-tab="wishlist">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                <span>รายการโปรด (Wishlist)</span>
+                <span class="tab-count-badge wishlist-count-val">{{ wishlist_count }}</span>
+            </button>
+            {% endif %}
+        </nav>
+
+        <!-- ==========================================================================
+             PANEL 1: ประวัติการรีวิว (Reviews)
+             ========================================================================== -->
+        <section class="tab-panel active" id="panel-reviews">
+            {% if reviews %}
+                <div class="reviews-list">
+                    {% for rev in reviews %}
+                    <div class="profile-review-card">
+                        <div class="review-header-row">
+                            <div>
+                                <h4 class="review-place-title">
+                                    <a href="/places/{{ rev.place.id }}/">{{ rev.place.name }}</a>
+                                </h4>
+                                <div class="review-rating-stars">
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= rev.rating %}⭐{% endif %}
+                                    {% endfor %}
+                                    <span class="review-date-text">{{ rev.created_at|date:"d M Y" }}</span>
+                                </div>
+                            </div>
+                            <a href="/places/{{ rev.place.id }}/" class="btn-card-view-sm">ดูสถานที่</a>
+                        </div>
+                        {% if rev.comment %}
+                            <p class="review-comment-body">{{ rev.comment }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Clean Empty State for Reviews -->
+                <div class="empty-state-box">
+                    <div class="empty-icon-circle">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FF9D9D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <h3 class="empty-title">ยังไม่มีประวัติการรีวิว</h3>
+                    <p class="empty-desc">เมื่อคุณเขียนรีวิวสถานที่ท่องเที่ยว คาเฟ่ หรือที่พัก ประวัติการรีวิวของคุณจะปรากฏที่นี่</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- ==========================================================================
+             PANEL 2: Wishlist ของตัวเอง (Wishlist) - เฉพาะเจ้าของโปรไฟล์
+             ========================================================================== -->
+        {% if is_own_profile %}
+        <section class="tab-panel" id="panel-wishlist">
+            {% if wishlist %}
+                <div class="wishlist-grid" id="profileWishlistGrid">
+                    {% for place in wishlist %}
+                    <article class="profile-place-card" id="wishlist-card-{{ place.id }}">
+                        {% if place.cover_image_url or place.image_url %}
+                        <div class="place-card-img-wrap">
+                            <img src="{{ place.cover_image_url|default:place.image_url }}"
+                                 alt="{{ place.name }}"
+                                 loading="lazy">
+                            <div class="place-card-badges">
+                                {% if place.category %}
+                                <span class="card-cat-badge">
+                                    {{ place.get_category_display|default:place.category }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <button type="button"
+                                    class="btn-remove-wishlist"
+                                    onclick="removeFromWishlist({{ place.id }}, this)"
+                                    aria-label="ลบออกจากรายการโปรด"
+                                    title="ลบออกจากรายการโปรด">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        {% endif %}
+                        <div class="place-card-body">
+                            <h3 class="place-card-title">
+                                <a href="/places/{{ place.id }}/">{{ place.name }}</a>
+                            </h3>
+                            {% if place.address %}
+                            <p class="place-card-address">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span>{{ place.address|truncatechars:38 }}</span>
+                            </p>
+                            {% endif %}
+                            <div class="place-card-footer">
+                                <div class="place-rating-pill">
+                                    <span>⭐ {{ place.rating|default:5.0|floatformat:1 }}</span>
+                                </div>
+                                <a href="/places/{{ place.id }}/" class="btn-view-detail">
+                                    <span>ดูรายละเอียด</span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Clean Empty State for Wishlist -->
+                <div class="empty-state-box">
+                    <div class="empty-icon-circle">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FF9D9D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="empty-title">ยังไม่มีรายการใน Wishlist</h3>
+                    <p class="empty-desc">เมื่อคุณกดบันทึกสถานที่โปรดที่อยากไป สถานที่จะถูกรวบรวมไว้ที่นี่</p>
+                    <a href="/#search" style="margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #FF9D9D, #FFB095); color: #ffffff; padding: 10px 22px; border-radius: var(--radius-pill); font-weight: 700; text-decoration: none; font-size: 0.9rem; box-shadow: 0 4px 14px rgba(255, 157, 157, 0.4);">
+                        <span>🔍 ค้นหาและบันทึกสถานที่</span>
+                    </a>
+                </div>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <!-- ==========================================================================
+             POPUP / MODAL สำหรับ "แก้ไขข้อมูลส่วนตัว" - เฉพาะเจ้าของโปรไฟล์
+             ========================================================================== -->
+        {% if is_own_profile %}
+        <div class="modal-overlay" id="editProfileModal" onclick="handleBackdropClick(event)">
+            <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+                
+                <div class="modal-header">
+                    <h2 class="modal-title" id="modalTitle">
+                        <span>✏️</span>
+                        <span>แก้ไขข้อมูลส่วนตัว</span>
+                    </h2>
+                    <button type="button" class="btn-close-modal" onclick="closeEditModal()" aria-label="ปิด">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <form action="{% url 'web:profile_settings' %}" method="POST" enctype="multipart/form-data" id="formEditProfile">
+                        {% csrf_token %}
+
+                        <!-- 1. ฟังก์ชันเปลี่ยนรูปโปรไฟล์ (Cloudinary Upload) -->
+                        <div class="avatar-upload-section">
+                            <div class="avatar-preview-box" onclick="triggerFileInput()" title="คลิกเพื่อเปลี่ยนรูปภาพ">
+                                {% if avatar_url %}
+                                    <img src="{{ avatar_url }}" alt="Preview" class="avatar-preview-img" id="avatarPreviewImg">
+                                {% elif user.profile.avatar_url %}
+                                    <img src="{{ user.profile.avatar_url }}" alt="Preview" class="avatar-preview-img" id="avatarPreviewImg">
+                                {% else %}
+                                    <div class="avatar-preview-fallback" id="avatarPreviewFallback">
+                                        {{ nickname|default:display_name|slice:":1"|upper }}
+                                    </div>
+                                {% endif %}
+                                <div class="avatar-camera-overlay">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                        <circle cx="12" cy="13" r="4"></circle>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <input type="file" name="avatar" id="avatarInput" class="hidden-file-input" accept="image/*" onchange="previewSelectedImage(event)">
+                            
+                            <button type="button" class="btn-cancel" style="padding: 6px 14px; font-size: 0.8rem; margin-top: 4px;" onclick="triggerFileInput()">
+                                เลือกรูปภาพใหม่
+                            </button>
+                        </div>
+
+                        <!-- 2. ฟอร์มแก้ไขชื่อ และ ชื่อผู้ใช้/ชื่อที่แสดง -->
+                        <div class="form-group">
+                            <label for="inputNickname" class="form-label">
+                                <span>ชื่อ</span>
+                            </label>
+                            <input type="text" id="inputNickname" name="nickname" class="form-input" value="{{ nickname|default:display_name }}" placeholder="กรอกชื่อของคุณ" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="inputUsername" class="form-label">
+                                <span>ชื่อผู้ใช้/ชื่อที่แสดง</span>
+                            </label>
+                            <input type="text" id="inputUsername" name="username" class="form-input" value="{{ username }}" placeholder="กรอกชื่อผู้ใช้หรือชื่อที่แสดง" required>
+                        </div>
+
+                        <!-- 3. ฟอร์มกรอกข้อความ Bio แนะนำตัว -->
+                        <div class="form-group">
+                            <label for="inputBio" class="form-label">
+                                <span>ข้อความ Bio แนะนำตัว</span>
+                                <span class="char-counter" id="bioCharCounter">0/500</span>
+                            </label>
+                            <textarea id="inputBio" name="bio" class="form-textarea" placeholder="เขียนแนะนำตัวสั้นๆ เช่น สถานที่โปรด สไตล์การท่องเที่ยว..." maxlength="500" oninput="updateCharCount(this)">{{ bio }}</textarea>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn-cancel" onclick="closeEditModal()">ยกเลิก</button>
+                            <button type="submit" class="btn-submit-save" id="btnSaveProfile">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>บันทึกการเปลี่ยนแปลง</span>
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ==========================================================================
+             POPUP / MODAL สำหรับ "ผู้ติดตาม" และ "กำลังติดตาม"
+             ========================================================================== -->
+        <div class="modal-overlay" id="followModal" onclick="handleFollowBackdropClick(event)">
+            <div class="modal-card follow-modal-card" role="dialog" aria-modal="true" aria-labelledby="followModalTitle">
+                <div class="modal-header follow-modal-header">
+                    <div class="follow-modal-nav-tabs">
+                        <button type="button" class="follow-tab-btn active" id="tabBtnFollowers" onclick="switchFollowModalTab('followers')">
+                            <span>👥 ผู้ติดตาม</span>
+                            <span class="follow-tab-badge" id="modalFollowersBadge">{{ followers_count }}</span>
+                        </button>
+                        <button type="button" class="follow-tab-btn" id="tabBtnFollowing" onclick="switchFollowModalTab('following')">
+                            <span>🚶 กำลังติดตาม</span>
+                            <span class="follow-tab-badge" id="modalFollowingBadge">{{ following_count }}</span>
+                        </button>
+                    </div>
+                    <button type="button" class="btn-close-modal" onclick="closeFollowModal()" aria-label="ปิด">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="modal-body follow-modal-body">
+                    <!-- Search box inside follow modal -->
+                    <div class="follow-search-box">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="followSearchInput" class="follow-search-input" placeholder="ค้นหาชื่อผู้ใช้หรือชื่อเล่น..." oninput="filterFollowList()">
+                    </div>
+
+                    <!-- Panel: ผู้ติดตาม (Followers) -->
+                    <div class="follow-list-panel active" id="followPanelFollowers">
+                        {% for u in followers_list %}
+                        <div class="follow-user-item" data-name="{{ u.display_name|lower }}" data-username="{{ u.username|lower }}" id="follower-item-{{ u.id }}">
+                            <a href="{% url 'web:profile_user' u.username %}" class="follow-user-left">
+                                <div class="follow-user-avatar">
+                                    {% if u.avatar_url %}
+                                        <img src="{{ u.avatar_url }}" alt="{{ u.display_name }}">
+                                    {% else %}
+                                        <span>{{ u.display_name|slice:":1"|upper }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="follow-user-info">
+                                    <div class="follow-user-name">{{ u.display_name }}</div>
+                                    <div class="follow-user-handle">@{{ u.username }}</div>
+                                </div>
+                            </a>
+                            {% if u.is_self %}
+                                <span class="badge-self">ตัวคุณ</span>
+                            {% else %}
+                                <button type="button" class="btn-follow-pill {% if u.is_following %}following{% endif %}" onclick="toggleFollowInModal(event, {{ u.id }}, this)">
+                                    {% if u.is_following %}กำลังติดตาม{% else %}ติดตาม{% endif %}
+                                </button>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <div class="follow-empty-state" id="emptyStateFollowers">
+                            <div class="follow-empty-icon">👥</div>
+                            <div class="follow-empty-title">ยังไม่มีผู้ติดตาม</div>
+                            <p class="follow-empty-desc">เมื่อมีคนเริ่มติดตาม ข้อมูลจะปรากฏที่นี่</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Panel: กำลังติดตาม (Following) -->
+                    <div class="follow-list-panel" id="followPanelFollowing">
+                        {% for u in following_list %}
+                        <div class="follow-user-item" data-name="{{ u.display_name|lower }}" data-username="{{ u.username|lower }}" id="following-item-{{ u.id }}">
+                            <a href="{% url 'web:profile_user' u.username %}" class="follow-user-left">
+                                <div class="follow-user-avatar">
+                                    {% if u.avatar_url %}
+                                        <img src="{{ u.avatar_url }}" alt="{{ u.display_name }}">
+                                    {% else %}
+                                        <span>{{ u.display_name|slice:":1"|upper }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="follow-user-info">
+                                    <div class="follow-user-name">{{ u.display_name }}</div>
+                                    <div class="follow-user-handle">@{{ u.username }}</div>
+                                </div>
+                            </a>
+                            {% if u.is_self %}
+                                <span class="badge-self">ตัวคุณ</span>
+                            {% else %}
+                                <button type="button" class="btn-follow-pill {% if u.is_following %}following{% endif %}" onclick="toggleFollowInModal(event, {{ u.id }}, this)">
+                                    {% if u.is_following %}กำลังติดตาม{% else %}ติดตาม{% endif %}
+                                </button>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <div class="follow-empty-state" id="emptyStateFollowing">
+                            <div class="follow-empty-icon">🚶</div>
+                            <div class="follow-empty-title">ยังไม่ได้ติดตามใคร</div>
+                            <p class="follow-empty-desc">เริ่มสำรวจสถานที่ท่องเที่ยวและติดตามเพื่อนๆ ได้เลย</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- JavaScript for Tab Switching, Wishlist Management, Edit Profile & Follow Modals -->
+    <script>
+        const IS_OWN_PROFILE = {{ is_own_profile|yesno:"true,false" }};
+        const TARGET_USER_ID = {{ target_user_id|default:0 }};
+
+        function getCsrfToken() {
+            const tokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (tokenInput) return tokenInput.value;
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith('csrftoken=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue || '';
+        }
+
+        function openEditModal() {
+            const modal = document.getElementById('editProfileModal');
+            if (!modal) return;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            const bioTextarea = document.getElementById('inputBio');
+            if (bioTextarea) updateCharCount(bioTextarea);
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editProfileModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            if (window.history && window.history.replaceState && window.location.search.includes('edit=')) {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('edit');
+                window.history.replaceState(null, null, url.pathname + (url.hash || ''));
+            }
+        }
+
+        function handleBackdropClick(event) {
+            if (event.target.id === 'editProfileModal') {
+                closeEditModal();
+            }
+        }
+
+        /* Follow Modal Controls */
+        function openFollowModal(tab = 'followers') {
+            const modal = document.getElementById('followModal');
+            if (!modal) return;
+            switchFollowModalTab(tab);
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            const searchInput = document.getElementById('followSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                filterFollowList();
+            }
+        }
+
+        function closeFollowModal() {
+            const modal = document.getElementById('followModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            if (window.location.hash === '#followers' || window.location.hash === '#following') {
+                window.history.replaceState(null, null, window.location.pathname + '#reviews');
+            }
+        }
+
+        function handleFollowBackdropClick(event) {
+            if (event.target.id === 'followModal') {
+                closeFollowModal();
+            }
+        }
+
+        function switchFollowModalTab(tabName) {
+            const btnFollowers = document.getElementById('tabBtnFollowers');
+            const btnFollowing = document.getElementById('tabBtnFollowing');
+            const panelFollowers = document.getElementById('followPanelFollowers');
+            const panelFollowing = document.getElementById('followPanelFollowing');
+
+            if (tabName === 'followers') {
+                if (btnFollowers) btnFollowers.classList.add('active');
+                if (btnFollowing) btnFollowing.classList.remove('active');
+                if (panelFollowers) panelFollowers.classList.add('active');
+                if (panelFollowing) panelFollowing.classList.remove('active');
+            } else {
+                if (btnFollowing) btnFollowing.classList.add('active');
+                if (btnFollowers) btnFollowers.classList.remove('active');
+                if (panelFollowing) panelFollowing.classList.add('active');
+                if (panelFollowers) panelFollowers.classList.remove('active');
+            }
+
+            const searchInput = document.getElementById('followSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                filterFollowList();
+            }
+        }
+
+        function filterFollowList() {
+            const query = (document.getElementById('followSearchInput')?.value || '').trim().toLowerCase();
+            const activePanel = document.querySelector('.follow-list-panel.active');
+            if (!activePanel) return;
+
+            const items = activePanel.querySelectorAll('.follow-user-item');
+            items.forEach(item => {
+                const name = item.getAttribute('data-name') || '';
+                const username = item.getAttribute('data-username') || '';
+                if (!query || name.includes(query) || username.includes(query)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        async function toggleFollowInModal(event, userId, btn) {
+            if (event) event.stopPropagation();
+            if (!btn) return;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/users/${userId}/follow/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const isFollowing = data.is_following;
+                    btn.classList.toggle('following', isFollowing);
+                    btn.innerText = isFollowing ? 'กำลังติดตาม' : 'ติดตาม';
+
+                    // Update following count on profile if owner
+                    if (IS_OWN_PROFILE) {
+                        const countElements = document.querySelectorAll('.following-count-val');
+                        countElements.forEach(el => el.textContent = data.my_following_count);
+                        const modalBadge = document.getElementById('modalFollowingBadge');
+                        if (modalBadge) modalBadge.textContent = data.my_following_count;
+                    }
+
+                    // Sync other buttons matching this user id
+                    document.querySelectorAll('.btn-follow-pill').forEach(otherBtn => {
+                        if (otherBtn !== btn && otherBtn.getAttribute('onclick')?.includes(userId.toString())) {
+                            otherBtn.classList.toggle('following', isFollowing);
+                            otherBtn.innerText = isFollowing ? 'กำลังติดตาม' : 'ติดตาม';
+                        }
+                    });
+
+                    // If user is target of current profile page
+                    if (userId === TARGET_USER_ID) {
+                        const mainBtn = document.getElementById('btnProfileFollow');
+                        const mainBtnText = document.getElementById('btnProfileFollowText');
+                        if (mainBtn && mainBtnText) {
+                            mainBtn.classList.toggle('following', isFollowing);
+                            mainBtnText.innerText = isFollowing ? 'กำลังติดตาม' : 'ติดตาม';
+                        }
+                        const followersCountEls = document.querySelectorAll('.followers-count-val');
+                        followersCountEls.forEach(el => el.textContent = data.target_followers_count);
+                        const modalFollowersBadge = document.getElementById('modalFollowersBadge');
+                        if (modalFollowersBadge) modalFollowersBadge.textContent = data.target_followers_count;
+                    }
+                } else {
+                    alert(data.message || 'เกิดข้อผิดพลาดในการติดตาม');
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function handleProfileToggleFollow(userId) {
+            const btn = document.getElementById('btnProfileFollow');
+            const btnText = document.getElementById('btnProfileFollowText');
+            if (!btn) return;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/users/${userId}/follow/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const isFollowing = data.is_following;
+                    btn.classList.toggle('following', isFollowing);
+                    if (btnText) btnText.innerText = isFollowing ? 'กำลังติดตาม' : 'ติดตาม';
+
+                    // Update followers count of target profile on screen
+                    const followersCountEls = document.querySelectorAll('.followers-count-val');
+                    followersCountEls.forEach(el => el.textContent = data.target_followers_count);
+                    const modalBadge = document.getElementById('modalFollowersBadge');
+                    if (modalBadge) modalBadge.textContent = data.target_followers_count;
+                } else {
+                    alert(data.message || 'เกิดข้อผิดพลาด');
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function triggerFileInput() {
+            const input = document.getElementById('avatarInput');
+            if (input) input.click();
+        }
+
+        function previewSelectedImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewImg = document.getElementById('avatarPreviewImg');
+                const fallback = document.getElementById('avatarPreviewFallback');
+                
+                if (previewImg) {
+                    previewImg.src = e.target.result;
+                } else if (fallback) {
+                    const newImg = document.createElement('img');
+                    newImg.src = e.target.result;
+                    newImg.alt = 'Preview';
+                    newImg.className = 'avatar-preview-img';
+                    newImg.id = 'avatarPreviewImg';
+                    fallback.parentNode.replaceChild(newImg, fallback);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateCharCount(textarea) {
+            const counter = document.getElementById('bioCharCounter');
+            if (!counter || !textarea) return;
+            const count = textarea.value.length;
+            counter.textContent = `${count}/500`;
+            if (count >= 480) {
+                counter.style.color = '#ef4444';
+            } else {
+                counter.style.color = 'var(--text-muted)';
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeEditModal();
+                closeFollowModal();
+            }
+        });
+
+        function moveProfileGlider(targetBtn) {
+            const glider = document.getElementById('profileTabGlider');
+            const nav = document.getElementById('profileTabsNav');
+            if (!glider || !nav || !targetBtn) return;
+
+            const navRect = nav.getBoundingClientRect();
+            const btnRect = targetBtn.getBoundingClientRect();
+
+            const offsetLeft = btnRect.left - navRect.left;
+            const width = btnRect.width;
+
+            glider.style.width = `${width}px`;
+            glider.style.transform = `translateX(${offsetLeft}px)`;
+        }
+
+        function switchProfileTab(tabName) {
+            const btnReviews = document.getElementById('btnTabReviews');
+            const btnWishlist = document.getElementById('btnTabWishlist');
+            const panelReviews = document.getElementById('panel-reviews');
+            const panelWishlist = document.getElementById('panel-wishlist');
+
+            if (tabName === 'reviews' && btnReviews && panelReviews) {
+                btnReviews.classList.add('active');
+                if (btnWishlist) btnWishlist.classList.remove('active');
+                panelReviews.classList.add('active');
+                if (panelWishlist) panelWishlist.classList.remove('active');
+                moveProfileGlider(btnReviews);
+                if (window.history && window.history.replaceState) {
+                    history.replaceState(null, null, '#reviews');
+                }
+            } else if (tabName === 'wishlist' && btnWishlist && panelWishlist) {
+                btnWishlist.classList.add('active');
+                if (btnReviews) btnReviews.classList.remove('active');
+                panelWishlist.classList.add('active');
+                if (panelReviews) panelReviews.classList.remove('active');
+                moveProfileGlider(btnWishlist);
+                if (window.history && window.history.replaceState) {
+                    history.replaceState(null, null, '#wishlist');
+                }
+            }
+        }
+
+        window.switchProfileTab = switchProfileTab;
+
+        window.addEventListener('resize', () => {
+            const activeBtn = document.querySelector('.profile-tabs-nav .tab-btn.active');
+            if (activeBtn) moveProfileGlider(activeBtn);
+        });
+
+        // Handle URL Hash or Query Param on Load
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('edit') === '1' || window.location.hash === '#edit') {
+                openEditModal();
+            }
+
+            if (window.location.hash === '#wishlist' || params.get('tab') === 'wishlist') {
+                switchProfileTab('wishlist');
+            } else if (window.location.hash === '#followers') {
+                switchProfileTab('reviews');
+                openFollowModal('followers');
+            } else if (window.location.hash === '#following') {
+                switchProfileTab('reviews');
+                openFollowModal('following');
+            } else {
+                switchProfileTab('reviews');
+            }
+
+            setTimeout(() => {
+                const activeBtn = document.querySelector('.profile-tabs-nav .tab-btn.active');
+                if (activeBtn) moveProfileGlider(activeBtn);
+            }, 60);
+        });
+
+        // Interactive Removal from Wishlist
+        async function removeFromWishlist(placeId, element) {
+            try {
+                if (element) element.disabled = true;
+                const response = await fetch('/api/wishlist/toggle/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ place_id: placeId })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success' || data.success) {
+                    const card = element ? element.closest('.profile-place-card') : document.getElementById(`wishlist-card-${placeId}`);
+                    if (card) {
+                        card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.85)';
+                        setTimeout(() => {
+                            card.remove();
+
+                            // Update count badges
+                            const countBadges = document.querySelectorAll('.wishlist-count-val');
+                            const newTotal = typeof data.total_count !== 'undefined' ? data.total_count : Math.max(0, parseInt(countBadges[0]?.textContent || '1') - 1);
+                            countBadges.forEach(badge => {
+                                badge.textContent = newTotal;
+                            });
+
+                            // If grid is empty, reload to show empty state
+                            const grid = document.getElementById('profileWishlistGrid');
+                            if (grid && grid.children.length === 0) {
+                                location.reload();
+                            }
+                        }, 300);
+                    }
+                } else if (element) {
+                    element.disabled = false;
+                }
+            } catch (err) {
+                console.error('Error removing item from wishlist:', err);
+                if (element) element.disabled = false;
+            }
+        }
+    </script>
+    <!-- JavaScript from Dev -->
+    <script src="{% static 'js/navbar.js' %}"></script>
+</body>
+</html>
+
