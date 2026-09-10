@@ -1321,6 +1321,103 @@
         padding-top: 0.5rem;
         border-top: 1px dashed rgba(255, 197, 170, 0.5);
     }
+
+    /* ---- Post 3-dot Menu ---- */
+    .post-menu-wrap { position: relative; }
+    .post-menu-btn {
+        background: none; border: none; cursor: pointer;
+        font-size: 1.2rem; color: var(--text-dim);
+        padding: 2px 7px; border-radius: 6px;
+        transition: background 0.15s, color 0.15s;
+        line-height: 1; display: flex; align-items: center;
+    }
+    .post-menu-btn:hover { background: rgba(255,157,157,0.12); color: #e25c5c; }
+    .post-dropdown {
+        position: absolute; right: 0; top: calc(100% + 6px);
+        background: #fff;
+        border: 1px solid rgba(255,197,170,0.5);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(255,157,157,0.18);
+        min-width: 160px; z-index: 300;
+        overflow: hidden;
+        animation: postMenuFadeIn 0.15s ease;
+        display: none;
+    }
+    .post-dropdown.open { display: block; }
+    @keyframes postMenuFadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+    .post-dd-item {
+        display: flex; align-items: center; gap: 8px;
+        width: 100%; background: none; border: none;
+        padding: 10px 16px; cursor: pointer;
+        font-size: 0.88rem; font-weight: 600;
+        color: #1e242b; text-align: left;
+        transition: background 0.15s;
+        font-family: inherit;
+    }
+    .post-dd-item:hover { background: rgba(255,197,170,0.18); }
+    .post-dd-delete { color: #e05d5d; }
+    .post-dd-delete:hover { background: rgba(224,93,93,0.08); }
+
+    /* ---- Edit Post Modal ---- */
+    .edit-post-overlay {
+        position: fixed; inset: 0; z-index: 4000;
+        background: rgba(30,36,43,0.5);
+        backdrop-filter: blur(6px);
+        display: none; align-items: center; justify-content: center;
+        padding: 1.25rem;
+    }
+    .edit-post-overlay.show { display: flex; }
+    .edit-post-card {
+        background: #fff; border-radius: 20px;
+        padding: 28px 28px 24px;
+        width: 100%; max-width: 500px;
+        box-shadow: 0 20px 60px rgba(255,157,157,0.22);
+        animation: editPostSlideUp 0.22s ease;
+    }
+    @keyframes editPostSlideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+    .edit-post-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 18px;
+    }
+    .edit-post-header h3 { font-size: 1.1rem; font-weight: 800; color: #1e242b; margin: 0; }
+    .edit-post-close {
+        background: none; border: none; cursor: pointer;
+        font-size: 1.5rem; color: #8c96a0; line-height: 1; padding: 0 4px;
+        transition: color 0.15s;
+    }
+    .edit-post-close:hover { color: #e25c5c; }
+    .edit-post-textarea {
+        width: 100%; min-height: 110px;
+        border: 1.5px solid rgba(255,197,170,0.7);
+        border-radius: 12px; padding: 12px 14px;
+        font-size: 0.95rem; color: #1e242b;
+        font-family: inherit; resize: vertical; outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
+    }
+    .edit-post-textarea:focus {
+        border-color: #FF9D9D;
+        box-shadow: 0 0 0 3px rgba(255,157,157,0.18);
+    }
+    .edit-post-actions {
+        display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;
+    }
+    .btn-edit-post-cancel {
+        background: #f1f5f9; border: none; border-radius: 10px;
+        padding: 9px 20px; font-size: 0.88rem; font-weight: 600;
+        color: #57616b; cursor: pointer; transition: background 0.15s;
+        font-family: inherit;
+    }
+    .btn-edit-post-cancel:hover { background: #e2e8f0; }
+    .btn-edit-post-save {
+        background: linear-gradient(135deg, #FF9D9D, #FF8080);
+        border: none; border-radius: 10px;
+        padding: 9px 22px; font-size: 0.88rem; font-weight: 700;
+        color: #fff; cursor: pointer; transition: all 0.2s;
+        font-family: inherit; display: flex; align-items: center; gap: 6px;
+    }
+    .btn-edit-post-save:hover { background: linear-gradient(135deg, #ff8585, #f87171); transform: translateY(-1px); }
+    .btn-edit-post-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     </style>
 {% endblock %}
 {% block content %}
@@ -1924,6 +2021,24 @@
         <div class="share-modal-hint" id="shareModalHint"></div>
     </div>
 </div>
+
+<!-- Edit Post Modal -->
+<div class="edit-post-overlay" id="editPostOverlay" onclick="closeEditPostModal(event)">
+    <div class="edit-post-card" onclick="event.stopPropagation()">
+        <div class="edit-post-header">
+            <h3>✏️ แก้ไขโพสต์</h3>
+            <button type="button" class="edit-post-close" onclick="closeEditPostModal()" title="ปิด">×</button>
+        </div>
+        <textarea class="edit-post-textarea" id="editPostTextarea" placeholder="เขียนเนื้อหาโพสต์..."></textarea>
+        <div class="edit-post-actions">
+            <button type="button" class="btn-edit-post-cancel" onclick="closeEditPostModal()">ยกเลิก</button>
+            <button type="button" class="btn-edit-post-save" id="btnSaveEditPost" onclick="submitEditPost()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                บันทึกการแก้ไข
+            </button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 {% block extra_scripts %}
     <script>
@@ -1946,6 +2061,162 @@ document.addEventListener("DOMContentLoaded", () => {
         if (typeof switchTab === 'function') switchTab(hash);
     } else if (initialTab && initialTab !== 'home') {
         if (typeof switchTab === 'function') switchTab(initialTab);
+    }
+});
+
+// ===================================================
+// Post 3-dot Menu Functions
+// ===================================================
+let _editingPostId = null;
+
+function togglePostMenu(event, reviewId) {
+    event.stopPropagation();
+    const dropdown = document.getElementById(`post_dropdown_${reviewId}`);
+    if (!dropdown) return;
+    // Close all other open dropdowns
+    document.querySelectorAll('.post-dropdown.open').forEach(d => {
+        if (d !== dropdown) d.classList.remove('open');
+    });
+    dropdown.classList.toggle('open');
+}
+
+// Close post dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.post-menu-wrap')) {
+        document.querySelectorAll('.post-dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+});
+
+function openEditPost(reviewId) {
+    _editingPostId = reviewId;
+    // Close dropdown
+    const dd = document.getElementById(`post_dropdown_${reviewId}`);
+    if (dd) dd.classList.remove('open');
+
+    const cached = reviewsDataMap.get(reviewId);
+    const currentContent = cached ? (cached.content || '') : '';
+
+    const textarea = document.getElementById('editPostTextarea');
+    if (textarea) textarea.value = currentContent;
+
+    const overlay = document.getElementById('editPostOverlay');
+    if (overlay) {
+        overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => { if (textarea) textarea.focus(); }, 100);
+    }
+}
+
+function closeEditPostModal(event) {
+    if (event && event.target !== document.getElementById('editPostOverlay')) return;
+    const overlay = document.getElementById('editPostOverlay');
+    if (overlay) {
+        overlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    _editingPostId = null;
+}
+
+async function submitEditPost() {
+    if (!_editingPostId) return;
+    const textarea = document.getElementById('editPostTextarea');
+    const content = textarea ? textarea.value.trim() : '';
+    if (!content) { showToast('กรุณากรอกเนื้อหาโพสต์'); return; }
+
+    const btn = document.getElementById('btnSaveEditPost');
+    if (btn) { btn.disabled = true; btn.textContent = 'กำลังบันทึก...'; }
+
+    try {
+        const res = await fetch(`/api/reviews/${_editingPostId}/edit/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getHomeCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ comment: content }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            // Update content in feed card
+            const contentEl = document.getElementById(`review_content_${_editingPostId}`);
+            if (contentEl) contentEl.textContent = content;
+
+            // Update cache
+            const cached = reviewsDataMap.get(_editingPostId);
+            if (cached) cached.content = content;
+
+            const overlay = document.getElementById('editPostOverlay');
+            if (overlay) { overlay.classList.remove('show'); document.body.style.overflow = ''; }
+            showToast('แก้ไขโพสต์เรียบร้อยแล้ว ✅');
+        } else {
+            showToast(data.error || 'เกิดข้อผิดพลาด');
+        }
+    } catch (err) {
+        console.error('[Zone In] Edit post error:', err);
+        showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> บันทึกการแก้ไข';
+        }
+        _editingPostId = null;
+    }
+}
+
+async function confirmDeletePost(reviewId) {
+    // Close dropdown
+    const dd = document.getElementById(`post_dropdown_${reviewId}`);
+    if (dd) dd.classList.remove('open');
+
+    if (!confirm('ต้องการลบโพสต์นี้หรือไม่?')) return;
+
+    try {
+        const res = await fetch(`/api/reviews/${reviewId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getHomeCSRFToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+        const data = await res.json();
+        if (data.success) {
+            const card = document.getElementById(`review_${reviewId}`);
+            if (card) {
+                card.style.transition = 'opacity 0.3s, transform 0.3s';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.97)';
+                setTimeout(() => card.remove(), 300);
+            }
+            reviewsDataMap.delete(reviewId);
+            showToast('ลบโพสต์เรียบร้อยแล้ว 🗑️');
+        } else {
+            showToast(data.error || 'เกิดข้อผิดพลาด');
+        }
+    } catch (err) {
+        console.error('[Zone In] Delete post error:', err);
+        showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+    }
+}
+
+function getHomeCSRFToken() {
+    const name = 'csrftoken';
+    for (const cookie of document.cookie.split(';')) {
+        const c = cookie.trim();
+        if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
+    }
+    return '';
+}
+
+// Close edit post modal on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const overlay = document.getElementById('editPostOverlay');
+        if (overlay && overlay.classList.contains('show')) {
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+            _editingPostId = null;
+        }
     }
 });
 
@@ -2170,7 +2441,26 @@ function renderReviewCardHtml(r) {
     const isFollowing = followedAuthorsSet.has(authorId);
 
     return `
-        <article class="review-card" id="review_${r.id}" style="text-align: left;">
+        <article class="review-card" id="review_${r.id}" style="text-align: left; position: relative;">
+            ${r.is_author ? `
+            <div class="post-menu-wrap" style="position: absolute; top: 1.1rem; right: 1.1rem; z-index: 10;">
+                <button type="button" class="post-menu-btn" aria-label="เมนูโพสต์" onclick="togglePostMenu(event, ${r.id})" title="ตัวเลือกโพสต์">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                        <circle cx="12" cy="5" r="1.8"></circle>
+                        <circle cx="12" cy="12" r="1.8"></circle>
+                        <circle cx="12" cy="19" r="1.8"></circle>
+                    </svg>
+                </button>
+                <div class="post-dropdown" id="post_dropdown_${r.id}">
+                    <button type="button" class="post-dd-item" onclick="openEditPost(${r.id})">
+                        ✏️ แก้ไขโพสต์
+                    </button>
+                    <button type="button" class="post-dd-item post-dd-delete" onclick="confirmDeletePost(${r.id})">
+                        🗑️ ลบโพสต์
+                    </button>
+                </div>
+            </div>
+            ` : ''}
             <div class="review-header" style="text-align: left;">
                 <div class="review-author" style="text-align: left;">
                     <a href="/profile/${authorUsername}/" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; text-align: left;">
@@ -2186,7 +2476,7 @@ function renderReviewCardHtml(r) {
                         </div>
                     </a>
                 </div>
-                <span class="rating-badge" id="rating_badge_${r.id}">${stars} ${r.rating}.0</span>
+                <span class="rating-badge" id="rating_badge_${r.id}" style="margin-right: ${r.is_author ? '2rem' : '0'}">${stars} ${r.rating}.0</span>
             </div>
 
             ${r.place ? `

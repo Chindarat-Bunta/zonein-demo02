@@ -301,36 +301,101 @@
                             <button type="button" class="filter-btn" data-filter="5star">5 ดาว</button>
                             <button type="button" class="filter-btn" data-filter="4star">4 ดาว</button>
                         </div>
-                        <!-- Reviews List Container (รองรับการดึงรีวิวแบบ Dynamic จาก Branch อื่น) -->
-                        <div id="reviewsList" data-place-id="{{ place.id|default:'2' }}">
+                        <!-- Reviews List Container -->
+                        <div id="reviewsList" data-place-id="{{ place.id|default:'2' }}" data-place-author-id="{{ place.author.id|default:'' }}">
                             {% for r in reviews %}
-                                <div class="review-item-card">
-                                    <div class="review-author-row">
-                                        <div class="author-profile-box">
-                                            <a href="{% if r.username %}/profile/{{ r.username }}/{% else %}#{% endif %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
-                                                <img src="{{ r.user_avatar|default:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' }}"
-                                                     class="author-avatar"
-                                                     alt="{{ r.user_name }}">
-                                                <div class="author-meta">
-                                                    <span class="author-name" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">{{ r.user_name }}</span>
-                                                    <span class="author-date">{{ r.created_at }}</span>
+                                {% with can_manage=False %}
+                                {% if user.is_authenticated %}
+                                    {% if user.username == r.username or user == place.author %}
+                                        {% with can_manage=True %}
+                                        <div class="review-item-card"
+                                             data-review-id="{{ r.review_id }}"
+                                             data-review-comment="{{ r.comment|escapejs }}"
+                                             data-review-rating="{{ r.rating }}">
+                                            <div class="review-author-row">
+                                                <div class="author-profile-box">
+                                                    <a href="{% if r.username %}/profile/{{ r.username }}/{% else %}#{% endif %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
+                                                        <img src="{{ r.user_avatar|default:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' }}"
+                                                             class="author-avatar"
+                                                             alt="{{ r.user_name }}">
+                                                        <div class="author-meta">
+                                                            <span class="author-name" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">{{ r.user_name }}</span>
+                                                            <span class="author-date">{{ r.created_at }}</span>
+                                                        </div>
+                                                    </a>
                                                 </div>
-                                            </a>
+                                                <div style="display:flex;align-items:center;gap:10px;">
+                                                    <div class="review-stars-score" title="{{ r.rating }} ดาว">
+                                                        {% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+                                                    </div>
+                                                    <!-- 3-dot menu (เจ้าของรีวิว / เจ้าของโพสต์เท่านั้น) -->
+                                                    <div class="review-menu-wrap">
+                                                        <button class="review-menu-btn" type="button" aria-label="เมนูรีวิว" onclick="toggleReviewMenu(this)">⋯</button>
+                                                        <div class="review-dropdown" style="display:none;">
+                                                            <button type="button" class="review-dd-item" onclick="openEditReview(this.closest('.review-item-card'))">
+                                                                ✏️ แก้ไขรีวิว
+                                                            </button>
+                                                            <button type="button" class="review-dd-item review-dd-delete" onclick="confirmDeleteReview(this.closest('.review-item-card'))">
+                                                                🗑️ ลบรีวิว
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="review-body-text">{{ r.comment }}</div>
                                         </div>
-                                        <div class="review-stars-score" title="{{ r.rating }} ดาว">
-                                            {% for i in "12345" %}
-                                                {% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}
-                                            {% endfor %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <div class="review-item-card">
+                                            <div class="review-author-row">
+                                                <div class="author-profile-box">
+                                                    <a href="{% if r.username %}/profile/{{ r.username }}/{% else %}#{% endif %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
+                                                        <img src="{{ r.user_avatar|default:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' }}"
+                                                             class="author-avatar"
+                                                             alt="{{ r.user_name }}">
+                                                        <div class="author-meta">
+                                                            <span class="author-name" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">{{ r.user_name }}</span>
+                                                            <span class="author-date">{{ r.created_at }}</span>
+                                                        </div>
+                                                    </a>
+                                                </div>
+                                                <div class="review-stars-score" title="{{ r.rating }} ดาว">
+                                                    {% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+                                                </div>
+                                            </div>
+                                            <div class="review-body-text">{{ r.comment }}</div>
                                         </div>
+                                    {% endif %}
+                                {% else %}
+                                    <!-- Not logged in — no menu shown -->
+                                    <div class="review-item-card">
+                                        <div class="review-author-row">
+                                            <div class="author-profile-box">
+                                                <a href="{% if r.username %}/profile/{{ r.username }}/{% else %}#{% endif %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
+                                                    <img src="{{ r.user_avatar|default:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' }}"
+                                                         class="author-avatar"
+                                                         alt="{{ r.user_name }}">
+                                                    <div class="author-meta">
+                                                        <span class="author-name">{{ r.user_name }}</span>
+                                                        <span class="author-date">{{ r.created_at }}</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <div class="review-stars-score" title="{{ r.rating }} ดาว">
+                                                {% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+                                            </div>
+                                        </div>
+                                        <div class="review-body-text">{{ r.comment }}</div>
                                     </div>
-                                    <div class="review-body-text">{{ r.comment }}</div>
-                                </div>
+                                {% endif %}
+                                {% endwith %}
                             {% empty %}
                                 <div class="review-item-card">
                                     <p style="color: var(--text-muted); text-align: center; padding: 20px;">ยังไม่มีรีวิวสำหรับสถานที่นี้ เป็นคนแรกที่เริ่มเขียนรีวิวเลย!</p>
                                 </div>
                             {% endfor %}
                         </div>
+
                     </section>
                 </div>
                 <!-- RIGHT COLUMN: Map & Navigation Sticky Sidebar (สำคัญมาก) -->
@@ -564,6 +629,126 @@
         </div>
         <script src="{% static 'js/navbar.js' %}"></script>
         <script src="{% static 'js/place_detail.js' %}"></script>
+
+        <!-- ======================================================
+             Edit Review Modal
+             ====================================================== -->
+        <div id="editReviewModal" class="edit-review-overlay" style="display:none;" onclick="closeEditReviewModal(event)">
+            <div class="edit-review-card" onclick="event.stopPropagation()">
+                <div class="edit-review-header">
+                    <h3>✏️ แก้ไขรีวิว</h3>
+                    <button type="button" class="edit-review-close" onclick="closeEditReviewModal()">&times;</button>
+                </div>
+                <!-- Star picker inside modal -->
+                <div class="star-picker-row" style="margin-bottom:14px;">
+                    <div id="editStarPicker">
+                        <span class="star-picker-star" data-value="1">★</span>
+                        <span class="star-picker-star" data-value="2">★</span>
+                        <span class="star-picker-star" data-value="3">★</span>
+                        <span class="star-picker-star" data-value="4">★</span>
+                        <span class="star-picker-star" data-value="5">★</span>
+                    </div>
+                    <input type="hidden" id="editRatingInput" value="5">
+                    <span class="star-picker-hint" id="editStarHint">5 ดาว — ยอดเยี่ยม</span>
+                </div>
+                <textarea id="editReviewTextarea" class="review-textarea" rows="4" placeholder="แก้ไขข้อความรีวิว..."></textarea>
+                <div class="edit-review-actions">
+                    <button type="button" class="btn-cancel-edit" onclick="closeEditReviewModal()">ยกเลิก</button>
+                    <button type="button" class="btn-save-edit" id="btnSaveEdit" onclick="submitEditReview()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        บันทึกการแก้ไข
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3-dot menu & Edit Modal Styles -->
+        <style>
+        /* ---- 3-dot menu button ---- */
+        .review-menu-wrap { position: relative; }
+        .review-menu-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 1.25rem; color: var(--text-muted);
+            padding: 2px 8px; border-radius: 6px;
+            transition: background 0.15s, color 0.15s;
+            line-height: 1;
+        }
+        .review-menu-btn:hover { background: rgba(255,157,157,0.12); color: var(--color-coral-dark); }
+
+        /* ---- Dropdown ---- */
+        .review-dropdown {
+            position: absolute; right: 0; top: calc(100% + 6px);
+            background: #fff;
+            border: 1px solid rgba(255,197,170,0.5);
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(255,157,157,0.18);
+            min-width: 150px; z-index: 200;
+            overflow: hidden;
+            animation: fadeInDown 0.15s ease;
+        }
+        @keyframes fadeInDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+        .review-dd-item {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; background: none; border: none;
+            padding: 10px 16px; cursor: pointer;
+            font-size: 0.88rem; font-weight: 600;
+            color: var(--text-primary); text-align: left;
+            transition: background 0.15s;
+        }
+        .review-dd-item:hover { background: rgba(255,197,170,0.18); }
+        .review-dd-delete { color: #e05d5d; }
+        .review-dd-delete:hover { background: rgba(224,93,93,0.08); }
+
+        /* ---- Edit Review Modal ---- */
+        .edit-review-overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(30,36,43,0.45);
+            backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .edit-review-card {
+            background: #fff; border-radius: 20px;
+            padding: 28px 28px 24px;
+            width: 100%; max-width: 480px;
+            box-shadow: 0 20px 60px rgba(255,157,157,0.22);
+            animation: slideUp 0.2s ease;
+        }
+        @keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+        .edit-review-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 18px;
+        }
+        .edit-review-header h3 { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); }
+        .edit-review-close {
+            background: none; border: none; cursor: pointer;
+            font-size: 1.5rem; color: var(--text-muted);
+            line-height: 1; padding: 0 4px;
+            transition: color 0.15s;
+        }
+        .edit-review-close:hover { color: var(--color-coral-dark); }
+        .edit-review-actions {
+            display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;
+        }
+        .btn-cancel-edit {
+            padding: 9px 20px; border-radius: var(--radius-pill);
+            border: 1.5px solid rgba(255,197,170,0.6);
+            background: transparent; color: var(--text-secondary);
+            font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-cancel-edit:hover { background: rgba(255,197,170,0.12); }
+        .btn-save-edit {
+            display: flex; align-items: center; gap: 7px;
+            padding: 9px 22px; border-radius: var(--radius-pill);
+            background: linear-gradient(135deg, #FF9D9D, #FFB095);
+            color: #fff; border: none; font-size: 0.9rem;
+            font-weight: 700; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(255,157,157,0.35);
+            transition: all 0.2s;
+        }
+        .btn-save-edit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,157,157,0.45); }
+        .btn-save-edit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        </style>
 
     </body>
 </html>
