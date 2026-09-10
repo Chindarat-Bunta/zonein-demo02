@@ -586,7 +586,7 @@ def signup_view(request):
             profile.nickname = full_name
             profile.save()
 
-        login(request, new_user)
+        login(request, new_user, backend="django.contrib.auth.backends.ModelBackend")
         messages.success(
             request, f"สมัครสมาชิกสำเร็จ! ยินดีต้อนรับสู่ Zone In, {new_user.first_name}"
         )
@@ -671,7 +671,7 @@ def social_login_view(request, provider):
             "picture": sim_picture or default_pic,
         }
         user, profile, created = sync_social_user(provider, user_info)
-        login(request, user)
+        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
         action_word = "ลงทะเบียนและเข้าสู่ระบบ" if created else "เข้าสู่ระบบ"
         messages.success(
             request,
@@ -740,7 +740,7 @@ def social_login_callback_view(request, provider):
 
     # Provision user and profile in Neon PostgreSQL
     user, profile, created = sync_social_user(provider, result)
-    login(request, user)
+    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
 
     action_word = "ลงทะเบียนและเข้าสู่ระบบ" if created else "เข้าสู่ระบบ"
     messages.success(

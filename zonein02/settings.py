@@ -81,7 +81,23 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # django-allauth
+    "django.contrib.sites",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    # Local app
     "web",
+]
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    # Django default (username/password login)
+    "django.contrib.auth.backends.ModelBackend",
+    # allauth-specific (email/social login)
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 MIDDLEWARE = [
@@ -92,6 +108,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Required by django-allauth
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "zonein02.urls"
@@ -207,8 +225,37 @@ else:
         secure=True,
     )
 
-# Social Authentication (Google & Facebook OAuth 2.0)
+# ==============================================================================
+# Social Authentication — Google & Facebook OAuth 2.0
+# ==============================================================================
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "").strip()
 FACEBOOK_CLIENT_ID = os.environ.get("FACEBOOK_CLIENT_ID", "").strip() or os.environ.get("FACEBOOK_APP_ID", "").strip()
 FACEBOOK_CLIENT_SECRET = os.environ.get("FACEBOOK_CLIENT_SECRET", "").strip() or os.environ.get("FACEBOOK_APP_SECRET", "").strip()
+
+# ==============================================================================
+# django-allauth Configuration
+# ==============================================================================
+ACCOUNT_SIGNUP_FIELDS = ["username*", "password1*", "password2*"]  # email ไม่บังคับ
+ACCOUNT_EMAIL_VERIFICATION = "none"  # ไม่บังคับยืนยัน email สำหรับ social login
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if not DEBUG else "http"
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APP": {
+            "client_id": GOOGLE_CLIENT_ID,
+            "secret": GOOGLE_CLIENT_SECRET,
+            "key": "",
+        },
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        "OAUTH_PKCE_ENABLED": True,
+    },
+}
