@@ -2479,13 +2479,11 @@ async function confirmDeleteComment(commentId, reviewId) {
 }
 
 function renderSingleCommentHtml(c, reviewId) {
-    const authorUsername = c.author?.username || '';
-    const authorDisplayName = c.author?.nickname || c.author?.username || 'user';
-    const authorInitial = (authorDisplayName || authorUsername || 'U')[0].toUpperCase();
+    const authorUsername = c.author?.username || 'user';
+    const authorInitial = (authorUsername || 'U')[0].toUpperCase();
     const avatarHtml = c.author?.avatar_url
-        ? `<img src="${c.author.avatar_url}" alt="${authorDisplayName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
+        ? `<img src="${c.author.avatar_url}" alt="${authorUsername}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
         : authorInitial;
-    const profileLink = authorUsername ? `/profile/${encodeURIComponent(authorUsername)}/` : '#';
     const timeFormatted = formatDateTimeWithRelative(c.created_at);
     const isOwner = c.is_author;
 
@@ -2493,22 +2491,14 @@ function renderSingleCommentHtml(c, reviewId) {
 
     return `
         <div class="comment-item" id="comment_${c.id}" style="text-align: left; position: relative;">
-            ${authorUsername ? `
-            <a href="${profileLink}" style="text-decoration: none; color: inherit; flex-shrink: 0;" title="ดูโปรไฟล์ @${authorUsername}">
+            <a href="/profile/${encodeURIComponent(authorUsername)}/" style="text-decoration: none; color: inherit; flex-shrink: 0;" title="ดูโปรไฟล์ @${authorUsername}">
                 <div class="comment-avatar">${avatarHtml}</div>
             </a>
-            ` : `
-            <div class="comment-avatar">${avatarHtml}</div>
-            `}
             <div class="comment-body" style="text-align: left;">
                 <div class="comment-meta" style="text-align: left; justify-content: flex-start; align-items: center; gap: 6px;">
-                    ${authorUsername ? `
-                    <a href="${profileLink}" class="comment-author" style="text-decoration: none; color: inherit; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">
-                        ${authorDisplayName}
+                    <a href="/profile/${encodeURIComponent(authorUsername)}/" class="comment-author" style="text-decoration: none; color: inherit; font-weight: 700; transition: color 0.2s;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">
+                        ${authorUsername}
                     </a>
-                    ` : `
-                    <span class="comment-author" style="font-weight: 700;">${authorDisplayName}</span>
-                    `}
                     <span class="comment-time" style="text-align: left; margin-left: 2px;">${timeFormatted}</span>
                     ${isOwner ? `
                     <div class="comment-menu-wrap" style="margin-left: auto; position: relative;">
@@ -2736,13 +2726,7 @@ function renderReviewCardHtml(r) {
     const commentsListHtml = comments.map(c => renderSingleCommentHtml(c, r.id)).join("");
 
     const authorId = r.author?.id || 0;
-    const authorUsername = r.author?.username || '';
-    const authorDisplayName = r.author?.nickname || r.author?.username || 'นักเดินทาง';
-    const authorInitial = (authorDisplayName || authorUsername || "T")[0].toUpperCase();
-    const authorAvatarHtml = r.author?.avatar_url
-        ? `<img src="${r.author.avatar_url}" alt="${authorDisplayName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
-        : authorInitial;
-    const profileLink = authorUsername ? `/profile/${encodeURIComponent(authorUsername)}/` : '#';
+    const authorUsername = r.author?.username || 'นักเดินทาง';
     const isFollowing = followedAuthorsSet.has(authorId);
 
     return `
@@ -2767,31 +2751,19 @@ function renderReviewCardHtml(r) {
             </div>
             ` : ''}
             <div class="review-header" style="text-align: left;">
-                <div class="review-author" style="text-align: left; display: flex; align-items: center; gap: 10px;">
-                    ${authorUsername ? `
-                    <a href="${profileLink}" style="text-decoration: none; color: inherit; flex-shrink: 0;" title="ดูโปรไฟล์ @${authorUsername}">
-                        <div class="author-avatar" style="overflow: hidden;">${authorAvatarHtml}</div>
-                    </a>
-                    ` : `
-                    <div class="author-avatar" style="overflow: hidden;">${authorAvatarHtml}</div>
-                    `}
-                    <div style="text-align: left;">
-                        <div class="author-name-row" style="text-align: left; justify-content: flex-start; display: flex; align-items: center; gap: 8px;">
-                            ${authorUsername ? `
-                            <a href="${profileLink}" style="text-decoration: none; color: inherit;" title="ดูโปรไฟล์ @${authorUsername}">
-                                <span class="author-name" style="cursor: pointer; transition: color 0.2s; text-align: left;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">${authorDisplayName}</span>
-                            </a>
-                            ` : `
-                            <span class="author-name" style="text-align: left;">${authorDisplayName}</span>
-                            `}
-                            ${authorId ? `
-                            <button type="button" class="btn-follow ${isFollowing ? 'following' : ''}" data-author-id="${authorId}" onclick="toggleFollowAuthor(event, ${authorId}, '${authorUsername}')">
-                                ${isFollowing ? 'กำลังติดตาม' : 'ติดตาม'}
-                            </button>
-                            ` : ''}
+                <div class="review-author" style="text-align: left;">
+                    <a href="/profile/${authorUsername}/" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px; text-align: left;">
+                        <div class="author-avatar">${authorInitial}</div>
+                        <div style="text-align: left;">
+                            <div class="author-name-row" style="text-align: left; justify-content: flex-start;">
+                                <span class="author-name" style="cursor: pointer; transition: color 0.2s; text-align: left;" onmouseover="this.style.color='#FF9D9D'" onmouseout="this.style.color='inherit'">${authorUsername}</span>
+                                <button type="button" class="btn-follow ${isFollowing ? 'following' : ''}" data-author-id="${authorId}" onclick="toggleFollowAuthor(event, ${authorId}, '${authorUsername}')">
+                                    ${isFollowing ? 'กำลังติดตาม' : 'ติดตาม'}
+                                </button>
+                            </div>
+                            <div class="review-time" style="text-align: left;">${dateFormatted}</div>
                         </div>
-                        <div class="review-time" style="text-align: left;">${dateFormatted}</div>
-                    </div>
+                    </a>
                 </div>
                 <span class="rating-badge" id="rating_badge_${r.id}" style="margin-right: ${r.is_author ? '2rem' : '0'}">${stars} ${r.rating}.0</span>
             </div>

@@ -191,10 +191,12 @@ def profile_view(request, username=None):
     """
     current_user = request.user
 
+    # เงื่อนไข: ถ้ายังไม่เข้าสู่ระบบ จะไม่สามารถดูโปรไฟล์ของใครได้เลย ต้องเข้าสู่ระบบก่อน
+    if not current_user.is_authenticated:
+        messages.info(request, "กรุณาเข้าสู่ระบบก่อนดูโปรไฟล์")
+        return redirect(f"/signin/?next={request.path}")
+
     if username is None:
-        if not current_user.is_authenticated:
-            messages.info(request, "กรุณาเข้าสู่ระบบเพื่อดูโปรไฟล์ของคุณ")
-            return redirect(f"/signin/?next={request.path}")
         target_user = current_user
         is_own_profile = True
     else:
@@ -204,15 +206,9 @@ def profile_view(request, username=None):
         if not target_user:
             target_user = User.objects.filter(username__iexact=decoded_username).first()
         if not target_user:
-            target_user = User.objects.filter(profile__nickname__iexact=decoded_username).first()
-        if not target_user:
-            target_user = User.objects.filter(first_name__iexact=decoded_username).first()
-        if not target_user:
             target_user = get_object_or_404(User, username=decoded_username)
 
-        is_own_profile = bool(
-            current_user.is_authenticated and current_user.username == target_user.username
-        )
+        is_own_profile = bool(current_user.username == target_user.username)
 
     profile, _ = UserProfile.objects.get_or_create(user=target_user)
     nickname = profile.nickname or target_user.first_name or target_user.username
