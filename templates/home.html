@@ -1453,6 +1453,222 @@
     }
     .btn-edit-post-save:hover { background: linear-gradient(135deg, #ff8585, #f87171); transform: translateY(-1px); }
     .btn-edit-post-save:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* ===================================================
+       Mobile Responsive Refinements (<= 640px)
+       =================================================== */
+    @media (max-width: 640px) {
+        .feed-container {
+            gap: 1rem !important;
+        }
+
+        .review-card {
+            padding: 1.1rem 1rem !important;
+            border-radius: 20px !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05) !important;
+            margin-bottom: 0.25rem !important;
+        }
+
+        .review-header {
+            align-items: flex-start !important;
+            gap: 8px !important;
+            margin-bottom: 0.65rem !important;
+        }
+
+        .review-author {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            gap: 0.65rem !important;
+        }
+
+        .author-avatar {
+            width: 38px !important;
+            height: 38px !important;
+            font-size: 0.95rem !important;
+        }
+
+        .author-name-row {
+            gap: 0.4rem !important;
+            flex-wrap: wrap !important;
+        }
+
+        .author-name {
+            font-size: 0.92rem !important;
+            max-width: 140px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+
+        .btn-follow {
+            padding: 0.12rem 0.5rem !important;
+            font-size: 0.72rem !important;
+        }
+
+        .review-time {
+            font-size: 0.74rem !important;
+        }
+
+        .rating-badge {
+            padding: 0.22rem 0.55rem !important;
+            font-size: 0.78rem !important;
+            flex-shrink: 0 !important;
+            gap: 0.25rem !important;
+        }
+
+        .post-title-block {
+            margin-top: 0.35rem !important;
+            margin-bottom: 0.45rem !important;
+        }
+
+        .post-title-text {
+            font-size: 1.02rem !important;
+            line-height: 1.35 !important;
+        }
+
+        .review-content {
+            font-size: 0.92rem !important;
+            line-height: 1.55 !important;
+            margin-bottom: 0.85rem !important;
+        }
+
+        .review-image-wrap {
+            border-radius: 14px !important;
+            max-height: 360px !important;
+            margin-bottom: 0.85rem !important;
+        }
+
+        .review-image {
+            max-height: 360px !important;
+        }
+
+        .post-map-link-row {
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.4rem !important;
+            width: 100% !important;
+        }
+
+        .btn-post-map-location {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 6px 10px !important;
+            font-size: 0.76rem !important;
+            justify-content: space-between !important;
+        }
+
+        .btn-post-map-location .map-loc-label {
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            text-align: left !important;
+        }
+
+        /* Perfectly balanced 3-button actions row on mobile */
+        .review-actions {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            flex-wrap: nowrap !important;
+            gap: 0.35rem !important;
+            padding-top: 0.7rem !important;
+            width: 100% !important;
+        }
+
+        .action-btn {
+            flex: 1 1 0 !important;
+            justify-content: center !important;
+            padding: 0.42rem 0.25rem !important;
+            font-size: 0.76rem !important;
+            white-space: nowrap !important;
+            gap: 0.3rem !important;
+            min-width: 0 !important;
+        }
+
+        .action-btn svg {
+            width: 14px !important;
+            height: 14px !important;
+            flex-shrink: 0 !important;
+        }
+
+        .action-btn span {
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+
+        /* Comments Form on Mobile */
+        .comments-section {
+            margin-top: 0.75rem !important;
+            padding-top: 0.75rem !important;
+            gap: 0.65rem !important;
+        }
+
+        .comment-item {
+            padding: 0.6rem 0.7rem !important;
+            border-radius: 12px !important;
+        }
+
+        .comment-avatar {
+            width: 28px !important;
+            height: 28px !important;
+            font-size: 0.75rem !important;
+        }
+
+        .comment-form {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            gap: 0.4rem !important;
+            align-items: center !important;
+            width: 100% !important;
+        }
+
+        .comment-input {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            padding: 0.42rem 0.7rem !important;
+            font-size: 0.78rem !important;
+        }
+
+        .comment-submit-btn {
+            flex-shrink: 0 !important;
+            padding: 0.42rem 0.85rem !important;
+            font-size: 0.78rem !important;
+        }
+
+        /* Section titles */
+        .section-header {
+            margin-bottom: 0.5rem !important;
+        }
+
+        .section-title {
+            font-size: 1.05rem !important;
+        }
+
+        .edit-post-card {
+            padding: 20px 16px 18px !important;
+            border-radius: 18px !important;
+        }
+
+        /* Popular Places Grid on Mobile */
+        .popular-places-grid {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+            gap: 0.75rem !important;
+        }
+
+        .popular-place-image-wrap {
+            height: 130px !important;
+        }
+
+        .popular-place-info {
+            padding: 0.75rem !important;
+        }
+
+        .popular-place-name {
+            font-size: 0.88rem !important;
+        }
+    }
     </style>
 {% endblock %}
 {% block content %}
@@ -2788,17 +3004,17 @@ function renderReviewCardHtml(r) {
                        onmouseover="this.style.background='rgba(255, 157, 157, 0.22)'; this.style.borderColor='#FF9D9D';"
                        onmouseout="this.style.background='rgba(255, 157, 157, 0.12)'; this.style.borderColor='rgba(255, 157, 157, 0.35)';"
                        title="เปิดนำทางบน Google Maps">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                             <circle cx="12" cy="10" r="3"></circle>
                         </svg>
-                        <span>📍 ${r.place.name} (${r.place.location || 'ศรีสะเกษ'})</span>
-                        <span style="font-size: 0.75rem; opacity: 0.85;">➔</span>
+                        <span class="map-loc-label">📍 ${r.place.name} (${r.place.location || 'ศรีสะเกษ'})</span>
+                        <span style="font-size: 0.75rem; opacity: 0.85; flex-shrink: 0;">➔</span>
                     </a>
                 </div>
             ` : ''}
 
-            <div class="review-actions" style="text-align: left; display: flex; justify-content: flex-start;">
+            <div class="review-actions">
                 <button type="button" class="action-btn ${isLiked ? 'liked' : ''}" id="like_btn_${r.id}" onclick="toggleLikeReview(${r.id}, ${r.place ? r.place.id : 0})">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="${isLiked ? '#FF9D9D' : 'none'}" stroke="${isLiked ? '#FF9D9D' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -2832,7 +3048,7 @@ function renderReviewCardHtml(r) {
                 </div>
                 <form class="comment-form" onsubmit="submitComment(event, ${r.id})" style="text-align: left; display: flex; align-items: center;">
                     <div class="comment-avatar">${IS_AUTHENTICATED ? CURRENT_USER_INITIAL : '🔒'}</div>
-                    <input type="text" class="comment-input" id="comment_input_${r.id}" placeholder="${IS_AUTHENTICATED ? 'เขียนความคิดเห็นของคุณ...' : 'กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น...'}" ${IS_AUTHENTICATED ? 'required' : 'readonly style="cursor: pointer;" onclick="submitComment(event, ' + r.id + ')"'}>
+                    <input type="text" class="comment-input" id="comment_input_${r.id}" placeholder="${IS_AUTHENTICATED ? 'เขียนความคิดเห็นของคุณ...' : 'เข้าสู่ระบบเพื่อแสดงความคิดเห็น...'}" ${IS_AUTHENTICATED ? 'required' : 'readonly style="cursor: pointer;" onclick="submitComment(event, ' + r.id + ')"'}>
                     <button type="submit" class="comment-submit-btn">${IS_AUTHENTICATED ? 'ส่ง' : 'เข้าสู่ระบบ'}</button>
                 </form>
             </div>
