@@ -589,10 +589,47 @@
         .user-handle {
             font-size: 0.95rem;
             color: var(--text-muted);
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        /* User Bio Section */
+        .user-bio {
+            font-size: 0.94rem;
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            max-width: 600px;
+            word-break: break-word;
+            white-space: pre-line;
+            text-align: left;
+        }
+
+        .user-bio-empty {
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+
+        .user-bio-empty .bio-placeholder {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.84rem;
+            color: #8c96a0;
+            background: rgba(255, 157, 157, 0.08);
+            border: 1px dashed rgba(255, 157, 157, 0.45);
+            padding: 4px 14px;
+            border-radius: var(--radius-pill);
+            transition: all 0.2s ease;
+        }
+
+        .user-bio-empty:hover .bio-placeholder {
+            background: rgba(255, 157, 157, 0.16);
+            border-color: #FF9D9D;
+            color: #e25c5c;
+            transform: translateY(-1px);
         }
 
         .user-meta-chips {
@@ -1364,6 +1401,11 @@
             .user-meta-chips {
                 justify-content: center;
             }
+            .user-bio {
+                text-align: center;
+                margin-left: auto;
+                margin-right: auto;
+            }
             .profile-tabs-nav {
                 flex-direction: column;
                 border-radius: var(--radius-card);
@@ -1482,6 +1524,15 @@
                         <span>{{ email }}</span>
                         {% endif %}
                     </div>
+
+                    <!-- ข้อความ Bio แนะนำตัว -->
+                    {% if bio %}
+                    <div class="user-bio" id="profileBioDisplay">{{ bio|linebreaksbr }}</div>
+                    {% elif is_own_profile %}
+                    <div class="user-bio user-bio-empty" id="profileBioDisplay" onclick="openEditModal()" title="คลิกเพื่อเพิ่มข้อความ Bio แนะนำตัว">
+                        <span class="bio-placeholder">+ เพิ่มข้อความ Bio แนะนำตัว...</span>
+                    </div>
+                    {% endif %}
 
                     <div class="user-meta-chips">
                         <div class="meta-chip">
