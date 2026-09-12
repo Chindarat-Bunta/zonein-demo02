@@ -198,7 +198,18 @@ def profile_view(request, username=None):
         target_user = current_user
         is_own_profile = True
     else:
-        target_user = get_object_or_404(User, username=username)
+        import urllib.parse
+        decoded_username = urllib.parse.unquote(username).strip()
+        target_user = User.objects.filter(username=decoded_username).first()
+        if not target_user:
+            target_user = User.objects.filter(username__iexact=decoded_username).first()
+        if not target_user:
+            target_user = User.objects.filter(profile__nickname__iexact=decoded_username).first()
+        if not target_user:
+            target_user = User.objects.filter(first_name__iexact=decoded_username).first()
+        if not target_user:
+            target_user = get_object_or_404(User, username=decoded_username)
+
         is_own_profile = bool(
             current_user.is_authenticated and current_user.username == target_user.username
         )
@@ -916,7 +927,7 @@ def api_recent_reviews(request):
                         "author": {
                             "id": c.author.id,
                             "username": c.author.username,
-                            "nickname": c.author.username,
+                            "nickname": c_prof.get_display_name() if c_prof else (c.author.first_name or c.author.username),
                             "avatar_url": c_prof.avatar_url if c_prof else "",
                         },
                     }
@@ -1035,9 +1046,7 @@ def api_add_comment(request, review_id):
         )
 
     author_profile = getattr(author, "profile", None)
-    avatar_url = None
-    if author_profile and author_profile.avatar:
-        avatar_url = author_profile.avatar.url
+    avatar_url = author_profile.avatar_url if (author_profile and author_profile.avatar_url) else ""
 
     return JsonResponse(
         {
